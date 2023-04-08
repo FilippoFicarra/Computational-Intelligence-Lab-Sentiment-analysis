@@ -6,6 +6,7 @@ source venv/bin/activate
 # Windows
 # .\venv\Scripts\activate
 
+pip install language-tool-python
 pip install spacy==3.2.2
 pip install pandas==1.4.1
 pip install tqdm==4.62.3
