@@ -7,6 +7,7 @@ source venv/bin/activate
 # .\venv\Scripts\activate
 
 pip install language-tool-python
+pip install contractions
 pip install spacy==3.2.2
 pip install pandas==1.4.1
 pip install tqdm==4.62.3
@@ -40,4 +41,5 @@ pip install nltk
 python -c "import nltk; nltk.download('wordnet')"
 python -c "import nltk; nltk.download('stopwords')"
 python -c "import nltk; nltk.download('vader_lexicon')"
+python -c "import nltk; nltk.download('punkt')"
 
