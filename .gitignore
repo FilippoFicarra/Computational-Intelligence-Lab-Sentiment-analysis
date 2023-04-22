@@ -129,6 +129,4 @@ dmypy.json
 .pyre/
 
 .DS_Store
-
-# virtualenv
-venv
+SentimentAnalysis/CSV/training.1600000.processed.noemoticon.csv
