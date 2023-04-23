@@ -36,7 +36,7 @@ class DataFrameManager:
 
     def load_dataframe(self, filepath:str, encoding=None, names=None, preprocess=True) -> pd.DataFrame:
         df = pd.read_csv(filepath, encoding=encoding, names=names)
-        df = df.sample(n=20000, random_state=42)
+        df = df.sample(n=100000, random_state=42)
         if preprocess:
             print("Preprocessing the text...")
             df = self.preprocess_df(df)
@@ -44,3 +44,8 @@ class DataFrameManager:
 
     def export_dataframe(self, df : pd.DataFrame, filepath : str) -> None:
         df.to_csv(filepath, index=False)
+    
+    def split(df : pd.DataFrame, train_size : float = 0.8, random_state : int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
+        train_df = df.sample(frac=train_size, random_state=random_state)
+        test_df = df.drop(train_df.index).reset_index(drop=True)
+        return train_df, test_df

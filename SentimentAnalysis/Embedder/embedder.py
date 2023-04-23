@@ -5,8 +5,6 @@ from transformers import BertModel, BertTokenizer
 import numpy as np
 import tqdm.auto as tqdm
 
-
-
 class Embedder:
     """
     This class is used to get the embeddings of a text using the BERT model.
@@ -51,11 +49,12 @@ if __name__ == '__main__':
         df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv", encoding=DATASET_ENCODING, names=DATASET_COLUMNS).dropna()
         data_frame_manager.export_dataframe(df, filepath="SentimentAnalysis/Data/preprocessed.csv")
         print("Preprocessing done and saved to CSV file.")
+    
+    train_df, test_df = data_frame_manager.split(df)
 
     embedder = Embedder()
-    print(df.text)
-    # Get the embeddings for the first 10 tweets
-    embeddings = df.text.progress_apply(embedder.get_embeddings)
+    # Get the embeddings for the first train set
+    embeddings = train_df.text.progress_apply(embedder.get_embeddings)
     print(embeddings)
     with open('Data/embeddings.npy', 'wb') as f:
         np.save('Data/embeddings.npy', embeddings.to_numpy())
