@@ -36,7 +36,7 @@ class DataFrameManager:
 
     def load_dataframe(self, filepath:str, encoding=None, names=None, preprocess=True) -> pd.DataFrame:
         df = pd.read_csv(filepath, encoding=encoding, names=names)
-        df = df.head(len(df)//20)
+        df = df.head(len(df)//40)
         if preprocess:
             print("Preprocessing the text...")
             df = self.preprocess_df(df)
