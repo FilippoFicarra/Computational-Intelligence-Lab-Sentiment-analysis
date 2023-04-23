@@ -6,6 +6,8 @@ source venv/bin/activate
 # Windows
 # .\venv\Scripts\activate
 
+export PYTHONPATH="${PYTHONPATH}:SentimentAnalysis"
+
 pip install language-tool-python
 pip install contractions
 pip install spacy==3.2.2
