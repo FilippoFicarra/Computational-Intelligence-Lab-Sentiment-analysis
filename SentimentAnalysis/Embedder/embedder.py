@@ -60,11 +60,28 @@ if __name__ == '__main__':
     train_df, test_df = data_frame_manager.split(df = df)
 
     embedder = Embedder()
-    # Get the embeddings for the first train set
-    train_embeddings = train_df.text.progress_apply(embedder.get_embeddings)
-    test_embeddings = test_df.text.progress_apply(embedder.get_embeddings)
-    with open('Data/train_embeddings.npy', 'wb') as f:
-        np.save('Data/train_embeddings.npy', train_embeddings.to_numpy())
-    with open('Data/test_embeddings.npy', 'wb') as f:
-        np.save('Data/test_embeddings.npy', test_embeddings.to_numpy())
+    
+    # Get the embeddings for the test set
+    if not os.path.exists('SentimentAnalysis/Data/test_embeddings.npy'):
+        test_embeddings = test_df.text.progress_apply(embedder.get_embeddings)
+        print("File does not exist, saving the embeddings...")
+        with open('SentimentAnalysis/Data/test_embeddings.npy', 'xb') as f:
+            np.save(f, test_embeddings.to_numpy())
+    else:
+        print("File already exists, loading it...")
+        test_embeddings = np.load('SentimentAnalysis/Data/test_embeddings.npy')
+        print(f"Loaded {test_embeddings.shape} array from 'SentimentAnalysis/Data/test_embeddings.npy'")
+
+    # Get the embeddings for the train set
+    if not os.path.exists('SentimentAnalysis/Data/train_embeddings.npy'):
+        train_embeddings = train_df.text.progress_apply(embedder.get_embeddings)
+        print("File does not exist, saving the embeddings...")
+        with open('SentimentAnalysis/Data/train_embeddings.npy', 'xb') as f:
+            np.save(f, train_embeddings.to_numpy())
+    else:
+        print("File already exists, loading it...")
+        train_embeddings = np.load('SentimentAnalysis/Data/train_embeddings.npy')
+        print(f"Loaded {train_embeddings.shape} array from 'SentimentAnalysis/Data/train_embeddings.npy'")
+    
+    
 
