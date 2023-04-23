@@ -17,13 +17,15 @@ class TextPreprocessor:
         self.nlp = spacy.load('en_core_web_sm')
 
     def preprocess_text(self, text : str) -> str:
+        ## lowercase
+        text = text.lower()
 
         ## Remove links
-        TEXT_CLEANING_RE = "@\S+|https?:\S+|http?:\S"
+        TEXT_CLEANING_RE = "@\S+|https?:\S+|http?:\S+|www\.\S+"
         text = re.sub(TEXT_CLEANING_RE, ' ', str(text).lower()).strip()
 
         ## Correct spelling
-        text = self.tool.correct(text).lower()       
+        text = self.tool.correct(text)
 
         ## Expand contractions
         text = contractions.fix(text)
@@ -37,7 +39,7 @@ class TextPreprocessor:
 
 ## Test:
 if __name__ == '__main__':
-    text = "I don't want to be a students. I'm learnig NLP. https://www.google.com, Sup dude, wanna grab some grub and chillax at the crib later?"
+    text = "I don't want to be a students. I'm learnig NLP. https://www.google.com  www.youtube.com, Sup dude, wanna grab some grub and chillax at the crib later?"
     text_preprocessor = TextPreprocessor()
     preprocessed_text = text_preprocessor.preprocess_text(text)
     print(preprocessed_text)
