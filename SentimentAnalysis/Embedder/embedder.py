@@ -48,8 +48,7 @@ if __name__ == '__main__':
         print(len(df))
     else:
         print("File does not exist, loading the original dataset and preprocessing it...")
-        df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv", encoding=DATASET_ENCODING, names=DATASET_COLUMNS)
-        df = df.dropna()
+        df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv", encoding=DATASET_ENCODING, names=DATASET_COLUMNS).dropna()
         data_frame_manager.export_dataframe(df, filepath="SentimentAnalysis/Data/preprocessed.csv")
         print("Preprocessing done and saved to CSV file.")
 
@@ -58,5 +57,6 @@ if __name__ == '__main__':
     # Get the embeddings for the first 10 tweets
     embeddings = df.text.progress_apply(embedder.get_embeddings)
     print(embeddings)
-    np.save('Data/embeddings.npy', embeddings.to_numpy())
+    with open('Data/embeddings.npy', 'wb') as f:
+        np.save('Data/embeddings.npy', embeddings.to_numpy())
 
