@@ -129,4 +129,5 @@ dmypy.json
 .pyre/
 
 .DS_Store
-SentimentAnalysis/CSV/training.1600000.processed.noemoticon.csv
+SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv
+SentimentAnalysis/Data/preprocessed.csv
