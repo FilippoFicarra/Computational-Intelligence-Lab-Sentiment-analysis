@@ -17,6 +17,13 @@ class TextPreprocessor:
         self.nlp = spacy.load('en_core_web_sm')
 
     def preprocess_text(self, text : str) -> str:
+        """
+        This function preprocesses the text.
+        Args:
+            - text : str
+        Returns:
+            - text : str
+        """
         ## lowercase
         text = text.lower()
 

@@ -18,6 +18,13 @@ class Embedder:
         self.model.eval()
 
     def get_embeddings(self, text : str) -> torch.Tensor:
+        """
+        This function gets the embeddings of a text using the BERT model.
+        Args:
+            - text : str
+        Returns:
+            - embeddings : torch.Tensor
+        """
         # Tokenize the text
         input_ids = torch.tensor([self.tokenizer.encode_plus(text, add_special_tokens=True)['input_ids']])
         attention_masks = torch.tensor([self.tokenizer.encode_plus(text, add_special_tokens=True)['attention_mask']])
@@ -46,16 +53,18 @@ if __name__ == '__main__':
         print(len(df))
     else:
         print("File does not exist, loading the original dataset and preprocessing it...")
-        df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv", encoding=DATASET_ENCODING, names=DATASET_COLUMNS).dropna()
+        df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv", encoding=DATASET_ENCODING, names=DATASET_COLUMNS).dropna(subset=['text'])
         data_frame_manager.export_dataframe(df, filepath="SentimentAnalysis/Data/preprocessed.csv")
         print("Preprocessing done and saved to CSV file.")
     
-    train_df, test_df = data_frame_manager.split(df)
+    train_df, test_df = data_frame_manager.split(df = df)
 
     embedder = Embedder()
     # Get the embeddings for the first train set
-    embeddings = train_df.text.progress_apply(embedder.get_embeddings)
-    print(embeddings)
-    with open('Data/embeddings.npy', 'wb') as f:
-        np.save('Data/embeddings.npy', embeddings.to_numpy())
+    train_embeddings = train_df.text.progress_apply(embedder.get_embeddings)
+    test_embeddings = test_df.text.progress_apply(embedder.get_embeddings)
+    with open('Data/train_embeddings.npy', 'wb') as f:
+        np.save('Data/train_embeddings.npy', train_embeddings.to_numpy())
+    with open('Data/test_embeddings.npy', 'wb') as f:
+        np.save('Data/test_embeddings.npy', test_embeddings.to_numpy())
 

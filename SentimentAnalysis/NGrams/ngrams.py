@@ -14,11 +14,11 @@ class NGrams:
         Generates n-grams from a sequence of word embeddings.
 
         Args:
-        embeddings: a list or array of word embeddings
-        n: the length of the n-grams
+            - embeddings: a list or array of word embeddings
+            - n: the length of the n-grams
 
         Returns:
-        a list of n-grams
+            - ngrams: a list of n-grams
         """
         ngrams = []
         for i in range(len(embeddings)-n+1):
