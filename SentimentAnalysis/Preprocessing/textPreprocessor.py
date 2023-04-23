@@ -1,54 +1,51 @@
 from nltk.corpus import stopwords
 import language_tool_python
 import contractions
-import string
 import re
+import spacy
 
 class TextPreprocessor:
     """
     This class is used to preprocess the text of the tweets.
     It corrects the spelling, removes the punctuation, stopwords, links and expands the contractions.
+    Functions:
+        - preprocess_text(text : str) -> str
     """
     def __init__(self):
         self.stop_words = set(stopwords.words('english'))
-       
-        self.punctuation = set(string.punctuation) 
-        self.punctuation.remove("'")
-        self.punctuation.remove('"')
-        self.punctuation.remove('?')
-        self.punctuation.remove('!')
-
         self.tool = language_tool_python.LanguageTool('en-US')
+        self.nlp = spacy.load('en_core_web_sm')
 
     def preprocess_text(self, text : str) -> str:
 
         ## Remove links
-        # TEXT_CLEANING_RE = "@\S+|https?:\S+|http?:\S"
-        # text = re.sub(TEXT_CLEANING_RE, ' ', str(text).lower()).strip()
+        TEXT_CLEANING_RE = "@\S+|https?:\S+|http?:\S"
+        text = re.sub(TEXT_CLEANING_RE, ' ', str(text).lower()).strip()
 
         ## Correct spelling
         text = self.tool.correct(text).lower()       
 
-        ## Remove punctuation
-        text = ''.join([c for c in text if c not in self.punctuation])
-
-        ## Remove stopwords
-        text = ' '.join([w for w in text.split() if w not in self.stop_words])
-
         ## Expand contractions
         text = contractions.fix(text)
 
-        # It could be useful to lemmatize and use part of speech tagging in order to better compare and translate the words in the vector space
+        ## Lemmatize
+        doc = self.nlp(text)
+        tokens = [token.lemma_.lower().strip() for token in doc if not token.is_punct and not token.like_num]
 
-        return text
+        return " ".join(tokens)
 
 
+## Test:
 if __name__ == '__main__':
-    text = "I'm a students. I'm learnig NLP."
-    text = "I'm a students. I'm learnig NLP. https://www.google.com"
+    text = "I don't want to be a students. I'm learnig NLP. https://www.google.com, Sup dude, wanna grab some grub and chillax at the crib later?"
     text_preprocessor = TextPreprocessor()
     preprocessed_text = text_preprocessor.preprocess_text(text)
     print(preprocessed_text)
+    
+
+   
+    
+
 
     
 

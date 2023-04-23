@@ -2,9 +2,20 @@ import pandas as pd
 from Preprocessing.textPreprocessor import TextPreprocessor
 from tqdm.auto import tqdm
 
+
 tqdm.pandas()
 
+
 class DataFrameManager:
+    """
+    This class is used to load the dataframe from a csv file and preprocess the text.
+    For preprocessing the text, it uses the TextPreprocessor class.
+    Functions:
+       - preprocess_text(text : str) -> str
+       - preprocess_df(df : pd.DataFrame) -> pd.DataFrame
+       - load_dataframe(filepath : str, encoding=None, names=None, preprocess=True) -> pd.DataFrame
+        export_dataframe(df : pd.DataFrame, filepath : str) -> None
+    """
     def __init__(self):
         self.preprocessor = TextPreprocessor()
     
@@ -25,6 +36,7 @@ class DataFrameManager:
 
     def load_dataframe(self, filepath:str, encoding=None, names=None, preprocess=True) -> pd.DataFrame:
         df = pd.read_csv(filepath, encoding=encoding, names=names)
+        df = df.head(len(df)//20)
         if preprocess:
             print("Preprocessing the text...")
             df = self.preprocess_df(df)
