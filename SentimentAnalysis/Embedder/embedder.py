@@ -3,7 +3,8 @@ import os
 import torch
 from transformers import BertModel, BertTokenizer
 import numpy as np
-import tqdm.auto as tqdm
+from tqdm import tqdm
+from NGrams.ngrams import NGrams
 
 class Embedder:
     """
@@ -43,6 +44,7 @@ if __name__ == '__main__':
     filename = 'preprocessed.csv'
     file_path = os.path.join(directory_path, filename)
     data_frame_manager = DataFrameManager()
+    N = 4
 
     DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
     DATASET_ENCODING = "ISO-8859-1"
@@ -82,5 +84,14 @@ if __name__ == '__main__':
         print("File already exists, loading it...")
         train_embeddings = np.load('SentimentAnalysis/Data/train_embeddings.npy', allow_pickle=True)
         print(f"Loaded {train_embeddings.shape} array from 'SentimentAnalysis/Data/train_embeddings.npy'")
+
+    n_grams = NGrams()
+    
+    print("Getting the n-grams for the test set...")
+    test_ngrams = [n_grams.generate_ngrams(embeddings, N) for embeddings in tqdm(test_embeddings, desc='Generating n-grams')]
+    print("Getting the n-grams for the train set...")
+    train_ngrams = [n_grams.generate_ngrams(embeddings, N) for embeddings in tqdm(train_embeddings, desc='Generating n-grams')]
+
+    
     
 

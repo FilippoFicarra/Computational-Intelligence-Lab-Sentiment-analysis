@@ -1,5 +1,5 @@
 import numpy as np
-
+import torch
 class NGrams:
     """
     This class is used to generate n-grams from a sequence of word embeddings.
@@ -24,4 +24,4 @@ class NGrams:
         for i in range(len(embeddings)-n+1):
             ngram = np.concatenate([embeddings[j] for j in range(i,i+n)])
             ngrams.append(ngram)
-        return ngrams
+        return torch.tensor(ngrams)
