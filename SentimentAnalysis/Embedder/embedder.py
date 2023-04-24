@@ -60,7 +60,7 @@ if __name__ == '__main__':
     train_df, test_df = data_frame_manager.split(df = df)
 
     embedder = Embedder()
-    
+
     # Get the embeddings for the test set
     if not os.path.exists('SentimentAnalysis/Data/test_embeddings.npy'):
         test_embeddings = test_df.text.progress_apply(embedder.get_embeddings)
@@ -69,7 +69,7 @@ if __name__ == '__main__':
             np.save(f, test_embeddings.to_numpy())
     else:
         print("File already exists, loading it...")
-        test_embeddings = np.load('SentimentAnalysis/Data/test_embeddings.npy')
+        test_embeddings = np.load('SentimentAnalysis/Data/test_embeddings.npy', allow_pickle=True)
         print(f"Loaded {test_embeddings.shape} array from 'SentimentAnalysis/Data/test_embeddings.npy'")
 
     # Get the embeddings for the train set
@@ -80,8 +80,7 @@ if __name__ == '__main__':
             np.save(f, train_embeddings.to_numpy())
     else:
         print("File already exists, loading it...")
-        train_embeddings = np.load('SentimentAnalysis/Data/train_embeddings.npy')
+        train_embeddings = np.load('SentimentAnalysis/Data/train_embeddings.npy', allow_pickle=True)
         print(f"Loaded {train_embeddings.shape} array from 'SentimentAnalysis/Data/train_embeddings.npy'")
-    
     
 
