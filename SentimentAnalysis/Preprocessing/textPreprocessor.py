@@ -46,7 +46,7 @@ class TextPreprocessor:
         for word in text.split(" "):
             for emoticon in EMOTICONS_EMO.keys():
                 if emoticon in word:
-                    emoticons_str = emoticons_str.replace(emoticon, EMOTICONS_EMO[emoticon].split("or")[0].replace(" ", "_").rstrip().lower())
+                    emoticons_str = emoticons_str.replace(emoticon, emoji.emojize(f'xx{EMOTICONS_EMO[emoticon].split("or")[0].rstrip().replace(" ", "_").lower()}'))
 
         return emoticons_str
     
@@ -73,13 +73,16 @@ class TextPreprocessor:
 
         ## Convert emoticons
         text = self.convert_emoticons(text)
+        print(text)
 
         ## Expand contractions
         text = contractions.fix(text)
 
         ## Lemmatize
         doc = self.nlp(text)
-        tokens = [token.lemma_.lower().strip() if "_" not in token.lemma_.lower().strip() else f":{token.lemma_.lower().strip()}:"  for token in doc if not token.is_punct and not token.like_num]
+        for token in doc:
+            print(token)
+        tokens = [f':{token.lemma_.lower().strip().lstrip("x")}:' if token.lemma_.lower().strip().startswith("xx") else token.lemma_.lower().strip() for token in doc if not token.is_punct and not token.like_num]
 
         ## Convert emojis
         tokens = [self.convert_emojis(token) for token in tokens]
@@ -89,12 +92,11 @@ class TextPreprocessor:
 
 ## Test:
 if __name__ == '__main__':
-    text = "I don't want to be a students 😍 :). I'm learnig NLP. @Filippo https://www.google.com  , Sup dude, wanna grab some www.youtube.com grub and chillax at the crib later?"
+    text = "I don't want to be a students 😍 :-). I'm learnig NLP. @Filippo https://www.google.com  , Sup dude, wanna grab some www.youtube.com grub and chillax at the crib later?"
     text_preprocessor = TextPreprocessor()
     preprocessed_text = text_preprocessor.preprocess_text(text)
     print(preprocessed_text)
 
-    # print(EMOTICONS_EMO[":)"].split("or")[0].replace(" ", "_"))
 
    
     
