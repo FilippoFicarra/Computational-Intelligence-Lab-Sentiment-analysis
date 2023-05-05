@@ -23,7 +23,7 @@ SentimentAnalysis
 
 - Data: It contains all the data used in the process
 - DataFrameManager: It contains a manager to load and create dataframes from the file in the folder Data
-- Embedder: It contains a word embedder
+- Embedder: It contains a word embedder (using either BERT or RoBERTa model)
 - NGrams: It contains a ngram creator from embeddings
-- Preprocessing: It contains all the preprocessing functions
+- Preprocessing: It contains all the preprocessing methods
 
