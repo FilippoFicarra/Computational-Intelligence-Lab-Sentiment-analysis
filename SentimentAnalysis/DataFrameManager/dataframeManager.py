@@ -1,3 +1,5 @@
+from SentimentAnalysis.common import utils
+import multiprocessing
 import pandas as pd
 from Preprocessing.textPreprocessor import TextPreprocessor
 from tqdm.auto import tqdm
@@ -17,18 +19,9 @@ class DataFrameManager:
         - export_dataframe(df : pd.DataFrame, filepath : str) -> None
         - split(df : pd.DataFrame, test_size : float = 0.2) -> (pd.DataFrame, pd.DataFrame)
     """
-    def __init__(self):
-        self.preprocessor = TextPreprocessor()
     
-    def preprocess_text(self, text):
-        """
-        This function preprocesses the text using the TextPreprocessor class.
-        Args:
-            - text : str
-        Returns:
-            - text : str
-        """
-        return self.preprocessor.preprocess_text(text)
+    def __init__(self, num_cpus : int = 1):
+        self._num_cpus = num_cpus
     
     def preprocess_df(self, df):
         """
@@ -38,13 +31,15 @@ class DataFrameManager:
         Returns:
             - df : pd.DataFrame
         """
-        decode_map = {0: "NEGATIVE", 2: "NEUTRAL", 4: "POSITIVE"}
-
-        def decode_sentiment(label):
-            return decode_map[int(label)]
-
-        df.target = df.target.progress_apply(decode_sentiment)
-        df.text = df.text.progress_apply(self.preprocess_text)
+        
+        partitions = pd.np.array_split(df, self._num_cpus)
+        
+        pool = multiprocessing.Pool(processes=self._num_cpus)
+    
+        results_target = pool.map(utils.wrapper, [(partition.target, utils.decode_sentiment)  for partition in partitions])
+        results_text = pool.map(utils.wrapper, [(partition.text, utils.preprocess_text)  for partition in partitions])
+        df.text = pd.concat(results_text)
+        df.target = pd.concat(results_target)
 
         return df
 
@@ -60,10 +55,11 @@ class DataFrameManager:
         Returns:
             - df : pd.DataFrame
         """
+        
         df = pd.read_csv(filepath, encoding=encoding, names=names)
         if preprocess:
             print("Preprocessing the text...")
-            df = df.sample(n=100000, random_state=42)
+            df = df.sample(n=10000, random_state=42)
             df = self.preprocess_df(df)
         return df
 
@@ -76,6 +72,7 @@ class DataFrameManager:
         Returns:
             - None
         """
+        
         df.to_csv(filepath, index=False)
     
     def split(self, df : pd.DataFrame, train_size : float = 0.8, random_state : int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -89,6 +86,7 @@ class DataFrameManager:
             - train_df : pd.DataFrame
             - test_df : pd.DataFrame
         """
+        
         train_df = df.sample(frac=train_size, random_state=random_state)
         test_df = df.drop(train_df.index).reset_index(drop=True)
         return train_df, test_df

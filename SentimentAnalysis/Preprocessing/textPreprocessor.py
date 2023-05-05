@@ -1,8 +1,7 @@
-from nltk.corpus import stopwords
-import language_tool_python
-import contractions
 import re
-import spacy
+# from nltk.corpus import stopwords
+from SentimentAnalysis.common import constants
+import contractions
 
 class TextPreprocessor:
     """
@@ -11,18 +10,19 @@ class TextPreprocessor:
     Functions:
         - preprocess_text(text : str) -> str
     """
-    def __init__(self):
-        self.stop_words = set(stopwords.words('english'))
-        self.tool = language_tool_python.LanguageTool('en-US')
-        self.nlp = spacy.load('en_core_web_sm')
+    
+    def __init__(self, tool, nlp):
+        # self.stop_words = set(stopwords.words('english'))
+        self.tool = tool
+        self.nlp = nlp
 
     def preprocess_text(self, text : str) -> str:
         """
         This function preprocesses the text.
         Args:
-            - text : str
+            - text {str}: the sentence to be processed
         Returns:
-            - text : str
+            - text {str}: the processed sentence
         """
         ## lowercase
         text = text.lower()
@@ -31,10 +31,10 @@ class TextPreprocessor:
         TEXT_CLEANING_RE = "@\S+|https?:\S+|http?:\S+|www\.\S+"
         text = re.sub(TEXT_CLEANING_RE, ' ', str(text).lower()).strip()
 
-        ## Correct spelling
+        # ## Correct spelling
         text = self.tool.correct(text)
 
-        ## Expand contractions
+        # ## Expand contractions
         text = contractions.fix(text)
 
         ## Lemmatize
@@ -47,7 +47,8 @@ class TextPreprocessor:
 ## Test:
 if __name__ == '__main__':
     text = "I don't want to be a students. I'm learnig NLP. https://www.google.com  www.youtube.com, Sup dude, wanna grab some grub and chillax at the crib later?"
-    text_preprocessor = TextPreprocessor()
+    
+    text_preprocessor = TextPreprocessor(constants.tool, constants.nlp)
     preprocessed_text = text_preprocessor.preprocess_text(text)
     print(preprocessed_text)
     
