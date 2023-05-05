@@ -80,8 +80,6 @@ class TextPreprocessor:
 
         ## Lemmatize
         doc = self.nlp(text)
-        for token in doc:
-            print(token)
         tokens = [f':{token.lemma_.lower().strip().lstrip("x")}:' if token.lemma_.lower().strip().startswith("xx") else token.lemma_.lower().strip() for token in doc if not token.is_punct and not token.like_num]
 
         ## Convert emojis
