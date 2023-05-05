@@ -12,7 +12,8 @@ class DataFrameManager:
     """
     This class is used to load the dataframe from a csv file and preprocess the text.
     For preprocessing the text, it uses the TextPreprocessor class.
-    Functions:
+    
+    Methods:
         - preprocess_text(text : str) -> str
         - preprocess_df(df : pd.DataFrame) -> pd.DataFrame
         - load_dataframe(filepath : str, encoding=None, names=None, preprocess=True) -> pd.DataFrame
@@ -26,6 +27,7 @@ class DataFrameManager:
     def preprocess_df(self, df):
         """
         This function maps the labels to the corresponding sentiment and preprocesses the text.
+
         Args:
             - df : pd.DataFrame
         Returns:
@@ -47,6 +49,7 @@ class DataFrameManager:
     def load_dataframe(self, filepath:str, encoding=None, names=None, preprocess=True) -> pd.DataFrame:
         """
         This function loads the dataframe from a csv file.
+
         Args:
             - filepath : str
             - encoding : str
@@ -66,6 +69,7 @@ class DataFrameManager:
     def export_dataframe(self, df : pd.DataFrame, filepath : str) -> None:
         """
         This function exports the dataframe to a csv file.
+
         Args:
             - df : pd.DataFrame
             - filepath : str
@@ -78,6 +82,7 @@ class DataFrameManager:
     def split(self, df : pd.DataFrame, train_size : float = 0.8, random_state : int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         This function splits the dataframe into train and test dataframes.
+
         Args:
             - df : pd.DataFrame
             - train_size : float
