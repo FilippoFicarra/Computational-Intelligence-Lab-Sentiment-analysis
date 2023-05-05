@@ -35,6 +35,8 @@ pip install scikit-learn-extra==0.1.0b2
 pip install pyldavis==3.2.2
 pip install hdbscan==0.8.27
 pip install pydot
+pip install environ-config==23.2.0
+
 pip install emoji
 pip install emot
 # spacy

@@ -5,6 +5,9 @@ from transformers import BertModel, BertTokenizer, RobertaTokenizer, RobertaMode
 import numpy as np
 from tqdm import tqdm
 from NGrams.ngrams import NGrams
+import environ
+from  SentimentAnalysis.config import Config
+
 
 class Embedder:
     """
@@ -55,10 +58,12 @@ class Embedder:
 
 ## Example usage
 if __name__ == '__main__':
+    config = environ.to_config(Config)
+    
     directory_path = 'SentimentAnalysis/Data'
     filename = 'preprocessed.csv'
     file_path = os.path.join(directory_path, filename)
-    data_frame_manager = DataFrameManager()
+    data_frame_manager = DataFrameManager(config.num_cpus)
     N = 4
 
     DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
