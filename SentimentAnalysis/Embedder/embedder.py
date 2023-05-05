@@ -1,7 +1,7 @@
 from DataFrameManager.dataframeManager import DataFrameManager
 import os
 import torch
-from transformers import BertModel, BertTokenizer
+from transformers import BertModel, BertTokenizer, RobertaTokenizer, RobertaModel
 import numpy as np
 from tqdm import tqdm
 from NGrams.ngrams import NGrams
@@ -9,31 +9,46 @@ from NGrams.ngrams import NGrams
 class Embedder:
     """
     This class is used to get the embeddings of a text using the BERT model.
-    Functions:
+
+    Methods:
         - get_embeddings(text : str) -> torch.Tensor
     """
     def __init__(self):
-        self.model_name = 'bert-base-uncased'
-        self.tokenizer = BertTokenizer.from_pretrained(self.model_name)
-        self.model = BertModel.from_pretrained(self.model_name)
-        self.model.eval()
+        self.bert_model_name = 'bert-large-uncased'
+        self.bert_tokenizer = BertTokenizer.from_pretrained(self.bert_model_name)
+        self.bert_model = BertModel.from_pretrained(self.bert_model_name)
+        self.bert_model.eval()
+        self.roberta_model_name = 'roberta-large'
+        self.roberta_tokenizer = RobertaTokenizer.from_pretrained(self.roberta_model_name)
+        self.roberta_model = RobertaModel.from_pretrained(self.roberta_model_name)
+        self.roberta_model.eval()
 
-    def get_embeddings(self, text : str) -> torch.Tensor:
+    def get_embeddings(self, text : str, model_name = 'bert') -> torch.Tensor:
         """
-        This function gets the embeddings of a text using the BERT model.
+        This function gets the embeddings of a text using the  'model_name' model.
+
         Args:
             - text : str
+            - model_name : str
         Returns:
             - embeddings : torch.Tensor
         """
+        if model_name == 'bert':
+            tokenizer = self.bert_tokenizer
+            model = self.bert_model
+        elif model_name == 'roberta':
+            tokenizer = self.roberta_tokenizer
+            model = self.roberta_model
+            
         # Tokenize the text
-        input_ids = torch.tensor([self.tokenizer.encode_plus(text, add_special_tokens=True)['input_ids']])
-        attention_masks = torch.tensor([self.tokenizer.encode_plus(text, add_special_tokens=True)['attention_mask']])
-        token_type_ids = torch.tensor([self.tokenizer.encode_plus(text, add_special_tokens=True)['token_type_ids']])
+        inputs = tokenizer.encode_plus(text, add_special_tokens=True, return_tensors='pt')
+        input_ids = inputs['input_ids']
+        attention_masks = inputs['attention_mask']
+        token_type_ids = inputs['token_type_ids']
 
         # Obtain the output embeddings
         with torch.no_grad():
-            outputs = self.model(input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids)
+            outputs = model(input_ids, attention_mask=attention_masks, token_type_ids=token_type_ids)
             embeddings = outputs[0][0]  # take the first element of the batch and the last hidden layer
         return embeddings
 
@@ -85,12 +100,12 @@ if __name__ == '__main__':
         train_embeddings = np.load('SentimentAnalysis/Data/train_embeddings.npy', allow_pickle=True)
         print(f"Loaded {train_embeddings.shape} array from 'SentimentAnalysis/Data/train_embeddings.npy'")
 
-    n_grams = NGrams()
+    # n_grams = NGrams()
     
-    print("Getting the n-grams for the test set...")
-    test_ngrams = [n_grams.generate_ngrams(embeddings, N) for embeddings in tqdm(test_embeddings, desc='Generating n-grams')]
-    print("Getting the n-grams for the train set...")
-    train_ngrams = [n_grams.generate_ngrams(embeddings, N) for embeddings in tqdm(train_embeddings, desc='Generating n-grams')]
+    # print("Getting the n-grams for the test set...")
+    # test_ngrams = [n_grams.generate_ngrams(embeddings, N) for embeddings in tqdm(test_embeddings, desc='Generating n-grams')]
+    # print("Getting the n-grams for the train set...")
+    # train_ngrams = [n_grams.generate_ngrams(embeddings, N) for embeddings in tqdm(train_embeddings, desc='Generating n-grams')]
 
     
     

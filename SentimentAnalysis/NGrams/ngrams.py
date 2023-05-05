@@ -3,7 +3,8 @@ import torch
 class NGrams:
     """
     This class is used to generate n-grams from a sequence of word embeddings.
-    Functions:
+    
+    Methods:
         - generate_ngrams(embeddings : list, n : int) -> list
     """
     def __init__(self):
