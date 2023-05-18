@@ -5,19 +5,32 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 
 # The structure of the project:
 ```bash
-SentimentAnalysis
 ├── Data
 │   ├── preprocessed.csv
-│   ├── embeddings.npy
-│   └── training.1600000.processed.noemoticon.csv
+│   ├── test_embeddings_roberta.npy
+│   ├── train_embeddings_roberta.npy
+│   ├── training.1600000.processed.noemoticon.csv
+│   └── twitter-datasets/
 ├── DataFrameManager
+│   ├── __init__.py
 │   └── dataframeManager.py
 ├── Embedder
+│   ├── __init__.py
 │   └── embedder.py
 ├── NGrams
+│   ├── __init__.py
 │   └── ngrams.py
-└── Preprocessing
-    └── textPreprocessor.py
+├── Preprocessing
+│   ├── __init__.py
+│   └── textPreprocessor.py
+├── __init__.py
+├── common
+│   ├── constants.py
+│   └── utils.py
+├── config.py
+├── ethz-cil-text-classification-2023/
+├── main.py
+└── train.ipynb
 
 ```
 
@@ -26,4 +39,6 @@ SentimentAnalysis
 - Embedder: It contains a word embedder (using either BERT or RoBERTa model)
 - NGrams: It contains a ngram creator from embeddings
 - Preprocessing: It contains all the preprocessing methods
+- main.py: It preprocesses the data and create the embeddings
+- train.ipynb: It contains the model to train
 
