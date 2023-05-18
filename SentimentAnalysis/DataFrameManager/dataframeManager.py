@@ -1,8 +1,11 @@
-from SentimentAnalysis.common import utils
+import numpy as np
+from common import utils
 import multiprocessing
 import pandas as pd
-from Preprocessing.textPreprocessor import TextPreprocessor
+# from Preprocessing.textPreprocessor import TextPreprocessor
 from tqdm.auto import tqdm
+from sklearn.model_selection import train_test_split
+
 
 
 tqdm.pandas()
@@ -34,7 +37,7 @@ class DataFrameManager:
             - df : pd.DataFrame
         """
         
-        partitions = pd.np.array_split(df, self._num_cpus)
+        partitions = np.array_split(df, self._num_cpus)
         
         pool = multiprocessing.Pool(processes=self._num_cpus)
     
@@ -59,14 +62,17 @@ class DataFrameManager:
             - df : pd.DataFrame
         """
         
-        df = pd.read_csv(filepath, encoding=encoding, names=names)
+        
         if preprocess:
+            df = pd.read_csv(filepath, encoding=encoding, names=names).sample(n=100000, random_state=42).reset_index(drop=True)
             print("Preprocessing the text...")
-            df = df.sample(n=10000, random_state=42)
+            df = df.sample(n=df.shape[0], random_state=42)
             df = self.preprocess_df(df)
-        return df
+        else:
+            df = pd.read_csv(filepath, encoding=encoding, names=names)
+        return df.dropna().reset_index(drop=True)
 
-    def export_dataframe(self, df : pd.DataFrame, filepath : str) -> None:
+    def export_dataframe(self, df : pd.DataFrame, filepath : str, encoding=None) -> None:
         """
         This function exports the dataframe to a csv file.
 
@@ -77,9 +83,9 @@ class DataFrameManager:
             - None
         """
         
-        df.to_csv(filepath, index=False)
+        df.to_csv(filepath, index=False, encoding=encoding)
     
-    def split(self, df : pd.DataFrame, train_size : float = 0.8, random_state : int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def split(self, df : pd.DataFrame, test_size : float = 0.2, random_state : int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
         """
         This function splits the dataframe into train and test dataframes.
 
@@ -91,7 +97,6 @@ class DataFrameManager:
             - train_df : pd.DataFrame
             - test_df : pd.DataFrame
         """
-        
-        train_df = df.sample(frac=train_size, random_state=random_state)
-        test_df = df.drop(train_df.index).reset_index(drop=True)
+        train_df, test_df = train_test_split(df,  test_size=test_size, random_state=random_state)
+    
         return train_df, test_df
