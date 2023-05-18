@@ -1,3 +1,4 @@
+#!/bin/bash
 virtualenv ./venv
 
 # linux and macOS
@@ -5,6 +6,8 @@ source venv/bin/activate
 
 # Windows
 # .\venv\Scripts\activate
+
+# export PYTHONPATH="${PYTHONPATH}:SentimentAnalysis" # for linux and macOS run this inside your virtualenv
 
 pip install language-tool-python
 pip install contractions
@@ -32,7 +35,10 @@ pip install scikit-learn-extra==0.1.0b2
 pip install pyldavis==3.2.2
 pip install hdbscan==0.8.27
 pip install pydot
+pip install environ-config==23.2.0
 
+pip install emoji
+pip install emot
 # spacy
 python -m spacy download en_core_web_sm
 
