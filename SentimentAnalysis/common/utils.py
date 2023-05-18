@@ -1,7 +1,6 @@
 from distutils.errors import PreprocessError
-
-from SentimentAnalysis.Preprocessing.textPreprocessor import TextPreprocessor
-from SentimentAnalysis.common  import constants
+from Preprocessing.textPreprocessor import TextPreprocessor
+from common  import constants
 
 
 def wrapper(args: tuple):
@@ -44,3 +43,4 @@ def decode_sentiment(label):
     
     decode_map = {0: "NEGATIVE", 2: "NEUTRAL", 4: "POSITIVE"}
     return decode_map[int(label)]
+
