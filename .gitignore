@@ -150,3 +150,9 @@ SentimentAnalysis/ethz-cil-text-classification-2023/pickle_vocab.py
 SentimentAnalysis/ethz-cil-text-classification-2023/README.md
 SentimentAnalysis/ethz-cil-text-classification-2023/sample_submission.csv
 SentimentAnalysis/ethz-cil-text-classification-2023/test_data.txt
+SentimentAnalysis/ethz-cil-text-classification-2023/cooc.pkl
+SentimentAnalysis/ethz-cil-text-classification-2023/vocab_cut.txt
+SentimentAnalysis/ethz-cil-text-classification-2023/vocab.pkl
+SentimentAnalysis/ethz-cil-text-classification-2023/vocab.txt
+SentimentAnalysis/Data/test.csv
+SentimentAnalysis/Data/train.csv
