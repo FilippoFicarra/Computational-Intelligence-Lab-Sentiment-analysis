@@ -55,7 +55,7 @@ class Embedder:
                 batch_attention_masks = batch_inputs['attention_mask']
 
                 if self.model_name == 'bert':
-                    batch_token_type_ids = batch_inputs[i:i + self.batch_size]
+                    batch_token_type_ids = batch_inputs['token_type_ids']
 
                 if self.model_name == 'bert':
                     outputs = self.model(batch_input_ids, attention_mask=batch_attention_masks, token_type_ids=batch_token_type_ids)
