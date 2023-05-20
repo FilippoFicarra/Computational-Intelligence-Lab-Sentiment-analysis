@@ -11,6 +11,7 @@ if __name__ == '__main__':
 
     PREPROCESSING = False
     CREATE_EMBEDDINGS = True 
+    TXT_TO_CSV = False
     MODEL_NAME = 'roberta'
     PATH = "SentimentAnalysis/Data/"
 
@@ -18,26 +19,21 @@ if __name__ == '__main__':
 
     data_frame_manager = DataFrameManager(num_cpus=4)
 
-    # pos = pd.read_csv('SentimentAnalysis/Data/twitter-datasets/train_pos_full.csv')
-    # pos["target"] = "1"
-    # pos.to_csv('SentimentAnalysis/Data/twitter-datasets/train_pos_full.csv', index=False)
-    # neg = pd.read_csv('SentimentAnalysis/Data/twitter-datasets/train_neg_full.csv')
-    # neg["target"] = "-1"
-    # neg.to_csv('SentimentAnalysis/Data/twitter-datasets/train_neg_full.csv', index=False)
-    # train_full = pd.concat([pos, neg], axis=0)
-    # train_full = train_full.drop_duplicates(subset='text')
-    # train_full.to_csv('SentimentAnalysis/Data/twitter-datasets/train_full.csv', index=False)
+    if TXT_TO_CSV: # fix this code 
+        data_frame_manager.txt_to_csv(PATH+"twitter-datasets/train_pos.txt", PATH+"twitter-datasets/train_pos.csv")
+        data_frame_manager.txt_to_csv(PATH+"twitter-datasets/train_neg.txt", PATH+"twitter-datasets/train_neg.csv")
+        pos = pd.read_csv('SentimentAnalysis/Data/twitter-datasets/train_pos_full.csv')
+        pos["target"] = "1"
+        pos.to_csv('SentimentAnalysis/Data/twitter-datasets/train_pos_full.csv', index=False)
+        neg = pd.read_csv('SentimentAnalysis/Data/twitter-datasets/train_neg_full.csv')
+        neg["target"] = "-1"
+        neg.to_csv('SentimentAnalysis/Data/twitter-datasets/train_neg_full.csv', index=False)
+        train_full = pd.concat([pos, neg], axis=0)
+        train_full = train_full.drop_duplicates(subset='text')
+        train_full.to_csv('SentimentAnalysis/Data/twitter-datasets/train_full.csv', index=False)
 
     if PREPROCESSING:
         filepath = PATH+"twitter-datasets/train_full.csv"
-
-        # if filepath.endswith(".txt"):
-        #     data_frame_manager.txt_to_csv(filepath, filepath[:-4]+".csv")
-        #     filepath = filepath[:-4]+".csv"
-        # if not os.path.exists(filepath):
-        #     with open(filepath, 'w'):
-        #         pass
-
         print("Starting preprocessing...")
         df = data_frame_manager.load_dataframe(filepath=filepath, encoding=DATASET_ENCODING)
         print(df.shape)
