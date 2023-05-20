@@ -5,7 +5,81 @@ import contractions
 import emoji
 from emot.emo_unicode import EMOTICONS_EMO
 
+EMOTICONS = EMOTICONS_EMO
+ 
+emoticons = {
+        "=|": "emotneutral",
+        "=-(": "emotfrown",
+        "=-)": "emotsmile",
+        "=:": "emotneutral",
+        "=/": "emotfrown",
+        "='(": "emotfrown",
+        "='[": "emotfrown",
+        "=(": "emotfrown",
+        "=)": "emotsmile",
+        "=[": "emotfrown",
+        "=]": "xemotsmile",
+        "={": "emotfrown",
+        "=\\": "emotfrown",
+        ">=(": "emotfrown",
+        ">=)": "emotsmile",
+        ">:|": "emotneutral",
+        ">:/": "xxemotfrown",
+        ">:[": "emotfrown",
+        ">:": "emotfrown",
+        "|:": "emotneutral",
+        ";|": "emotneutral",
+        ";-}": "emotsmile",
+        ";:": "emotneutral",
+        ";/": "emotfrown",
+        ";'/": "emotfrown",
+        ";'(": "emotfrown",
+        ";')": "emotsmile",
+        ";)": "emotsmile",
+        ";]": "emotsmile",
+        ";}": "emotsmile",
+        ";*{": "emotfrown",
+        ":|": "emotneutral",
+        ":-|": "emotneutral",
+        ":-/": "emotfrown",
+        ":-[": "emotfrown",
+        ":-]": "emotsmile",
+        ":-}": "emotsmile",
+        ":-": "emotneutral",
+        ":-\\": "emotfrown",
+        ":;": "emotneutral",
+        "::": "emotneutral",
+        ":/": "emotfrown",
+        ":'|": "emotneutral",
+        ":'/": "emotfrown",
+        ":')": "emotsmile",
+        ":'{": "emotfrown",
+        ":'}": "emotsmile",
+        ":'\\": "emotneutral",
+        ":(": "emotfrown",
+        ":)": "emotsmile",
+        ":]": "emotsmile",
+        ":[": "emotfrown",
+        ":{": "emotfrown",
+        ":}": "emotsmile",
+        ":": "emotneutral",
+        ":*{": "emotfrown",
+        ":\\": "emotfrown",
+        "(=": "emotsmile",
+        "(;": "emotsmile",
+        "(':": "emotsmile",
+        ")=": "emotfrown",
+        ")':": "emotfrown",
+        "[;": "emotsmile",
+        "]:": "emotfrown",
+        "{:": "emotsmile",
+        "\\=": "emotfrown",
+        "\\:": "emotfrown",
+        "<3": "emotheart"
+}
 
+for emot in emoticons.keys():
+    EMOTICONS[emot] = emoticons[emot]
 
 class TextPreprocessor:
     """
@@ -45,7 +119,7 @@ class TextPreprocessor:
             for emoticon in EMOTICONS_EMO.keys():
                 if emoticon in word:
                     # emoticons_str = emoticons_str.replace(emoticon, emoji.emojize(f'xx{EMOTICONS_EMO[emoticon].split("or")[0].split(",")[0].rstrip().replace(" ", "_").lower()} ')) # this line is used to convert emoticons to emojis
-                    emoticons_str = emoticons_str.replace(emoticon, f' xx{EMOTICONS_EMO[emoticon].split("or")[0].split(",")[0].rstrip().replace(" ", "_").lower()} ')
+                    emoticons_str = emoticons_str.replace(emoticon, f' xx{EMOTICONS[emoticon].split("or")[0].split(",")[0].rstrip().replace(" ", "_").lower()} ')
 
         return emoticons_str
     
@@ -117,8 +191,8 @@ class TextPreprocessor:
 ## Test:
 if __name__ == '__main__':
     # text = "I don't want to be a students 😍 :). I'm learnig NLP. @Filippo https://www.google.com  , Sup dude, wanna grab some www.youtube.com grub and chillax at the crib later?"
-    text_2 = "<user> y dont follow me liam ? u can make me happy and make me feel better ( cuz im sick ) :( if u will follow me  #liamfollow me <url>"
-    text_preprocessor = TextPreprocessor(constants.tool, constants.nlp)
+    text_2 = "<user> y dont follow me liam ? u can make me happy and make me feel better ( cuz im sick ) :(  <3 if u will follow me  #liamfollow me <url>"
+    text_preprocessor = TextPreprocessor()
     # # preprocessed_text = text_preprocessor.preprocess_text_old(text)
     preprocessed_text_2 = text_preprocessor.preprocess_text(text_2)
 
@@ -129,5 +203,4 @@ if __name__ == '__main__':
 
     tokenizer = RobertaTokenizer.from_pretrained("roberta-base")
     print(tokenizer.tokenize(preprocessed_text_2))
-
 
