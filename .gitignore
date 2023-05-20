@@ -171,3 +171,7 @@ SentimentAnalysis/Data/mock-data/train_embeddings_roberta.npy
 SentimentAnalysis/Data/mock-data/train.csv
 SentimentAnalysis/Data/mock-data/training.1600000.processed.noemoticon.csv
 SentimentAnalysis/Data/twitter-datasets/train_full_preprocessed.csv
+SentimentAnalysis/Data/twitter-datasets/preprocessed/test_preprocessed.csv
+SentimentAnalysis/Data/twitter-datasets/preprocessed/train_full_preprocessed.csv
+SentimentAnalysis/Data/twitter-datasets/preprocessed/train_preprocessed.csv
+SentimentAnalysis/Data/twitter-datasets/preprocessed/test_embeddings_roberta.npy
