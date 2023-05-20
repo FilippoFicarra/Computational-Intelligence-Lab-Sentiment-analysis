@@ -28,7 +28,9 @@ def preprocess_text(text):
         - str: the processed string
     """
     
-    return TextPreprocessor(constants.tool, constants.nlp).preprocess_text(text)
+    # return TextPreprocessor(constants.tool, constants.nlp).preprocess_text(text)
+    return TextPreprocessor().preprocess_text(text) # this speeds up the process
+
 
 def decode_sentiment(label):
     """
@@ -41,6 +43,6 @@ def decode_sentiment(label):
         - int: the label in integer format
     """
     
-    decode_map = {0: "NEGATIVE", 2: "NEUTRAL", 4: "POSITIVE"}
+    decode_map = {-1: "NEGATIVE", 1: "POSITIVE"}
     return decode_map[int(label)]
 
