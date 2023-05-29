@@ -176,3 +176,12 @@ SentimentAnalysis/Data/twitter-datasets/preprocessed/train_full_preprocessed.csv
 SentimentAnalysis/Data/twitter-datasets/preprocessed/train_preprocessed.csv
 SentimentAnalysis/Data/twitter-datasets/preprocessed/test_embeddings_roberta.npy
 SentimentAnalysis/Data/twitter-datasets/preprocessed/train_embeddings_roberta.npy
+SentimentAnalysis/Data/twitter-datasets/test_data.csv
+SentimentAnalysis/Data/twitter-datasets/preprocessed/test_data_preprocessed.csv
+SentimentAnalysis/Data/roberta_base_fine_tuned/config.json
+SentimentAnalysis/Data/roberta_base_fine_tuned/merges.txt
+SentimentAnalysis/Data/roberta_base_fine_tuned/pytorch_model.bin
+SentimentAnalysis/Data/roberta_base_fine_tuned/special_tokens_map.json
+SentimentAnalysis/Data/roberta_base_fine_tuned/tokenizer_config.json
+SentimentAnalysis/Data/roberta_base_fine_tuned/vocab.json
+SentimentAnalysis/Data/twitter-datasets/prediction.csv
