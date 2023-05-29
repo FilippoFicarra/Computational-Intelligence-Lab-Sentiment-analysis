@@ -8,6 +8,9 @@ from common import utils
 import multiprocessing
 import pandas as pd
 from tqdm.auto import tqdm
+from torch.nn import DataParallel
+import time
+
 # from NGrams.ngrams import NGrams
 # import environ
 # from  config import Config
@@ -30,6 +33,8 @@ class Embedder:
             self._model_name = 'roberta-large'
             self.tokenizer = RobertaTokenizer.from_pretrained(self._model_name)
             self.model = RobertaModel.from_pretrained(self._model_name)
+
+        self.model = DataParallel(self.model)
         self.model.eval()
 
 
@@ -45,10 +50,10 @@ class Embedder:
         """
 
         # Obtain the output embeddings
+        
         embeddings = []
         with torch.no_grad(), tqdm(total=len(texts), desc='Embedding Progress') as pbar:
             for i in range(0, len(texts), self.batch_size):
-                
                 # Tokenize the input texts
                 batch_inputs = self.tokenizer.batch_encode_plus(texts[i:i + self.batch_size], add_special_tokens=True, return_tensors='pt', padding=True, truncation=True)
                 batch_input_ids = batch_inputs['input_ids']
@@ -67,5 +72,6 @@ class Embedder:
                 pbar.update(batch_input_ids.shape[0])
 
         embeddings = torch.cat(embeddings, dim=0)  # Concatenate embeddings from all batches
+        
         return embeddings
 
