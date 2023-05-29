@@ -138,8 +138,12 @@ def load_embeddings(model_name : str, embedding_path : str) -> tuple[np.ndarray,
 @click.command()
 @click.option('--preprocess', is_flag=True, help='Perform preprocessing')
 @click.option('--embeddings', is_flag=True, help='Create embeddings')
-@click.option('--model', default='roberta', help='Model name')
+@click.option('--model', default='roberta-large', help='Model name')
 def main(preprocess : bool, embeddings : bool, model : str) -> None:
+
+    if model not in ['roberta-large', 'bert-large-uncased', 'roberta-base', 'bert-base-uncased']:
+        print(colored("The model name is not valid. Please use one of the following: roberta-large, bert-large-uncased, roberta-base, bert-base-uncased.", "red"))
+        sys.exit()
 
 
     DATASET_ENCODING = None 

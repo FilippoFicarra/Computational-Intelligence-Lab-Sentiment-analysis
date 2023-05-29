@@ -25,14 +25,12 @@ class Embedder:
     def __init__(self, model_name : str = 'bert'):
         self.model_name = model_name
         self.batch_size = 32
-        if self.model_name == 'bert':
-            self._model_name = 'bert-large-uncased'
-            self.tokenizer = BertTokenizer.from_pretrained(self._model_name)
-            self.model = BertModel.from_pretrained(self._model_name)
-        elif self.model_name == 'roberta':
-            self._model_name = 'roberta-large'
-            self.tokenizer = RobertaTokenizer.from_pretrained(self._model_name)
-            self.model = RobertaModel.from_pretrained(self._model_name)
+        if 'bert' in self.model_name and not 'roberta' in self.model_name:
+            self.tokenizer = BertTokenizer.from_pretrained(self.model_name)
+            self.model = BertModel.from_pretrained(self.model_name)
+        elif 'roberta' in self.model_name:
+            self.tokenizer = RobertaTokenizer.from_pretrained(self.model_name)
+            self.model = RobertaModel.from_pretrained(self.model_name)
 
         self.model = DataParallel(self.model)
         self.model.eval()
@@ -59,12 +57,12 @@ class Embedder:
                 batch_input_ids = batch_inputs['input_ids']
                 batch_attention_masks = batch_inputs['attention_mask']
 
-                if self.model_name == 'bert':
+                if 'bert' in self.model_name and not 'roberta' in self.model_name:
                     batch_token_type_ids = batch_inputs['token_type_ids']
 
-                if self.model_name == 'bert':
+                if 'bert' in self.model_name and not 'roberta' in self.model_name:
                     outputs = self.model(batch_input_ids, attention_mask=batch_attention_masks, token_type_ids=batch_token_type_ids)
-                elif self.model_name == 'roberta':
+                elif 'roberta' in self.model_name:
                     outputs = self.model(batch_input_ids, attention_mask=batch_attention_masks)
                 batch_embeddings = outputs.last_hidden_state[:, 0, :]  # Extract the embeddings for the [CLS] token of each input
 
