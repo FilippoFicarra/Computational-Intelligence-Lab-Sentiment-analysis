@@ -1,3 +1,4 @@
+import sys
 from DataFrameManager.dataframeManager import DataFrameManager
 from Embedder.embedder import Embedder
 import os
@@ -48,9 +49,10 @@ def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager,
 
     """
     
-    if not os.path.exists(dst_filepath):
-        raise Exception(colored("The file does not exist. Please use --preprocess as argument when running the script again.", "red"))
-    
+    if not os.path.isfile(dst_filepath):
+        print(colored("The file does not exist. Please use --preprocess as argument when running the script again.", "red"))
+        sys.exit()
+        
     print("Loading the preprocessed data...")
 
     df = data_frame_manager.load_dataframe(filepath=dst_filepath, encoding=encoding, preprocess=False)
@@ -62,7 +64,7 @@ def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager,
     data_frame_manager.export_dataframe(train_df, filepath=split_path + "train_preprocessed.csv", encoding=encoding)
     data_frame_manager.export_dataframe(test_df, filepath=split_path + "test_preprocessed.csv", encoding=encoding)
 
-    print("Data loaded.")
+    print(colored("Data loaded.", "blue"))
 
     return train_df, test_df
 
@@ -83,7 +85,7 @@ def create_embeddings(model_name : str, embedding_path :str, train_df : pd.DataF
 
     embed = Embedder(model_name)
     # Get the embeddings for the test set
-    if not os.path.exists(f'{embedding_path}test_embeddings_{model_name}.npy'):
+    if not os.path.isfile(f'{embedding_path}test_embeddings_{model_name}.npy'):
         with open(f'{embedding_path}test_embeddings_{model_name}.npy', 'wb'):
             pass
     
@@ -95,7 +97,7 @@ def create_embeddings(model_name : str, embedding_path :str, train_df : pd.DataF
         np.save(f, test_embeddings.numpy())
 
     # Get the embeddings for the train set
-    if not os.path.exists(f'{embedding_path}train_embeddings_{model_name}.npy'):
+    if not os.path.isfile(f'{embedding_path}train_embeddings_{model_name}.npy'):
         with open(f'{embedding_path}train_embeddings_{model_name}.npy', 'wb'):
             pass
     
@@ -120,13 +122,14 @@ def load_embeddings(model_name : str, embedding_path : str) -> tuple[np.ndarray,
         train_embeddings, test_embeddings (tuple[np.ndarray, np.ndarray]): The train and test embeddings.
         
     """
-    if not os.path.exists(f'{embedding_path}test_embeddings_{model_name}.npy') or not os.path.exists(f'{embedding_path}train_embeddings_{model_name}.npy'):
-            raise Exception(colored("The file does not exist. Please set --embedddings as argument when running the script again.", "red"))
-        
+    if not os.path.isfile(f'{embedding_path}test_embeddings_{model_name}.npy') or not os.path.exists(f'{embedding_path}train_embeddings_{model_name}.npy'):
+        print(colored("The file does not exist. Please set --embedddings as argument when running the script again.", "red"))
+        sys.exit()     
+       
     print("Loading the embeddings...")
     test_embeddings = np.load(f'{embedding_path}test_embeddings_{model_name}.npy', allow_pickle=True)
     train_embeddings = np.load(f'{embedding_path}train_embeddings_{model_name}.npy', allow_pickle=True)
-    print("Embeddings loaded.")
+    print(colored("Embeddings loaded.", "blue"))
 
     return train_embeddings, test_embeddings
 
