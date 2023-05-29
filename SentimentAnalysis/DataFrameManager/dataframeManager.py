@@ -67,11 +67,12 @@ class DataFrameManager:
         
         pool = multiprocessing.Pool(processes=self._num_cpus)
     
-        results_target = pool.map(utils.wrapper, [(partition.target, utils.decode_sentiment)  for partition in partitions])
+        if "target" in partitions[0].columns:
+            results_target = pool.map(utils.wrapper, [(partition.target, utils.decode_sentiment)  for partition in partitions])
         results_text = pool.map(utils.wrapper, [(partition.text, utils.preprocess_text)  for partition in partitions])
         df.text = pd.concat(results_text)
-        df.target = pd.concat(results_target)
-
+        if "target" in partitions[0].columns:
+            df.target = pd.concat(results_target)
         return df
 
 
@@ -87,14 +88,12 @@ class DataFrameManager:
         Returns:
             - df : pd.DataFrame
         """
-        
+        df = pd.read_csv(filepath, encoding=encoding, names=names)
+
         if preprocess: 
-            df = pd.read_csv(filepath, encoding=encoding, names=names)
             print("Preprocessing the text...")
             df = df.sample(n=df.shape[0], random_state=42)
             df = self.preprocess_df(df)
-        else:
-            df = pd.read_csv(filepath, encoding=encoding, names=names)
         return df.dropna().reset_index(drop=True)
 
     def export_dataframe(self, df : pd.DataFrame, filepath : str, encoding=None) -> None:
