@@ -1,6 +1,6 @@
 import sys
-from data_frame_manager.data_frame_manager import DataFrameManager
 from embedder.embedder import Embedder
+from data_frame_manager.data_frame_manager import DataFrameManager
 import os
 import numpy as np
 import pandas as pd
