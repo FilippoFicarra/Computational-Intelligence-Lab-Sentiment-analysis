@@ -1,5 +1,5 @@
 import sys
-from DataFrameManager.dataframeManager import DataFrameManager
+from DataFrameManager.data_frame_manager import DataFrameManager
 from Embedder.embedder import Embedder
 import os
 import numpy as np
