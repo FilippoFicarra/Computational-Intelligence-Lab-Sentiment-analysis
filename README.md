@@ -12,7 +12,7 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 │   └── twitter-datasets/
 ├── DataFrameManager
 │   ├── __init__.py
-│   └── dataframeManager.py
+│   └── data_frame_manager.py
 ├── Embedder
 │   ├── __init__.py
 │   └── embedder.py
@@ -21,7 +21,7 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 │   └── ngrams.py
 ├── Preprocessing
 │   ├── __init__.py
-│   └── textPreprocessor.py
+│   └── text_preprocessor.py
 ├── __init__.py
 ├── common
 │   ├── constants.py
