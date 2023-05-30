@@ -1,5 +1,5 @@
 from distutils.errors import PreprocessError
-from Preprocessing.text_preprocessor import TextPreprocessor
+from preprocessor.text_preprocessor import TextPreprocessor
 from common  import constants
 
 

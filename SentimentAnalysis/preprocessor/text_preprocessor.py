@@ -1,6 +1,6 @@
 import re
 # from nltk.corpus import stopwords
-from common import constants
+# from common import constants
 import contractions
 import emoji
 from emot.emo_unicode import EMOTICONS_EMO
