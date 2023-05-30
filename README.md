@@ -5,21 +5,21 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 
 # The structure of the project:
 ```bash
-├── Data
+├── data
 │   ├── preprocessed.csv
 │   ├── test_embeddings_roberta.npy
 │   ├── train_embeddings_roberta.npy
 │   └── twitter-datasets/
-├── DataFrameManager
+├── data_frame_manager
 │   ├── __init__.py
 │   └── data_frame_manager.py
-├── Embedder
+├── embedder
 │   ├── __init__.py
 │   └── embedder.py
-├── NGrams
+├── ngrams
 │   ├── __init__.py
 │   └── ngrams.py
-├── Preprocessing
+├── preprocessor
 │   ├── __init__.py
 │   └── text_preprocessor.py
 ├── __init__.py

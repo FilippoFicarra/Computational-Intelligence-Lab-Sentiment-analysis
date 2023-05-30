@@ -149,9 +149,9 @@ def main(preprocess : bool, embeddings : bool, model : str) -> None:
     DATASET_ENCODING = None 
     data_frame_manager = DataFrameManager(num_cpus=4)
 
-    src_preprocess_filepath = "Data/twitter-datasets/train_full.csv"
-    dst_preprocess_filepath = "Data/twitter-datasets/preprocessed/train_full_preprocessed.csv"
-    PATH = "Data/twitter-datasets/preprocessed/"
+    src_preprocess_filepath = "data/twitter-datasets/train_full.csv"
+    dst_preprocess_filepath = "data/twitter-datasets/preprocessed/train_full_preprocessed.csv"
+    PATH = "data/twitter-datasets/preprocessed/"
 
     if preprocess:
         train_df, test_df = preprocess_data(src_preprocess_filepath, dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING)
