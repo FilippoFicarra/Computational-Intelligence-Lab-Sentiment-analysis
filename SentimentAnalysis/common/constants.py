@@ -1,6 +1,6 @@
-from nltk.corpus import stopwords
-import language_tool_python
-import spacy
+# from nltk.corpus import stopwords
+# import language_tool_python
+# import spacy
 
 # ---- Imports for preprocessing. Must be treated as constants. ----#
 # stop_words = set(stopwords.words('english'))
