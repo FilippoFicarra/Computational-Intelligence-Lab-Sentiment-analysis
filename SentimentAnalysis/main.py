@@ -9,7 +9,7 @@ from termcolor import colored
 
 
 
-def preprocess_data(src_filepath : str, dst_filepath : str, data_frame_manager : DataFrameManager, encoding : str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def preprocess_data(src_filepath : str, dst_filepath : str, data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Preprocesses the data and saves it to a CSV file.
     
@@ -27,10 +27,16 @@ def preprocess_data(src_filepath : str, dst_filepath : str, data_frame_manager :
     print("Starting preprocessing...")
     df = data_frame_manager.load_dataframe(filepath=src_filepath, encoding=encoding)
 
-    train_df, test_df = data_frame_manager.split(df = df)
-
     data_frame_manager.export_dataframe(df, filepath=dst_filepath, encoding=encoding)
     print("Preprocessing done and saved to CSV file.")
+
+
+    print("Splitting the data...")
+
+    train_df, test_df = data_frame_manager.split(df = df)
+
+    data_frame_manager.export_dataframe(train_df, filepath=split_path + "train_preprocessed.csv", encoding=encoding)
+    data_frame_manager.export_dataframe(test_df, filepath=split_path + "test_preprocessed.csv", encoding=encoding)
 
     return train_df, test_df
 
@@ -48,9 +54,18 @@ def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager,
         train_df, test_df (tuple[pd.DataFrame, pd.DataFrame]): The train and test sets.
 
     """
+
+    if os.path.isfile(split_path + "train_preprocessed.csv") and os.path.isfile(split_path + "test_preprocessed.csv"):
+        print(colored("The train and test sets already exist. Loading them...", "blue"))
+        train_df = data_frame_manager.load_dataframe(filepath=split_path + "train_preprocessed.csv", encoding=encoding, preprocess=False)
+        test_df = data_frame_manager.load_dataframe(filepath=split_path + "test_preprocessed.csv", encoding=encoding, preprocess=False)
+            
+        print(colored("Data loaded.", "blue"))
+
+        return train_df, test_df
     
     if not os.path.isfile(dst_filepath):
-        print(colored("The file does not exist. Please use --preprocess as argument when running the script again.", "red"))
+        print(colored(f"The file {dst_filepath} does not exist. Please use --preprocess as argument when running the script again.", "red"))
         sys.exit()
         
     print("Loading the preprocessed data...")
@@ -63,6 +78,7 @@ def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager,
 
     data_frame_manager.export_dataframe(train_df, filepath=split_path + "train_preprocessed.csv", encoding=encoding)
     data_frame_manager.export_dataframe(test_df, filepath=split_path + "test_preprocessed.csv", encoding=encoding)
+    
 
     print(colored("Data loaded.", "blue"))
 
@@ -154,7 +170,7 @@ def main(preprocess : bool, embeddings : bool, model : str) -> None:
     PATH = "data/twitter-datasets/preprocessed/"
 
     if preprocess:
-        train_df, test_df = preprocess_data(src_preprocess_filepath, dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING)
+        train_df, test_df = preprocess_data(src_preprocess_filepath, dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
     else:
         train_df, test_df = load_preprocessed(dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
 
