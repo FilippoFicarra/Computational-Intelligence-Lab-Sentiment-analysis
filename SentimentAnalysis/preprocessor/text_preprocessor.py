@@ -180,8 +180,8 @@ class TextPreprocessor:
         text = re.sub("<url>", "xxurl", text)
         ## convert emoticons
         text = self.convert_emoticons(text)
-        ## split the hashtags to preserve the words
-        text = text.replace("#", "# ")
+        ## treat the hashtags as specialtokens
+        text = text.replace("#", "xx")
         ## remove usless spaces
         text = re.sub("\\s+", " ", text)
 
