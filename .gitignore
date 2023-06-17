@@ -185,3 +185,4 @@ SentimentAnalysis/data/roberta_base_fine_tuned/special_tokens_map.json
 SentimentAnalysis/data/roberta_base_fine_tuned/tokenizer_config.json
 SentimentAnalysis/data/roberta_base_fine_tuned/vocab.json
 SentimentAnalysis/data/twitter-datasets/prediction.csv
+SentimentAnalysis/data/twitter-datasets/preprocessed/test_embeddings_roberta-large.npy

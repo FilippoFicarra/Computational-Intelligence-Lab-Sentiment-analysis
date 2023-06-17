@@ -176,8 +176,8 @@ def main(preprocess : bool, embeddings : bool, model : str) -> None:
 
     if embeddings:
         train_embeddings, test_embeddings = create_embeddings(model, PATH, train_df, test_df)
-    else:
-        train_embeddings, test_embeddings = load_embeddings(model, PATH)
+    # else:
+    #     train_embeddings, test_embeddings = load_embeddings(model, PATH)
     
 
 

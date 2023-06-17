@@ -24,7 +24,7 @@ class Embedder:
     """
     def __init__(self, model_name : str = 'bert'):
         self.model_name = model_name
-        self.batch_size = 32
+        self.batch_size = 64
         if 'bert' in self.model_name and not 'roberta' in self.model_name:
             self.tokenizer = BertTokenizer.from_pretrained(self.model_name)
             self.model = BertModel.from_pretrained(self.model_name)
@@ -32,6 +32,9 @@ class Embedder:
             self.tokenizer = RobertaTokenizer.from_pretrained(self.model_name)
             self.model = RobertaModel.from_pretrained(self.model_name)
 
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("mps") # for m1 mac
+        self.model.to(self.device)
         self.model = DataParallel(self.model)
         self.model.eval()
 
@@ -53,7 +56,7 @@ class Embedder:
         with torch.no_grad(), tqdm(total=len(texts), desc='Embedding Progress') as pbar:
             for i in range(0, len(texts), self.batch_size):
                 # Tokenize the input texts
-                batch_inputs = self.tokenizer.batch_encode_plus(texts[i:i + self.batch_size], add_special_tokens=True, return_tensors='pt', padding=True, truncation=True)
+                batch_inputs = self.tokenizer.batch_encode_plus(texts[i:i + self.batch_size], add_special_tokens=True, return_tensors='pt', padding=True, truncation=True).to(self.device)
                 batch_input_ids = batch_inputs['input_ids']
                 batch_attention_masks = batch_inputs['attention_mask']
 
