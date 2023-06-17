@@ -2,9 +2,9 @@ import numpy as np
 from common import utils
 import multiprocessing
 import pandas as pd
-# from Preprocessing.textPreprocessor import TextPreprocessor
 from tqdm.auto import tqdm
 from sklearn.model_selection import train_test_split
+import csv
 
 
 
@@ -26,6 +26,31 @@ class DataFrameManager:
     
     def __init__(self, num_cpus : int = 1):
         self._num_cpus = num_cpus
+
+    def txt_to_csv(self, txt_file, csv_file, delimiter='\n'):
+        """
+        This function converts a text file to a CSV file.
+
+        Args:
+            - txt_file : str
+            - csv_file : str
+            - delimiter : str
+        Returns:
+            - None
+        """
+
+        # Open the input and output files
+        with open(txt_file, 'r') as input_file, open(csv_file, 'w', newline='') as output_file:
+            # Create a CSV writer
+            csv_writer = csv.writer(output_file)
+
+            # Process each line in the text file
+            for line in input_file:
+                # Split the line by any delimiters and extract the data
+                data = line.strip().split(delimiter)  # Change '\t' to the appropriate delimiter
+
+                # Write the data to the CSV file
+                csv_writer.writerow(data)
     
     def preprocess_df(self, df):
         """
@@ -41,11 +66,12 @@ class DataFrameManager:
         
         pool = multiprocessing.Pool(processes=self._num_cpus)
     
-        results_target = pool.map(utils.wrapper, [(partition.target, utils.decode_sentiment)  for partition in partitions])
+        if "target" in partitions[0].columns:
+            results_target = pool.map(utils.wrapper, [(partition.target, utils.decode_sentiment)  for partition in partitions])
         results_text = pool.map(utils.wrapper, [(partition.text, utils.preprocess_text)  for partition in partitions])
         df.text = pd.concat(results_text)
-        df.target = pd.concat(results_target)
-
+        if "target" in partitions[0].columns:
+            df.target = pd.concat(results_target)
         return df
 
 
@@ -61,15 +87,12 @@ class DataFrameManager:
         Returns:
             - df : pd.DataFrame
         """
-        
-        
-        if preprocess:
-            df = pd.read_csv(filepath, encoding=encoding, names=names).sample(n=100000, random_state=42).reset_index(drop=True)
+        df = pd.read_csv(filepath, encoding=encoding, names=names)
+
+        if preprocess: 
             print("Preprocessing the text...")
             df = df.sample(n=df.shape[0], random_state=42)
             df = self.preprocess_df(df)
-        else:
-            df = pd.read_csv(filepath, encoding=encoding, names=names)
         return df.dropna().reset_index(drop=True)
 
     def export_dataframe(self, df : pd.DataFrame, filepath : str, encoding=None) -> None:

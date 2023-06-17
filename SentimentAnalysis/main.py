@@ -1,162 +1,185 @@
-from DataFrameManager.dataframeManager import DataFrameManager
-from Embedder.embedder import Embedder
+import sys
+from embedder.embedder import Embedder
+from data_frame_manager.data_frame_manager import DataFrameManager
 import os
 import numpy as np
 import pandas as pd
+import click
+from termcolor import colored
+
+
+
+def preprocess_data(src_filepath : str, dst_filepath : str, data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Preprocesses the data and saves it to a CSV file.
+    
+    Args:
+        src_filepath (str): The path to the CSV file containing the data.
+        dst_filepath (str): The path to the CSV file where the preprocessed data will be saved.
+        data_frame_manager (DataFrameManager): The DataFrameManager object.
+        encoding (str): The encoding of the CSV file.
+
+    Returns:
+        train_df, test_df (tuple[pd.DataFrame, pd.DataFrame]): The train and test sets.
+
+    """
+    
+    print("Starting preprocessing...")
+    df = data_frame_manager.load_dataframe(filepath=src_filepath, encoding=encoding)
+
+    data_frame_manager.export_dataframe(df, filepath=dst_filepath, encoding=encoding)
+    print("Preprocessing done and saved to CSV file.")
+
+
+    print("Splitting the data...")
+
+    train_df, test_df = data_frame_manager.split(df = df)
+
+    data_frame_manager.export_dataframe(train_df, filepath=split_path + "train_preprocessed.csv", encoding=encoding)
+    data_frame_manager.export_dataframe(test_df, filepath=split_path + "test_preprocessed.csv", encoding=encoding)
+
+    return train_df, test_df
+
+def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """
+    Loads the preprocessed data from a CSV file and splits it into train and test sets.
+
+    Args:
+        dst_filepath (str): The path to the CSV file containing the preprocessed data.
+        data_frame_manager (DataFrameManager): The DataFrameManager object.
+        encoding (str): The encoding of the CSV file.
+        split_path (str): The path to the folder where the train and test sets will be saved.
+
+    Returns:
+        train_df, test_df (tuple[pd.DataFrame, pd.DataFrame]): The train and test sets.
+
+    """
+
+    if os.path.isfile(split_path + "train_preprocessed.csv") and os.path.isfile(split_path + "test_preprocessed.csv"):
+        print(colored("The train and test sets already exist. Loading them...", "blue"))
+        train_df = data_frame_manager.load_dataframe(filepath=split_path + "train_preprocessed.csv", encoding=encoding, preprocess=False)
+        test_df = data_frame_manager.load_dataframe(filepath=split_path + "test_preprocessed.csv", encoding=encoding, preprocess=False)
+            
+        print(colored("Data loaded.", "blue"))
+
+        return train_df, test_df
+    
+    if not os.path.isfile(dst_filepath):
+        print(colored(f"The file {dst_filepath} does not exist. Please use --preprocess as argument when running the script again.", "red"))
+        sys.exit()
+        
+    print("Loading the preprocessed data...")
+
+    df = data_frame_manager.load_dataframe(filepath=dst_filepath, encoding=encoding, preprocess=False)
+
+    print("Splitting the data...")
+
+    train_df, test_df = data_frame_manager.split(df = df)
+
+    data_frame_manager.export_dataframe(train_df, filepath=split_path + "train_preprocessed.csv", encoding=encoding)
+    data_frame_manager.export_dataframe(test_df, filepath=split_path + "test_preprocessed.csv", encoding=encoding)
+    
+
+    print(colored("Data loaded.", "blue"))
+
+    return train_df, test_df
+
+def create_embeddings(model_name : str, embedding_path :str, train_df : pd.DataFrame, test_df : pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Creates the embeddings for the train and test sets and saves them to a NPY file.
+
+    Args:
+        model_name (str): The name of the model to be used for creating the embeddings.
+        embedding_path (str): The path to the folder where the embeddings will be saved.
+        train_df (pd.DataFrame): The train set.
+        test_df (pd.DataFrame): The test set.
+
+    Returns:
+        train_embeddings, test_embeddings (tuple[np.ndarray, np.ndarray]): The train and test embeddings.
+
+    """
+
+    embed = Embedder(model_name)
+    # Get the embeddings for the test set
+    if not os.path.isfile(f'{embedding_path}test_embeddings_{model_name}.npy'):
+        with open(f'{embedding_path}test_embeddings_{model_name}.npy', 'wb'):
+            pass
+    
+    print("Getting the embeddings for the test set...")
+    test_embeddings = embed.get_embeddings(test_df['text'])
+    print("Saving the embeddings...")
+
+    with open(f'{embedding_path}test_embeddings_{model_name}.npy', 'wb') as f:
+        np.save(f, test_embeddings.numpy())
+
+    # Get the embeddings for the train set
+    if not os.path.isfile(f'{embedding_path}train_embeddings_{model_name}.npy'):
+        with open(f'{embedding_path}train_embeddings_{model_name}.npy', 'wb'):
+            pass
+    
+    print("Getting the embeddings for the train set...")
+    train_embeddings = embed.get_embeddings(train_df['text'])
+    print("Saving the embeddings...")
+
+    with open(f'{embedding_path}train_embeddings_{model_name}.npy', 'wb') as f:
+        np.save(f, train_embeddings.numpy())
+
+    return train_embeddings, test_embeddings
+
+def load_embeddings(model_name : str, embedding_path : str) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Loads the embeddings from a NPY file.
+    
+    Args:
+        model_name (str): The name of the model used for creating the embeddings.
+        embedding_path (str): The path to the folder where the embeddings are saved.
+        
+    Returns:
+        train_embeddings, test_embeddings (tuple[np.ndarray, np.ndarray]): The train and test embeddings.
+        
+    """
+    if not os.path.isfile(f'{embedding_path}test_embeddings_{model_name}.npy') or not os.path.exists(f'{embedding_path}train_embeddings_{model_name}.npy'):
+        print(colored("The file does not exist. Please set --embedddings as argument when running the script again.", "red"))
+        sys.exit()     
+       
+    print("Loading the embeddings...")
+    test_embeddings = np.load(f'{embedding_path}test_embeddings_{model_name}.npy', allow_pickle=True)
+    train_embeddings = np.load(f'{embedding_path}train_embeddings_{model_name}.npy', allow_pickle=True)
+    print(colored("Embeddings loaded.", "blue"))
+
+    return train_embeddings, test_embeddings
+
+
+
+@click.command()
+@click.option('--preprocess', is_flag=True, help='Perform preprocessing')
+@click.option('--embeddings', is_flag=True, help='Create embeddings')
+@click.option('--model', default='roberta-large', help='Model name')
+def main(preprocess : bool, embeddings : bool, model : str) -> None:
+
+    if model not in ['roberta-large', 'bert-large-uncased', 'roberta-base', 'bert-base-uncased']:
+        print(colored("The model name is not valid. Please use one of the following: roberta-large, bert-large-uncased, roberta-base, bert-base-uncased.", "red"))
+        sys.exit()
+
+
+    DATASET_ENCODING = None 
+    data_frame_manager = DataFrameManager(num_cpus=4)
+
+    src_preprocess_filepath = "data/twitter-datasets/train_full.csv"
+    dst_preprocess_filepath = "data/twitter-datasets/preprocessed/train_full_preprocessed.csv"
+    PATH = "data/twitter-datasets/preprocessed/"
+
+    if preprocess:
+        train_df, test_df = preprocess_data(src_preprocess_filepath, dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
+    else:
+        train_df, test_df = load_preprocessed(dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
+
+    if embeddings:
+        train_embeddings, test_embeddings = create_embeddings(model, PATH, train_df, test_df)
+    else:
+        train_embeddings, test_embeddings = load_embeddings(model, PATH)
+    
+
 
 if __name__ == '__main__':
-    
-    DATASET_COLUMNS = ["target", "ids", "date", "flag", "user", "text"]
-    DATASET_ENCODING = "ISO-8859-1"
-
-    PREPROCESSING = False
-    CREATE_EMBEDDINGS = True 
-    MODEL_NAME = 'roberta'
-
-    data_frame_manager = DataFrameManager(num_cpus=4)
-    embed = Embedder(MODEL_NAME)
-
-    if PREPROCESSING:
-        if not os.path.exists('SentimentAnalysis/Data/preprocessed.csv'):
-            with open('SentimentAnalysis/Data/preprocessed.csv', 'w'):
-                pass
-
-        print("Starting preprocessing...")
-        df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/training.1600000.processed.noemoticon.csv", encoding=DATASET_ENCODING, names=DATASET_COLUMNS)
-        print(df.shape)
-        data_frame_manager.export_dataframe(df, filepath="SentimentAnalysis/Data/preprocessed.csv", encoding=DATASET_ENCODING)
-        print("Preprocessing done and saved to CSV file.")
-        exit()
-    else:
-        if not os.path.exists('SentimentAnalysis/Data/preprocessed.csv'):
-            raise Exception("The file does not exist. Please set PREPROCESSING to True and run the script again.")
-        print("Loading the preprocessed data...")
-        df = data_frame_manager.load_dataframe(filepath="SentimentAnalysis/Data/preprocessed.csv", encoding=DATASET_ENCODING, preprocess=False)
-        print(df.shape)
-        print("Splitting the data...")
-        train_df, test_df = data_frame_manager.split(df = df)
-        print("Data loaded.")
-    if CREATE_EMBEDDINGS:
-        # Get the embeddings for the test set
-        if not os.path.exists(f'SentimentAnalysis/Data/test_embeddings_{MODEL_NAME}.npy'):
-            with open(f'SentimentAnalysis/Data/test_embeddings_{MODEL_NAME}.npy', 'wb'):
-                pass
-        print("Getting the embeddings for the test set...")
-        test_embeddings = embed.get_embeddings(test_df['text'])
-        print("Saving the embeddings...")
-
-        with open(f'SentimentAnalysis/Data/test_embeddings_{MODEL_NAME}.npy', 'wb') as f:
-            np.save(f, test_embeddings.numpy())
-
-        # Get the embeddings for the train set
-        if not os.path.exists(f'SentimentAnalysis/Data/train_embeddings_{MODEL_NAME}.npy'):
-            with open(f'SentimentAnalysis/Data/train_embeddings_{MODEL_NAME}.npy', 'wb'):
-                pass
-        print("Getting the embeddings for the train set...")
-        train_embeddings = embed.get_embeddings(train_df['text'])
-        print("Saving the embeddings...")
-
-        with open(f'SentimentAnalysis/Data/train_embeddings_{MODEL_NAME}.npy', 'wb') as f:
-            np.save(f, train_embeddings.numpy())
-    else:
-
-        if not os.path.exists(F'SentimentAnalysis/Data/test_embeddings_{MODEL_NAME}.npy') or not os.path.exists(f'SentimentAnalysis/Data/train_embeddings_{MODEL_NAME}.npy'):
-            raise Exception("The file does not exist. Please set CREATE_EMBEDDINGS to True and run the script again.")
-        
-        print("Loading the embeddings...")
-        test_embeddings = np.load(f'SentimentAnalysis/Data/test_embeddings_{MODEL_NAME}.npy', allow_pickle=True)
-        train_embeddings = np.load(f'SentimentAnalysis/Data/train_embeddings_{MODEL_NAME}.npy', allow_pickle=True)
-        print("Embeddings loaded.")
-
-
-    print("Train embeddings shape: ", train_embeddings.shape)
-    print("Test embeddings shape: ", test_embeddings.shape)
-
-
-"""
-# encode_map = {"NEGATIVE" : 0, "NEUTRAL" : 2, "POSITIVE" : 4}
-    
-
-    # train_labels = train_df["target"].map(encode_map).to_list()
-    # test_labels = test_df["target"].map(encode_map).to_list()
-
-
-    
-
-    # # Start training
-    # from sklearn.linear_model import LogisticRegression
-    # from sklearn.metrics import accuracy_score
-    # from sklearn.model_selection import cross_val_score
-    # from sklearn.model_selection import GridSearchCV
-
-    # # # Define the hyperparameter grid
-    # # param_grid = {
-    # #     'C': [0.1, 1.0, 10.0, 100.0],
-    # #     'max_iter': [100, 1000, 2500],
-    # #     'random_state': [42],
-
-    # # }
-
-    # # # Create the Logistic Regression classifier
-    # # classifier_lr = LogisticRegression()
-
-    # # # Perform grid search with cross-validation
-    # # grid_search = GridSearchCV(classifier_lr, param_grid, cv=5)
-    # # grid_search.fit(train_embeddings, train_labels)
-
-    # # # Get the best hyperparameters and best score
-    # # best_params = grid_search.best_params_
-    # # best_score = grid_search.best_score_
-
-    # # print("Best Hyperparameters: ", best_params)
-    # # print("Best Score: ", best_score)
-
-    # # # Fit the model with the best hyperparameters on the entire training data
-    # # best_classifier_lr = LogisticRegression(**best_params)
-    # # best_classifier_lr.fit(train_embeddings, train_labels)
-
-    # # # Predict on the test set
-    # # predictions_lr = best_classifier_lr.predict(test_embeddings)
-
-    # # # Calculate the accuracy score
-    # # accuracy_lr = accuracy_score(test_labels, predictions_lr)
-    # # print("Accuracy score for Logistic Regression: ", accuracy_lr)
-
-
-
-    # # Start training a Random Forest Classifier
-    # from sklearn.ensemble import RandomForestClassifier
-    # # Define the hyperparameter grid
-    # param_grid = {
-    #     'n_estimators': [100, 200, 300],
-    #     'max_depth': [5, 10],
-    #     'min_samples_split': [2, 5, 10]
-    # }
-
-    # # Create the Random Forest classifier
-    # classifier_rf = RandomForestClassifier()
-
-    # # Perform grid search with cross-validation
-    # grid_search = GridSearchCV(classifier_rf, param_grid, cv=5)
-    # grid_search.fit(train_embeddings, train_labels)
-
-    # # Get the best hyperparameters and best score
-    # best_params = grid_search.best_params_
-    # best_score = grid_search.best_score_
-
-    # print("Best Hyperparameters: ", best_params)
-    # print("Best Score: ", best_score)
-
-    # # Fit the model with the best hyperparameters on the entire training data
-    # best_classifier_rf = RandomForestClassifier(**best_params)
-    # best_classifier_rf.fit(train_embeddings, train_labels)
-
-    # # Predict on the test set
-    # predictions_rf = best_classifier_rf.predict(test_embeddings)
-
-    # # Calculate the accuracy score
-    # accuracy_rf = accuracy_score(test_labels, predictions_rf)
-    # print("Accuracy score for Random Forest: ", accuracy_rf)
-"""
-    
-        
+    main()

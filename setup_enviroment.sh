@@ -1,13 +1,11 @@
 #!/bin/bash
-virtualenv ./venv
+python3 -m venv venv
 
 # linux and macOS
 source venv/bin/activate
 
 # Windows
 # .\venv\Scripts\activate
-
-# export PYTHONPATH="${PYTHONPATH}:SentimentAnalysis" # for linux and macOS run this inside your virtualenv
 
 pip install language-tool-python
 pip install contractions
@@ -39,13 +37,14 @@ pip install environ-config==23.2.0
 
 pip install emoji
 pip install emot
+pip install termcolor
 # spacy
-python -m spacy download en_core_web_sm
+python3 -m spacy download en_core_web_sm
 
 # nltk
 pip install nltk
-python -c "import nltk; nltk.download('wordnet')"
-python -c "import nltk; nltk.download('stopwords')"
-python -c "import nltk; nltk.download('vader_lexicon')"
-python -c "import nltk; nltk.download('punkt')"
+python3 -c "import nltk; nltk.download('wordnet')"
+python3 -c "import nltk; nltk.download('stopwords')"
+python3 -c "import nltk; nltk.download('vader_lexicon')"
+python3 -c "import nltk; nltk.download('punkt')"
 
