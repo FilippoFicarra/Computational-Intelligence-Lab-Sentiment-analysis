@@ -59,6 +59,8 @@ This will merge all the positive and negative sentences into a unique dataframe.
 NOTE: some sentences strangely are labeled both as negative and positive. They are just discarded when running the script.
 
 # Start the project
+Start the virtual enviroment.
+
 Add the SentimentAnalysis as working directory.
 
 ```bash
