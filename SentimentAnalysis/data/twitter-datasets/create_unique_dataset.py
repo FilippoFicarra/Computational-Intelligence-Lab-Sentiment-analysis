@@ -1,5 +1,5 @@
 import pandas as pd
-from DataFrameManager.dataframeManager import DataFrameManager
+from data_frame_manager.data_frame_manager import DataFrameManager
 
 
 if __name__ == "__main__":
