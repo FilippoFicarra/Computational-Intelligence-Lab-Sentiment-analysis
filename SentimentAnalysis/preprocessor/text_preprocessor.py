@@ -8,6 +8,7 @@ from emot.emo_unicode import EMOTICONS_EMO
 EMOTICONS = EMOTICONS_EMO
  
 emoticons = {
+        "xd" : "laughoutloud",
         "=|": "emotneutral",
         "=-(": "emotfrown",
         "=-)": "emotsmile",

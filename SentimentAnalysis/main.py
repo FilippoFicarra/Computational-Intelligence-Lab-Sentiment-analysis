@@ -106,11 +106,11 @@ def create_embeddings(model_name : str, embedding_path :str, train_df : pd.DataF
             pass
     
     print("Getting the embeddings for the test set...")
-    test_embeddings = embed.get_embeddings(test_df['text'])
+    test_embeddings = embed.get_embeddings(test_df['text'], f'{embedding_path}test_embeddings_{model_name}.npy')
     print("Saving the embeddings...")
 
-    with open(f'{embedding_path}test_embeddings_{model_name}.npy', 'wb') as f:
-        np.save(f, test_embeddings.numpy())
+    # with open(f'{embedding_path}test_embeddings_{model_name}.npy', 'wb') as f:
+    #     np.save(f, test_embeddings.numpy())
 
     # Get the embeddings for the train set
     if not os.path.isfile(f'{embedding_path}train_embeddings_{model_name}.npy'):
@@ -118,11 +118,11 @@ def create_embeddings(model_name : str, embedding_path :str, train_df : pd.DataF
             pass
     
     print("Getting the embeddings for the train set...")
-    train_embeddings = embed.get_embeddings(train_df['text'])
+    train_embeddings = embed.get_embeddings(train_df['text'], f'{embedding_path}train_embeddings_{model_name}.npy')
     print("Saving the embeddings...")
 
-    with open(f'{embedding_path}train_embeddings_{model_name}.npy', 'wb') as f:
-        np.save(f, train_embeddings.numpy())
+    # with open(f'{embedding_path}train_embeddings_{model_name}.npy', 'wb') as f:
+    #     np.save(f, train_embeddings.numpy())
 
     return train_embeddings, test_embeddings
 
@@ -175,9 +175,11 @@ def main(preprocess : bool, embeddings : bool, model : str) -> None:
         train_df, test_df = load_preprocessed(dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
 
     if embeddings:
-        train_embeddings, test_embeddings = create_embeddings(model, PATH, train_df, test_df)
+        create_embeddings(model, PATH, train_df, test_df)
     # else:
     #     train_embeddings, test_embeddings = load_embeddings(model, PATH)
+
+
     
 
 
