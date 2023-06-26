@@ -7,8 +7,8 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 ```bash
 ├── data
 │   └── twitter-datasets/
-|        ├── preprocessed/
-|        └── create_unique_dataset.py
+│        ├── preprocessed/
+│        └── create_unique_dataset.py
 ├── data_frame_manager
 │   └── data_frame_manager.py
 ├── embedder
