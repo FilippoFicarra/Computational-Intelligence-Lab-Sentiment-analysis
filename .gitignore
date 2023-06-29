@@ -188,3 +188,6 @@ SentimentAnalysis/data/twitter-datasets/prediction.csv
 SentimentAnalysis/data/twitter-datasets/preprocessed/test_embeddings_roberta-large.npy
 SentimentAnalysis/data/twitter-datasets/preprocessed/test_embeddings_bert-base-uncased.npy
 SentimentAnalysis/data/twitter-datasets/preprocessed/train_embeddings_bert-base-uncased.npy
+SentimentAnalysis/twitter-roberta-base-sentiment/config.json
+SentimentAnalysis/twitter-roberta-base-sentiment/pytorch_model.bin
+SentimentAnalysis/data/twitter-datasets/predictions_twitter-roberta-base-sentiment.csv
