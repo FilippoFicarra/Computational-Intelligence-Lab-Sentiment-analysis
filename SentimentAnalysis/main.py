@@ -9,7 +9,7 @@ from termcolor import colored
 
 
 
-def preprocess_data(src_filepath : str, dst_filepath : str, data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def preprocess_data(src_filepath : str, dst_filepath : str, test_path : str,  data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
     Preprocesses the data and saves it to a CSV file.
     
@@ -26,6 +26,9 @@ def preprocess_data(src_filepath : str, dst_filepath : str, data_frame_manager :
     
     print("Starting preprocessing...")
     df = data_frame_manager.load_dataframe(filepath=src_filepath, encoding=encoding)
+    test_df = data_frame_manager.load_dataframe(filepath=test_path, encoding=encoding, test=True)
+
+    data_frame_manager.export_dataframe(test_df, filepath=split_path+"test_data_preprocessed.csv", encoding=encoding)
 
     data_frame_manager.export_dataframe(df, filepath=dst_filepath, encoding=encoding)
     print("Preprocessing done and saved to CSV file.")
@@ -166,11 +169,12 @@ def main(preprocess : bool, embeddings : bool, model : str) -> None:
     data_frame_manager = DataFrameManager(num_cpus=4)
 
     src_preprocess_filepath = "data/twitter-datasets/train_full.csv"
+    test_filepath = "data/twitter-datasets/test_data.csv"
     dst_preprocess_filepath = "data/twitter-datasets/preprocessed/train_full_preprocessed.csv"
     PATH = "data/twitter-datasets/preprocessed/"
 
     if preprocess:
-        train_df, test_df = preprocess_data(src_preprocess_filepath, dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
+        train_df, test_df = preprocess_data(src_preprocess_filepath, dst_preprocess_filepath, test_filepath, data_frame_manager, DATASET_ENCODING, PATH)
     else:
         train_df, test_df = load_preprocessed(dst_preprocess_filepath, data_frame_manager, DATASET_ENCODING, PATH)
 

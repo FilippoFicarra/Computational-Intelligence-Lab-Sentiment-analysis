@@ -75,7 +75,7 @@ class DataFrameManager:
         return df
 
 
-    def load_dataframe(self, filepath:str, encoding=None, names=None, preprocess=True) -> pd.DataFrame:
+    def load_dataframe(self, filepath:str, encoding=None, names=None, preprocess=True, test = False) -> pd.DataFrame:
         """
         This function loads the dataframe from a csv file.
 
@@ -84,6 +84,7 @@ class DataFrameManager:
             - encoding : str
             - names : list[str]
             - preprocess : bool
+            - test : bool
         Returns:
             - df : pd.DataFrame
         """
@@ -91,7 +92,8 @@ class DataFrameManager:
 
         if preprocess: 
             print("Preprocessing the text...")
-            df = df.sample(n=df.shape[0], random_state=42)
+            if not test:
+                df = df.sample(n=df.shape[0], random_state=42)
             df = self.preprocess_df(df)
         return df.dropna().reset_index(drop=True)
 
