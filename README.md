@@ -6,23 +6,17 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 # The structure of the project:
 ```bash
 ├── data
-│   ├── preprocessed.csv
-│   ├── test_embeddings_roberta.npy
-│   ├── train_embeddings_roberta.npy
 │   └── twitter-datasets/
+│        ├── preprocessed/
+│        └── create_unique_dataset.py
 ├── data_frame_manager
-│   ├── __init__.py
 │   └── data_frame_manager.py
 ├── embedder
-│   ├── __init__.py
 │   └── embedder.py
 ├── ngrams
-│   ├── __init__.py
 │   └── ngrams.py
 ├── preprocessor
-│   ├── __init__.py
 │   └── text_preprocessor.py
-├── __init__.py
 ├── common
 │   ├── constants.py
 │   └── utils.py
