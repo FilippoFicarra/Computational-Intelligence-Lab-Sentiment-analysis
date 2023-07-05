@@ -29,15 +29,17 @@ class SMARTRobertaClassificationModel(nn.Module):
 
         def eval(embed):
             outputs = self.model.roberta(inputs_embeds=embed, attention_mask=attention_mask)
-            pooled = outputs[0] 
+            pooled = outputs.last_hidden_state
+            # print(self.model.classifier)
             logits = self.model.classifier(pooled) 
             return logits 
         
         smart_loss_fn = SMARTLoss(eval_fn = eval, loss_fn = kl_loss, loss_last_fn = sym_kl_loss)
         state = eval(embed)
-        print(state)
-        print(state.shape, labels.shape)
-        loss = nn.functional.cross_entropy(state.view(-1, 2), labels.view(-1))
+        # print(state)
+        # print(state.shape, labels.shape)
+        # print(state.view(-1, 2).shape, labels.view(-1).shape)
+        loss = nn.functional.cross_entropy(state, labels)
         loss += self.weight * smart_loss_fn(embed, state)
         
         return state, loss
@@ -84,7 +86,7 @@ def main():
     optimizer = AdamW(model.parameters(), lr=1e-5)
 
     # Fine-tuning loop
-    device = torch.device("cuda" if torch.cuda.is_available() else "mps")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     model.train()
 
@@ -111,7 +113,7 @@ def main():
             labels = labels.to(device)
 
             optimizer.zero_grad()
-            print(input_ids.shape, attention_mask.shape, labels.shape)
+            # print(input_ids.shape, attention_mask.shape, labels.shape)
             logits, loss = model(input_ids, attention_mask=attention_mask, labels=labels )
             
             loss.backward()
