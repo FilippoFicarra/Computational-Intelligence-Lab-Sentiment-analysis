@@ -191,3 +191,15 @@ SentimentAnalysis/data/twitter-datasets/preprocessed/train_embeddings_bert-base-
 SentimentAnalysis/twitter-roberta-base-sentiment/config.json
 SentimentAnalysis/twitter-roberta-base-sentiment/pytorch_model.bin
 SentimentAnalysis/data/twitter-datasets/predictions_twitter-roberta-base-sentiment.csv
+
+SentimentAnalysis/pretraining/data/All_Amazon_Review.json
+SentimentAnalysis/pretraining/data/dataset.jsonl
+SentimentAnalysis/pretraining/data/dataset-cleaned.jsonl
+SentimentAnalysis/pretraining/data/dataset-cleaned-no-unknown.jsonl
+SentimentAnalysis/pretraining/data/cleaning/profanities.txt
+SentimentAnalysis/pretraining/data/cleaning/unknown_words.txt
+SentimentAnalysis/pretraining/data/sentiment-knowledge/all-words-with-occurrences.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/words-polarity.csv
+
+.idea
+ReferencePapers/How Will Your Tweet Be Received\? Predicting the Sentiment Polarity of Tweet Replies.pdf
