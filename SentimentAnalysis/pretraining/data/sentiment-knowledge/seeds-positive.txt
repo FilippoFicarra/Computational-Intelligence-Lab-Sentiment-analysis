@@ -23,7 +23,6 @@ fantastic
 cute
 glad
 enjoyable
-sweet
 entertaining
 compliments
 satisfied
@@ -48,3 +47,7 @@ convenient
 inspiring
 superb
 delightful
+recommend
+loves
+beautifully
+funny

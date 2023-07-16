@@ -1,0 +1,29 @@
+{
+  "additional_special_tokens": [
+    "[EMAIL]",
+    "[URL]",
+    "[XML]",
+    "[PATH]",
+    "[NUMBER]",
+    "[USD]",
+    "[EUR]",
+    "[GBP]",
+    "[JPY]",
+    "[INR]",
+    "[BAD]",
+    "[UNKNOWN]"
+  ],
+  "bos_token": "[BOS]",
+  "cls_token": "[CLS]",
+  "eos_token": "[EOS]",
+  "mask_token": {
+    "content": "[MASK]",
+    "lstrip": true,
+    "normalized": true,
+    "rstrip": false,
+    "single_word": false
+  },
+  "pad_token": "[PAD]",
+  "sep_token": "[SEP]",
+  "unk_token": "[UNK]"
+}

@@ -27,7 +27,6 @@ worse
 failed
 disappointment
 hard
-trash
 ripped
 cracked
 wasted
@@ -48,3 +47,8 @@ bother
 misleading
 fake
 unusable
+poorly
+disappointing
+unacceptable
+defect
+pathetic

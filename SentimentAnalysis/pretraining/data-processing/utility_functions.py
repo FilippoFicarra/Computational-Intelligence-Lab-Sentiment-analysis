@@ -1,10 +1,14 @@
 import csv
+import os
 import re
+import shutil
+import numpy as np
 
 import contractions
 from cleantext import clean
 from flashtext import KeywordProcessor
 from nltk.tokenize import word_tokenize
+
 
 # GLOBAL VARIABLES
 
@@ -52,10 +56,12 @@ EMOTICONS = {':*': 'kiss', ':-*': 'kiss', ':x': 'kiss', ':-)': 'happy', ':)': 'h
              ':þ': 'tong', ':l': 'annoyed', '=l': 'annoyed', ':s': 'annoyed', ':-x': 'seallips', 'o:-)': 'angel',
              '>:d': 'devil', '>:-d': 'devil', 'o:<': 'surprise', 'o:': 'surprise', '(-:o': 'angel'}
 
-PATH_TO_DOMAINS = "data/cleaning/domain_extensions.txt"
-PATH_TO_FILE_EXTENSIONS = "data/cleaning/file_extensions.txt"
-PATH_TO_PROFANITIES = "data/cleaning/profanities.txt"
+PATH_TO_DOMAINS = "../data/cleaning/domain_extensions.txt"
+PATH_TO_FILE_EXTENSIONS = "../data/cleaning/file_extensions.txt"
+PATH_TO_PROFANITIES = "../data/cleaning/profanities.txt"
 PATH_TO_UNKNOWN = "data/cleaning/unknown_words.txt"
+
+SCHEMA = "overall float, reviewText string"
 
 
 # FUNCTIONS ON FILE
@@ -90,11 +96,6 @@ def save_list_to_csv(data_list, file_path, attributes) -> None:
 KEYWORD_PROCESSOR_EMOJIS = KeywordProcessor()
 for key, value in EMOTICONS.items():
     KEYWORD_PROCESSOR_EMOJIS.add_keyword(key, value)
-
-KEYWORD_PROCESSOR_EMOJIS.set_non_word_boundaries(['p', 'D', 'l', '<', 'b', ':', '3', '[', 's', '°', '_', 'B', 'o', '&',
-                                                  '#', 'O', 'P', '-', '>', 'L', 'c', 'v', '\\', 'd', 'X', '@',
-                                                  'Þ', 'x', ']', 'þ', '0', '=', '(', '|', '{', '5', '8', '*', '}', '/',
-                                                  "'", 'S', '^', ')'])
 
 # Get domain extensions
 domains = []
@@ -352,3 +353,49 @@ def tokenize_with_sequences(string) -> list[str]:
             final_tokens.append(token)
 
     return final_tokens
+
+
+# FUNCTIONS FOR PMI CALCULATION
+
+def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict, checked_dict):
+    pairs = []
+    for i in range(0, len(tokens)):
+        # Check if current token is a seed
+        if seeds_dict[tokens[i]]:
+            if i - 1 >= 0 and occurrences_dict[tokens[i - 1]] >= 250 and checked_dict[tokens[i - 1]]:
+                pairs.append((tokens[i], tokens[i - 1]))
+            if i + 1 < len(tokens) and occurrences_dict[tokens[i + 1]] >= 250 and checked_dict[tokens[i + 1]]:
+                pairs.append((tokens[i], tokens[i + 1]))
+    # Return the pairs
+    return pairs
+
+
+def pmi(c_w1_w2, c_w1, c_w2, N):
+    # Calculate pmi
+    result = np.log2((c_w1_w2 * N) / (c_w1 * c_w2))
+    if np.isinf(result) and result < 0:
+        return 0
+    return result
+
+
+# FUNCTIONS FOR STORING DATASET
+
+
+def save_rdd_to_json_file(path, rdd):
+    # Save cleaned dataset with unknown words
+    rdd.toDF(schema=SCHEMA).write.json(path)
+
+
+def merge_files(path_dataset_directory, path_merged_dataset):
+    # Create dataset from json files within path_dataset_directory
+    with open(path_merged_dataset, "a+") as f1:
+        for root, dirs, files in os.walk(path_dataset_directory):
+            for file in files:
+                if file.endswith(".json"):
+                    file_path = os.path.join(root, file)
+                    # Read and process file
+                    with open(file_path, "r") as f2:
+                        f1.writelines(f2.readlines())
+
+    # Remove temporary directory
+    shutil.rmtree(path_dataset_directory)
