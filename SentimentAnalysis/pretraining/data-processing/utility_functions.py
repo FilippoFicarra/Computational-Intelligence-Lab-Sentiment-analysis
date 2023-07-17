@@ -128,11 +128,11 @@ def calculate_polarity_of_occurrence(overall) -> int:
     """
     This function calculates the polarity of the occurrence of a word. If the word appears in a negative review, then
     the occurrence receives a negative value, else it receives a positive value. The value are assigned as follows:
-    - Overall 1 receives -4.
+    - Overall 1 receives -10.
     - Overall 2 receives -2.
     - Overall 3 receives 0.
     - Overall 4 receives 2.
-    - Overall 5 receives 4.
+    - Overall 5 receives 10.
     Args:
         overall: the score of the review.
 
@@ -141,7 +141,7 @@ def calculate_polarity_of_occurrence(overall) -> int:
     base_value = 2
 
     if overall == 1.:
-        return -3 * base_value
+        return -5 * base_value
     elif overall == 2.:
         return -base_value
     elif overall == 3.:
@@ -149,7 +149,7 @@ def calculate_polarity_of_occurrence(overall) -> int:
     elif overall == 4.:
         return base_value
     else:
-        return 3 * base_value
+        return 5 * base_value
 
 
 # FUNCTIONS FOR CLEANING
@@ -373,7 +373,7 @@ def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict, checked_dict):
 def pmi(c_w1_w2, c_w1, c_w2, N):
     # Calculate pmi
     result = np.log2((c_w1_w2 * N) / (c_w1 * c_w2))
-    if np.isinf(result) and result < 0:
+    if np.isinf(result) or result < 0:
         return 0
     return result
 

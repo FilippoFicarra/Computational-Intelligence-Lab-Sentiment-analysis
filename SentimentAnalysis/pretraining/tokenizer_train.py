@@ -18,16 +18,6 @@ def list_generator(data: pd.DataFrame):
         yield data[SECOND_COLUMN_DATASET][index: index + CHUNK_SIZE].tolist()
 
 
-def modify_special_tokens(tokenizer: RobertaTokenizerFast):
-    tokenizer.bos_token = "[BOS]"
-    tokenizer.eos_token = "[EOS]"
-    tokenizer.cls_token = "[CLS]"
-    tokenizer.mask_token = "[MASK]"
-    tokenizer.pad_token = "[PAD]"
-    tokenizer.sep_token = "[SEP]"
-    tokenizer.unk_token = "[UNK]"
-
-
 if __name__ == "__main__":
     # Delete tokenizer directory if present
     if os.path.exists(PATH_TOKENIZER):
@@ -43,8 +33,5 @@ if __name__ == "__main__":
                                                       new_special_tokens=["[EMAIL]", "[URL]", "[XML]", "[PATH]",
                                                                           "[NUMBER]", "[USD]", "[EUR]", "[GBP]",
                                                                           "[JPY]", "[INR]", "[BAD]", "[UNKNOWN]"])
-
-    # Modify special tokens
-    modify_special_tokens(new_tokenizer)
 
     new_tokenizer.save_pretrained(PATH_TOKENIZER)

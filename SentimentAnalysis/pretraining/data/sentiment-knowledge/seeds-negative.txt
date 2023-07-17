@@ -16,7 +16,6 @@ problem
 useless
 wrong
 less
-garbage
 boring
 awful
 defective
@@ -52,3 +51,6 @@ disappointing
 unacceptable
 defect
 pathetic
+disgrace
+disgraceful
+embarrassingly

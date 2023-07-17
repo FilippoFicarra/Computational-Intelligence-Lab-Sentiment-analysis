@@ -13,17 +13,17 @@
     "[BAD]",
     "[UNKNOWN]"
   ],
-  "bos_token": "[BOS]",
-  "cls_token": "[CLS]",
-  "eos_token": "[EOS]",
+  "bos_token": "<s>",
+  "cls_token": "<s>",
+  "eos_token": "</s>",
   "mask_token": {
-    "content": "[MASK]",
+    "content": "<mask>",
     "lstrip": true,
-    "normalized": true,
+    "normalized": false,
     "rstrip": false,
     "single_word": false
   },
-  "pad_token": "[PAD]",
-  "sep_token": "[SEP]",
-  "unk_token": "[UNK]"
+  "pad_token": "<pad>",
+  "sep_token": "</s>",
+  "unk_token": "<unk>"
 }
