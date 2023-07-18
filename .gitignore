@@ -201,6 +201,7 @@ SentimentAnalysis/pretraining/data/cleaning/unknown_words.txt
 SentimentAnalysis/pretraining/data/sentiment-knowledge/all-words-with-occurrences.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/words-polarity.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/pmi.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/polarity.csv
 
 .idea
 ReferencePapers/How Will Your Tweet Be Received\? Predicting the Sentiment Polarity of Tweet Replies.pdf

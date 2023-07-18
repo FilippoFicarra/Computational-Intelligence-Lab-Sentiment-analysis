@@ -1,0 +1,25 @@
+import math
+
+VOCABULARY_SIZE = 50265
+OVERALL_NUMBER = 5
+HIDDEN_SIZE = 768
+
+PATH_PMI = "data/sentiment-knowledge/pmi.csv"
+PATH_DATASET = "data/datasets/dataset-cleaned-no-unknown.json"
+PATH_TOKENIZER = "model/tokenizer"
+PATH_MODEL = "model/model/model.pt"
+
+EPOCHS = 10
+TRAIN_BATCH_SIZE = 16
+LEARNING_RATE = 1e-04
+PEAK_LEARNING_RATE = 5e-04
+WARMUP_STEPS = 4000
+
+CHUNK_SIZE = 100000
+SECOND_COLUMN_DATASET = "reviewText"
+
+MAX_LENGTH = 512
+FRACTION_MASKING = 0.15
+LOWER_LIMIT_FRACTION_MASKING = 0.1
+
+PAD_LENGTH = math.ceil(FRACTION_MASKING * MAX_LENGTH)

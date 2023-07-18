@@ -4,12 +4,12 @@ from flashtext import KeywordProcessor
 import random
 import math
 import torch
-
-PATH_PMI = "data/sentiment-knowledge/pmi.csv"
+from CONSTANTS import *
 
 
 class Embedder:
-    def __init__(self, tokenizer: PreTrainedTokenizerFast, fraction_masking=0.15, lower_limit_fraction_masking=0.1):
+    def __init__(self, tokenizer: PreTrainedTokenizerFast, fraction_masking=FRACTION_MASKING,
+                 lower_limit_fraction_masking=LOWER_LIMIT_FRACTION_MASKING):
         self.tokenizer = tokenizer
         self.mask_tosken_for_replacement = "<mask>"
         self.mask_token_id = self.tokenizer.get_vocab()[self.mask_tosken_for_replacement]
@@ -27,14 +27,15 @@ class Embedder:
             self.sentiment_knowledge_kp.add_keyword(row.word1, self.mask_tosken_for_replacement)
             self.sentiment_knowledge_kp.add_keyword(row.word2, self.mask_tosken_for_replacement)
 
-    def encode_plus(self, text, add_special_tokens=True, max_length=512, return_attention_mask=True,
+    def encode_plus(self, text, add_special_tokens=True, max_length=MAX_LENGTH, return_attention_mask=True,
                     return_token_type_ids=True):
         # Get tokens id for string with sentiment words
         tokens_with_replacement = self.tokenizer.encode(self.sentiment_knowledge_kp.replace_keywords(text),
                                                         None,
                                                         add_special_tokens=add_special_tokens,
                                                         padding='max_length',
-                                                        max_length=max_length)
+                                                        max_length=max_length,
+                                                        truncation=True)
 
         indeces = []
         for i in range(1, len(tokens_with_replacement)):
@@ -50,7 +51,8 @@ class Embedder:
                                                      padding='max_length',
                                                      max_length=max_length,
                                                      return_attention_mask=return_attention_mask,
-                                                     return_token_type_ids=return_token_type_ids)
+                                                     return_token_type_ids=return_token_type_ids,
+                                                     truncation=True)
 
         # Count padding tokens. "-2" accounts for cls and eos tokens
         available_tokens = len(encode_plus_res['input_ids']) - \
@@ -69,7 +71,7 @@ class Embedder:
             sampled_indeces += indeces
             # Sample from remaining indeces
             remaining_indeces = set(range(1, len(tokens_with_replacement)
-                                          - tokens_with_replacement.count(self.tokenizer.pad_token_id) - 1))\
+                                          - tokens_with_replacement.count(self.tokenizer.pad_token_id) - 1)) \
                                 - set(indeces)
             sampled_indeces += random.sample(remaining_indeces,
                                              min(num_masks_low - len(indeces), len(remaining_indeces)))
@@ -104,7 +106,7 @@ class Embedder:
             attention_mask[i] = 0
 
         return {
-            'ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
-            'mask': torch.tensor(attention_mask, dtype=torch.long),
-            'token_type_ids': torch.tensor(encode_plus_res['token_type_ids'], dtype=torch.long)
+            'ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.int),
+            'mask': torch.tensor(attention_mask, dtype=torch.int),
+            'token_type_ids': torch.tensor(encode_plus_res['token_type_ids'], dtype=torch.int)
         }

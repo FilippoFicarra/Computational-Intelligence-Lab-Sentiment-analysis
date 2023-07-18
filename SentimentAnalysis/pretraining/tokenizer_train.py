@@ -1,15 +1,8 @@
 from transformers import AutoTokenizer
-from transformers import RobertaTokenizerFast
 import pandas as pd
 import shutil
 import os
-
-# GLOBAL VARIABLES
-
-PATH_DATASET = "data/datasets/dataset-cleaned-no-unknown.json"
-PATH_TOKENIZER = "model/tokenizer"
-CHUNK_SIZE = 100000
-SECOND_COLUMN_DATASET = "reviewText"
+from CONSTANTS import *
 
 
 def list_generator(data: pd.DataFrame):
@@ -29,7 +22,7 @@ if __name__ == "__main__":
     # Load dataset as iterator
     data = pd.read_json(open(PATH_DATASET, "r", encoding="utf8"), lines=True)
 
-    new_tokenizer = tokenizer.train_new_from_iterator(list_generator(data), vocab_size=40000,
+    new_tokenizer = tokenizer.train_new_from_iterator(list_generator(data), vocab_size=VOCABULARY_SIZE,
                                                       new_special_tokens=["[EMAIL]", "[URL]", "[XML]", "[PATH]",
                                                                           "[NUMBER]", "[USD]", "[EUR]", "[GBP]",
                                                                           "[JPY]", "[INR]", "[BAD]", "[UNKNOWN]"])
