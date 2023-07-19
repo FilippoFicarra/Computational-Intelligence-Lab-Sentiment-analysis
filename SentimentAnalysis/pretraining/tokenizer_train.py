@@ -1,7 +1,9 @@
-from transformers import AutoTokenizer
-import pandas as pd
-import shutil
 import os
+import shutil
+
+import pandas as pd
+from transformers import AutoTokenizer
+
 from CONSTANTS import *
 
 
@@ -24,7 +26,6 @@ if __name__ == "__main__":
 
     new_tokenizer = tokenizer.train_new_from_iterator(list_generator(data), vocab_size=VOCABULARY_SIZE,
                                                       new_special_tokens=["[EMAIL]", "[URL]", "[XML]", "[PATH]",
-                                                                          "[NUMBER]", "[USD]", "[EUR]", "[GBP]",
-                                                                          "[JPY]", "[INR]", "[BAD]", "[UNKNOWN]"])
+                                                                          "[NUMBER]", "[CUR]", "[BAD]", "[UNKNOWN]"])
 
     new_tokenizer.save_pretrained(PATH_TOKENIZER)

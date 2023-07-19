@@ -6,11 +6,7 @@
     "[XML]",
     "[PATH]",
     "[NUMBER]",
-    "[USD]",
-    "[EUR]",
-    "[GBP]",
-    "[JPY]",
-    "[INR]",
+    "[CUR]",
     "[BAD]",
     "[UNKNOWN]"
   ],

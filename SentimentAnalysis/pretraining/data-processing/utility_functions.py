@@ -14,11 +14,11 @@ from nltk.tokenize import word_tokenize
 
 # Define a dictionary mapping currency symbols to names
 CURRENCY_SYMBOLS = {
-    '$': ' [USD] ',
-    '€': ' [EUR] ',
-    '£': ' [GBP] ',
-    '¥': ' [JPY] ',
-    '₹': ' [INR] ',
+    '$': ' [CUR] ',
+    '€': ' [CUR] ',
+    '£': ' [CUR] ',
+    '¥': ' [CUR] ',
+    '₹': ' [CUR] ',
     # Add more currency symbols and their names as needed
 }
 
@@ -222,7 +222,7 @@ def replace_emojis(string):
 
 def replace_special_tokens_with_placeholder(text, placeholder) -> str:
     # Define a regular expression pattern to match sequences of "[text]"
-    sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|USD|EUR|GBP|JPY|INR|BAD|UNKNOWN)\]"
+    sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]"
 
     # Find all matches of the sequence pattern in the text
     sequence_matches = re.findall(sequence_pattern, text)

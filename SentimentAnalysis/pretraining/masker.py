@@ -1,9 +1,10 @@
-import pandas as pd
-from transformers import PreTrainedTokenizerFast
-from flashtext import KeywordProcessor
 import random
-import math
+
+import pandas as pd
 import torch
+from flashtext import KeywordProcessor
+from transformers import PreTrainedTokenizerFast
+
 from CONSTANTS import *
 
 
@@ -19,13 +20,12 @@ class Embedder:
         self.lower_limit_fraction_masking = lower_limit_fraction_masking
 
     def load_sentiment_knowledge_words(self):
-        df = pd.read_csv(PATH_PMI, dtype={"word1": str, "word2": str, "pmi": float})
+        df = pd.read_csv(PATH_POLARITY, dtype={"word": str, "polarity": float})
         # Filter by pmi value (keep pmi bigger than 5)
-        df = df[df.pmi > 5.0]
+        df = df[abs(df.polarity) > 25.0]
         # Insert words in keyword processor.
         for row in df.itertuples():
-            self.sentiment_knowledge_kp.add_keyword(row.word1, self.mask_tosken_for_replacement)
-            self.sentiment_knowledge_kp.add_keyword(row.word2, self.mask_tosken_for_replacement)
+            self.sentiment_knowledge_kp.add_keyword(row.word, self.mask_tosken_for_replacement)
 
     def encode_plus(self, text, add_special_tokens=True, max_length=MAX_LENGTH, return_attention_mask=True,
                     return_token_type_ids=True):

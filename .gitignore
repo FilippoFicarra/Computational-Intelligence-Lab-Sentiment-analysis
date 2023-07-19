@@ -197,9 +197,8 @@ SentimentAnalysis/pretraining/data/datasets/dataset.json
 SentimentAnalysis/pretraining/data/datasets/dataset-cleaned.json
 SentimentAnalysis/pretraining/data/datasets/dataset-cleaned-no-unknown.json
 SentimentAnalysis/pretraining/data/cleaning/profanities.txt
-SentimentAnalysis/pretraining/data/cleaning/unknown_words.txt
 SentimentAnalysis/pretraining/data/sentiment-knowledge/all-words-with-occurrences.csv
-SentimentAnalysis/pretraining/data/sentiment-knowledge/words-polarity.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/words-seed-score.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/pmi.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/polarity.csv
 
