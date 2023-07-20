@@ -25,12 +25,12 @@ class ReviewDataset(Dataset):
         encode_plus_res = self.embedder.encode_plus(text, max_length=self.max_length)
 
         # Compute targets for masked tokens
-        tokens_targets = []
-        for i in range(1, len(encode_plus_res['ids'])):
-            if encode_plus_res['ids'][i] == self.tokenizer.eos_token_id:
-                break
-            if encode_plus_res['mask'][i] == 0:
-                tokens_targets.append(encode_plus_res['ids'][i])
+        # tokens_targets = []
+        # for i in range(1, len(encode_plus_res['ids'])):
+        #     if encode_plus_res['ids'][i] == self.tokenizer.eos_token_id:
+        #         break
+        #     if encode_plus_res['mask'][i] == 0:
+        #         tokens_targets.append(encode_plus_res['ids'][i])
 
         # Add cls target
         encode_plus_res['cls_target'] = torch.tensor(self.targets[index] - 1, dtype=torch.long)

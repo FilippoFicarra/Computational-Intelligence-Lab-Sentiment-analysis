@@ -8,7 +8,9 @@
     "[NUMBER]",
     "[CUR]",
     "[BAD]",
-    "[UNKNOWN]"
+    "[UNKNOWN]",
+    "<user>",
+    "<url>"
   ],
   "bos_token": "<s>",
   "clean_up_tokenization_spaces": true,

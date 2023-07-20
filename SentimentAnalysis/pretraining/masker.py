@@ -51,7 +51,6 @@ class Embedder:
                                                      padding='max_length',
                                                      max_length=max_length,
                                                      return_attention_mask=return_attention_mask,
-                                                     return_token_type_ids=return_token_type_ids,
                                                      truncation=True)
 
         # Count padding tokens. "-2" accounts for cls and eos tokens
@@ -106,7 +105,6 @@ class Embedder:
             attention_mask[i] = 0
 
         return {
-            'ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.int),
-            'mask': torch.tensor(attention_mask, dtype=torch.int),
-            'token_type_ids': torch.tensor(encode_plus_res['token_type_ids'], dtype=torch.int)
+            'ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
+            'mask': torch.tensor(attention_mask, dtype=torch.long)
         }

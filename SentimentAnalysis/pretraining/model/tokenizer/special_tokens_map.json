@@ -7,7 +7,9 @@
     "[NUMBER]",
     "[CUR]",
     "[BAD]",
-    "[UNKNOWN]"
+    "[UNKNOWN]",
+    "<user>",
+    "<url>"
   ],
   "bos_token": "<s>",
   "cls_token": "<s>",

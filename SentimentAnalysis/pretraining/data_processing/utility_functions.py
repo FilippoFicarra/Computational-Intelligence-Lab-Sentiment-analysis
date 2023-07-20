@@ -9,7 +9,6 @@ from cleantext import clean
 from flashtext import KeywordProcessor
 from nltk.tokenize import word_tokenize
 
-
 # GLOBAL VARIABLES
 
 # Define a dictionary mapping currency symbols to names
@@ -59,9 +58,11 @@ EMOTICONS = {':*': 'kiss', ':-*': 'kiss', ':x': 'kiss', ':-)': 'happy', ':)': 'h
 PATH_TO_DOMAINS = "../data/cleaning/domain_extensions.txt"
 PATH_TO_FILE_EXTENSIONS = "../data/cleaning/file_extensions.txt"
 PATH_TO_PROFANITIES = "../data/cleaning/profanities.txt"
-PATH_TO_UNKNOWN = "data/cleaning/unknown_words.txt"
+PATH_TO_UNKNOWN = "../data/cleaning/unknown_words.txt"
 
 SCHEMA = "overall float, reviewText string"
+
+PLACEHOLDER = 'SEQUENCE'
 
 
 # FUNCTIONS ON FILE
@@ -163,7 +164,7 @@ def replace_xml_tag(string) -> str:
     Returns: The modified string with no xml tags.
 
     """
-    return re.sub(r"<([^>]+)>(?:.*</([^>]+)>)?", " [XML] ", string)
+    return re.sub(r"<([^>]+)>(?:.*</([^>]+)>)?", ' [XML] ', string)
 
 
 def replace_email(string) -> str:
@@ -220,35 +221,39 @@ def replace_emojis(string):
     return KEYWORD_PROCESSOR_EMOJIS.replace_keywords(string)
 
 
-def replace_special_tokens_with_placeholder(text, placeholder) -> str:
-    # Define a regular expression pattern to match sequences of "[text]"
-    sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]"
+def replace_special_tokens_with_placeholder(string, twitter) -> str:
+    # Choose pattern
+    if not twitter:
+        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]"
+    else:
+        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]|<(?:url|user)>"
 
     # Find all matches of the sequence pattern in the text
-    sequence_matches = re.findall(sequence_pattern, text)
+    sequence_matches = re.findall(sequence_pattern, string)
 
-    # Replace the sequences with a special placeholder
-    return re.sub(sequence_pattern, placeholder, text), sequence_matches
+    # Replace the sequences with a special PLACEHOLDER
+    return re.sub(sequence_pattern, PLACEHOLDER, string), sequence_matches
 
 
-def remove_special_characters(string):
+def remove_special_characters(string, twitter=False):
     """
     This function replaces special characters with " ". It keeps ".", "!", "?", "%" and ', but if "!", "?", "%" or '
     appear multiple times, then they are replaced with one single occurrence.
     Args:
         string: The string to modify
+        twitter: A boolean
 
     Returns: The modified string with no special characters.
 
     """
     # Note that spaces are managed by clean, * by multiple functions, and currencies by replace_currency_symbols
-    placeholder = 'SEQUENCE'
-    text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, placeholder)
+    text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, twitter)
+
     cleaned_text = re.sub(r"[^a-zA-Z0-9\s,*.!?%@#$€£¥₹]", " ", text_with_placeholders)
     cleaned_text = re.sub(r"([,!?€£¥₹])\1+", r'\1', cleaned_text)
     cleaned_text = re.sub(r'([.])\1+', '...', cleaned_text)
     if sequence_matches:
-        pattern = re.compile(re.escape(placeholder))
+        pattern = re.compile(re.escape(PLACEHOLDER))
         cleaned_text = pattern.sub(lambda _: sequence_matches.pop(0), cleaned_text)
     return cleaned_text
 
@@ -314,30 +319,44 @@ def cleaning_function_no_unknown(string) -> str:
         no_line_breaks=True)
 
 
+# FUNCTION FOR CLEANING OF TWITTER DATASET
+
+def cleaning_function_twitter_dataset(string) -> str:
+    return clean(
+        divide_words_starting_with_numbers(
+            replace_currency_symbols(
+                late_remove_special_characters(
+                    replace_profanities(
+                        add_space_before_and_after_punctuation(
+                            remove_special_characters(
+                                replace_emojis(
+                                    contractions.fix(
+                                        string.lower())), twitter=True)))))), lower=False, no_line_breaks=True)
+
+
 # WORD TOKENIZER
 
-def remove_symbols_before_tokenization(string):
+def remove_symbols_before_tokenization(string, twitter=False):
     # Note that spaces are managed by clean, * by multiple functions, and currencies by replace_currency_symbols
-    placeholder = 'SEQUENCE'
-    text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, placeholder)
+    text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, twitter)
     cleaned_text = re.sub(r"[^a-zA-Z0-9]", " ", text_with_placeholders)
     if sequence_matches:
-        pattern = re.compile(re.escape(placeholder))
+        pattern = re.compile(re.escape(PLACEHOLDER))
         cleaned_text = pattern.sub(lambda _: sequence_matches.pop(0), cleaned_text)
     return cleaned_text
 
 
-def tokenize_with_sequences(string) -> list[str]:
+def tokenize_with_sequences(string, twitter=False) -> list[str]:
     """
     This function divides a sentence into word tokens.
     Args:
         string: The string to tokenize.
+        twitter: A boolean
 
     Returns: A list of tokens.
 
     """
-    placeholder = 'SEQUENCE'
-    text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, placeholder)
+    text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, twitter)
 
     # Tokenize the modified text
     tokens = word_tokenize(text_with_placeholders)
@@ -345,7 +364,7 @@ def tokenize_with_sequences(string) -> list[str]:
     # Replace the placeholders with the original sequences
     final_tokens = []
     for token in tokens:
-        if token == placeholder:
+        if token == PLACEHOLDER:
             # Restore the original sequence
             sequence = sequence_matches.pop(0)
             final_tokens.append(sequence)

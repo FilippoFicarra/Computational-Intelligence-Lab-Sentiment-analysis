@@ -11,11 +11,11 @@ from termcolor import colored
 
 def preprocess_data(src_filepath : str, dst_filepath : str, test_path : str,  data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Preprocesses the data and saves it to a CSV file.
+    Preprocesses the twitter-data and saves it to a CSV file.
     
     Args:
-        src_filepath (str): The path to the CSV file containing the data.
-        dst_filepath (str): The path to the CSV file where the preprocessed data will be saved.
+        src_filepath (str): The path to the CSV file containing the twitter-data.
+        dst_filepath (str): The path to the CSV file where the preprocessed twitter-data will be saved.
         data_frame_manager (DataFrameManager): The DataFrameManager object.
         encoding (str): The encoding of the CSV file.
 
@@ -34,7 +34,7 @@ def preprocess_data(src_filepath : str, dst_filepath : str, test_path : str,  da
     print("Preprocessing done and saved to CSV file.")
 
 
-    print("Splitting the data...")
+    print("Splitting the twitter-data...")
 
     train_df, test_df = data_frame_manager.split(df = df)
 
@@ -45,10 +45,10 @@ def preprocess_data(src_filepath : str, dst_filepath : str, test_path : str,  da
 
 def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager, encoding : str, split_path : str) -> tuple[pd.DataFrame, pd.DataFrame]:
     """
-    Loads the preprocessed data from a CSV file and splits it into train and test sets.
+    Loads the preprocessed twitter-data from a CSV file and splits it into train and test sets.
 
     Args:
-        dst_filepath (str): The path to the CSV file containing the preprocessed data.
+        dst_filepath (str): The path to the CSV file containing the preprocessed twitter-data.
         data_frame_manager (DataFrameManager): The DataFrameManager object.
         encoding (str): The encoding of the CSV file.
         split_path (str): The path to the folder where the train and test sets will be saved.
@@ -71,11 +71,11 @@ def load_preprocessed(dst_filepath : str, data_frame_manager : DataFrameManager,
         print(colored(f"The file {dst_filepath} does not exist. Please use --preprocess as argument when running the script again.", "red"))
         sys.exit()
         
-    print("Loading the preprocessed data...")
+    print("Loading the preprocessed twitter-data...")
 
     df = data_frame_manager.load_dataframe(filepath=dst_filepath, encoding=encoding, preprocess=False)
 
-    print("Splitting the data...")
+    print("Splitting the twitter-data...")
 
     train_df, test_df = data_frame_manager.split(df = df)
 

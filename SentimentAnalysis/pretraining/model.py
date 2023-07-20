@@ -16,10 +16,9 @@ class Roberta(torch.nn.Module):
         self.review_classifier_linear = torch.nn.Linear(HIDDEN_SIZE, OVERALL_NUMBER)
         # self.review_softmax = torch.nn.Softmax()
 
-    def forward(self, input_ids, attention_mask, token_type_ids, eos_token_id):
+    def forward(self, input_ids, attention_mask):
         roberta_output = self.roberta(input_ids=input_ids,
                                       attention_mask=attention_mask,
-                                      token_type_ids=token_type_ids,
                                       return_dict=True)
         # Get cls output probabilities
         hidden_state = roberta_output['last_hidden_state']
@@ -45,4 +44,4 @@ class Roberta(torch.nn.Module):
         #     tokens_values_batch.append(torch.cat((torch.stack(tokens_values), padding), dim=0))
 
         # return {'cls': cls_second_linear, 'tokens': torch.stack(tokens_values_batch)}
-        return {'cls': cls_second_linear}
+        return cls_second_linear

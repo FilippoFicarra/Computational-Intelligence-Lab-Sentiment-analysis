@@ -26,6 +26,7 @@ if __name__ == "__main__":
 
     new_tokenizer = tokenizer.train_new_from_iterator(list_generator(data), vocab_size=VOCABULARY_SIZE,
                                                       new_special_tokens=["[EMAIL]", "[URL]", "[XML]", "[PATH]",
-                                                                          "[NUMBER]", "[CUR]", "[BAD]", "[UNKNOWN]"])
+                                                                          "[NUMBER]", "[CUR]", "[BAD]", "[UNKNOWN]",
+                                                                          "<user>", "<url>"])
 
     new_tokenizer.save_pretrained(PATH_TOKENIZER)
