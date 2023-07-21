@@ -8,8 +8,10 @@ from torch.optim.lr_scheduler import LinearLR
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-# import torch_xla
-# import torch_xla.core.xla_model as xm
+import torch_xla
+import torch_xla.core.xla_model as xm
+import torch_xla.distributed.xla_multiprocessing as xmp
+import torch_xla.distributed.parallel_loader as pl
 
 from CONSTANTS import *
 from dataset import ReviewDataset
@@ -37,8 +39,8 @@ def plot_accuracy_and_loss(training_accuracies, training_losses, eval_accuracies
 
 if __name__ == "__main__":
     # DEVICE
-    # device = xm.xla_device()
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = xm.xla_device()
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # TOKENIZER
     tokenizer = AutoTokenizer.from_pretrained(PATH_TOKENIZER)
@@ -76,8 +78,9 @@ if __name__ == "__main__":
 
     # Create dataloader object for both training and validation
     training_loader = DataLoader(ReviewDataset(df_training, tokenizer), batch_size=TRAIN_BATCH_SIZE, shuffle=True)
+    # mp_device_loader_training = pl.MpDeviceLoader(training_loader, device)
     eval_loader = DataLoader(ReviewDataset(df_eval, tokenizer), batch_size=TRAIN_BATCH_SIZE)
-
+    # mp_device_loader_eval = pl.MpDeviceLoader(eval_loader, device)
     # MODEL
 
     model = Roberta().to(device)
@@ -116,8 +119,8 @@ if __name__ == "__main__":
             num_training_examples = 0
 
             # Initialize optimizer learning rate and define scheduler
-            optimizer.param_groups[0]['lr'] = LEARNING_RATE
-            scheduler = LinearLR(optimizer, start_factor=1, end_factor=0.01, total_iters=WARMUP_STEPS)
+            # optimizer.param_groups[0]['lr'] = LEARNING_RATE
+            # scheduler = LinearLR(optimizer, start_factor=1, end_factor=0.01, total_iters=WARMUP_STEPS)
 
             # Train for the epoch
             with alive_bar(len(training_loader), force_tty=True, title=f"Epoch {epoch}") as bar:
@@ -148,7 +151,7 @@ if __name__ == "__main__":
                     num_training_steps += 1
                     num_training_examples += cls_targets.size(0)
 
-                    if i % 4000 == 0:
+                    if i % 200 == 0:
                         loss_step = training_loss / num_training_steps
                         accu_step = (num_correct * 100) / num_training_examples
                         print(f"Epoch {epoch} Training Accuracy after {num_training_steps} steps: {accu_step}")
@@ -159,10 +162,11 @@ if __name__ == "__main__":
                     # Update learnable parameters using grad attribute of the parameters, which has been updated by
                     # loss.backward()
                     optimizer.step()
+                    # xm.optimizer_step(optimizer)
                     # Compute new learning rate
-                    scheduler.step()
+                    # scheduler.step()
                     # xm step
-                    # xm.mark_step()
+                    xm.mark_step()
                     # scaler.update()
                     # Update bar
                     bar()
@@ -222,3 +226,6 @@ if __name__ == "__main__":
 
     # Plot accuracies and losses
     plot_accuracy_and_loss(training_accuracies, training_losses, eval_accuracies, eval_losses)
+
+# if __name__ == "__main__":
+#  xmp.spawn(_mp_fn, args=(), nprocs=8, start_method="fork")
