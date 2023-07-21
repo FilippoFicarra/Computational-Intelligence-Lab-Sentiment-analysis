@@ -14,7 +14,7 @@ class Roberta(torch.nn.Module):
         self.pre_review_classifier_linear = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
         self.pre_review_classifier_dropout = torch.nn.Dropout(p=0.1)
         self.review_classifier_linear = torch.nn.Linear(HIDDEN_SIZE, OVERALL_NUMBER)
-        # self.review_softmax = torch.nn.Softmax()
+        self.review_sigmoid = torch.nn.Sigmoid()
 
     def forward(self, input_ids, attention_mask):
         roberta_output = self.roberta(input_ids=input_ids,
@@ -25,6 +25,7 @@ class Roberta(torch.nn.Module):
         cls_first_linear = self.pre_review_classifier_linear(hidden_state[:, 0])
         cls_dropout = self.pre_review_classifier_dropout(cls_first_linear)
         cls_second_linear = self.review_classifier_linear(cls_dropout)
+        cls_output = self.review_sigmoid(cls_second_linear)
         # output_cls = self.review_softmax(cls_second_linear)
 
         # Get probabilities for masked tokens
@@ -44,4 +45,4 @@ class Roberta(torch.nn.Module):
         #     tokens_values_batch.append(torch.cat((torch.stack(tokens_values), padding), dim=0))
 
         # return {'cls': cls_second_linear, 'tokens': torch.stack(tokens_values_batch)}
-        return cls_second_linear
+        return cls_output

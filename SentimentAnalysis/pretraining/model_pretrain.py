@@ -75,7 +75,7 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
     model.train()
 
     # Define object for loss
-    training_loss_meter = AverageMeter()
+    training_meter = AverageMeter()
 
     # Train for the epoch
     for i, data in enumerate(para_loader):
@@ -87,17 +87,23 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
         cls_targets = data['cls_targets'].to(device)
         # Compute model output
         outputs = model(ids, mask)
+        # Compute accuracy
+
         # Compute loss
         loss = criterion(outputs, cls_targets)
         # Update running average of loss for epoch
-        training_loss_meter.update(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)),
-                                   cls_targets.size(0))
+        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
-        # feedback
+        # Update running average of accuracy for epoch
+        training_meter.update_accuracy(xm.mesh_reduce(
+            'accuracy_reduce', torch.eq(torch.max(outputs, dim=1)[1], cls_targets).sum(),
+            lambda values: sum(values) / len(values)), cls_targets.size(0))
+
+        # Feedback
         if i > 0 and i % VERBOSE_PARAM == 0:
-            xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}'.format(i, training_loss_meter.val,
-                                                                                       training_loss_meter.avg),
-                            flush=True)
+            xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = {:.6f}'
+                            .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
+                                    training_meter.avg_accuracy), flush=True)
 
         # Compute gradient updates for learnable parameters
         loss.backward()
@@ -109,7 +115,7 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
         gc.collect()
 
     # Return average training loss for the epoch
-    return training_loss_meter.avg
+    return training_meter.avg_loss, training_meter.avg_accuracy
 
 
 def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
@@ -117,7 +123,7 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
     model.eval()
 
     # Define object for loss
-    eval_loss_meter = AverageMeter()
+    eval_meter = AverageMeter()
 
     with torch.no_grad():
         for eval_batch in para_loader:
@@ -129,18 +135,24 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
             eval_outputs = model(eval_ids, eval_mask)
             loss = criterion(eval_outputs, eval_cls_targets)
 
-            eval_loss_meter.update(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)),
-                                   eval_cls_targets.size(0))
+            # Update running average of loss for epoch
+            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+
+            # Update running average of accuracy for epoch
+            eval_meter.update_accuracy(xm.mesh_reduce(
+                'accuracy_reduce', torch.eq(torch.max(eval_outputs, dim=1)[1], eval_cls_targets).sum(),
+                lambda values: sum(values) / len(values)), eval_cls_targets.size(0))
 
             # Free up memory
             del eval_ids, eval_mask, eval_cls_targets, eval_outputs, loss
             gc.collect()
 
-    # Output average evaluation loss for current epoch
-    xm.master_print('-- epoch {} | avg_eval_loss =  {:.6f}'.format(epoch, eval_loss_meter.avg), flush=True)
+    # Output average evaluation loss and accuracy for current epoch
+    xm.master_print('-- epoch {} | avg_eval_loss =  {:.6f}, avg_eval_acc = {:.6f}'
+                    .format(epoch, eval_meter.avg_loss, eval_meter.avg_accuracy), flush=True)
 
     # Return average evaluation loss for the epoch
-    return eval_loss_meter.avg
+    return eval_meter.avg_loss, eval_meter.avg_accuracy
 
 
 def _run():
@@ -194,13 +206,15 @@ def _run():
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
     # LISTS FOR STORING LOSSES AND DICTIONARY FOR EARLY STOPPING
 
     training_losses = []
     eval_losses = []
+    training_accuracies = []
+    eval_accuracies = []
     early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': 2, 'stop': False}
 
     # TRAINING
@@ -212,7 +226,6 @@ def _run():
             xm.master_print('EPOCH {}/{}'.format(epoch + 1, EPOCHS), flush=True)
             xm.master_print('-' * 55, flush=True)
             xm.master_print('- initialization | TPU cores = {}'.format(xm.xrt_world_size()), flush=True)
-            epoch_start = time.time()
 
             # Update training loader shuffling
             train_sampler.set_epoch(epoch)
@@ -221,12 +234,12 @@ def _run():
             train_start = time.time()
             xm.master_print('- training...')
             para_loader = pl.ParallelLoader(training_loader, [device])
-            training_loss = _train_epoch_fn(epoch=epoch + 1,
-                                            model=model,
-                                            para_loader=para_loader.per_device_loader(device),
-                                            criterion=criterion,
-                                            optimizer=optimizer,
-                                            device=device)
+            training_loss, training_accuracy = _train_epoch_fn(epoch=epoch + 1,
+                                                               model=model,
+                                                               para_loader=para_loader.per_device_loader(device),
+                                                               criterion=criterion,
+                                                               optimizer=optimizer,
+                                                               device=device)
 
             del para_loader
             gc.collect()
@@ -235,11 +248,11 @@ def _run():
             valid_start = time.time()
             xm.master_print('- validation...', flush=True)
             para_loader = pl.ParallelLoader(eval_loader, [device])
-            eval_loss = _eval_epoch_fn(epoch=epoch + 1,
-                                       model=model,
-                                       para_loader=para_loader.per_device_loader(device),
-                                       criterion=criterion,
-                                       device=device)
+            eval_loss, eval_accuracy = _eval_epoch_fn(epoch=epoch + 1,
+                                                      model=model,
+                                                      para_loader=para_loader.per_device_loader(device),
+                                                      criterion=criterion,
+                                                      device=device)
 
             del para_loader
             gc.collect()
@@ -259,12 +272,17 @@ def _run():
                 (valid_start - train_start) / 60, (time.time() - valid_start) / 60), flush=True)
             xm.master_print('- average loss | train = {:.6f}, valid = {:.6f}'.format(training_loss, eval_loss),
                             flush=True)
+            xm.master_print('- average accuracy | train = {:.6f}, valid = {:.6f}'.format(training_accuracy,
+                                                                                         eval_accuracy),
+                            flush=True)
             xm.master_print('-' * 55)
             xm.master_print('')
 
-            # save losses
+            # Save losses and accuracies
             training_losses.append(training_loss)
             eval_losses.append(eval_loss)
+            training_accuracies.append(training_accuracy)
+            eval_accuracies.append(eval_accuracy)
 
             del training_loss, eval_loss
             gc.collect()
@@ -273,7 +291,7 @@ def _run():
             xm.master_print('- early stopping triggered ', flush=True)
             break
 
-    return training_losses, eval_losses
+    return training_losses, eval_losses, training_accuracies, eval_accuracies
 
 
 def _map_fn(index, flags):
@@ -286,9 +304,11 @@ def _map_fn(index, flags):
     Returns:
 
     """
-    training_losses, eval_losses = _run()
+    training_losses, eval_losses, training_accuracies, eval_accuracies = _run()
     np.save('trn_losses.npy', np.array(training_losses))
     np.save('val_losses.npy', np.array(eval_losses))
+    np.save('trn_accuracies.npy', np.array(training_accuracies))
+    np.save('val_accuracies.npy', np.array(eval_accuracies))
 
 
 if __name__ == "__main__":
