@@ -33,7 +33,7 @@ class ReviewDataset(Dataset):
         #         tokens_targets.append(encode_plus_res['ids'][i])
 
         # Add cls target
-        encode_plus_res['cls_target'] = torch.tensor(self.targets[index] - 1, dtype=torch.long)
+        encode_plus_res['cls_targets'] = torch.tensor(self.targets[index], dtype=torch.long)
         # Add tokens targets
         # encode_plus_res['tokens_targets'] = torch.nn.functional.pad(
         #     torch.tensor(tokens_targets, dtype=torch.long), (0, PAD_LENGTH - len(tokens_targets)), value=0

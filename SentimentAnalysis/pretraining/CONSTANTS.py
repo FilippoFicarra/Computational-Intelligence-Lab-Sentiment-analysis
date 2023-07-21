@@ -1,19 +1,17 @@
-import math
-
 VOCABULARY_SIZE = 50265
-OVERALL_NUMBER = 5
+OVERALL_NUMBER = 2
 HIDDEN_SIZE = 768
 
 PATH_POLARITY = "data/sentiment-knowledge/polarity.csv"
-PATH_DATASET = "data/datasets/dataset-cleaned-no-unknown.json"
+PATH_DATASET = "data/datasets/dataset-two-classes.json"
 PATH_TOKENIZER = "model/tokenizer"
-PATH_MODEL = "model/model/model.pt"
+MODEL_NAME = "tweet_competition"
 
-EPOCHS = 10
+EPOCHS = 20
 TRAIN_BATCH_SIZE = 256
-LEARNING_RATE = 0.001
-WARMUP_STEPS = 4000
+LEARNING_RATE = 0.00001
 NUMBER_OF_TPU_WORKERS = 8
+PATIENCE = 5
 
 CHUNK_SIZE = 100000
 SECOND_COLUMN_DATASET = "reviewText"
@@ -22,4 +20,6 @@ MAX_LENGTH = 128
 FRACTION_MASKING = 0.15
 LOWER_LIMIT_FRACTION_MASKING = 0.1
 
-# PAD_LENGTH = math.ceil(FRACTION_MASKING * MAX_LENGTH)
+VERBOSE_PARAM = 50
+DATASET_TRAIN_FRACTION = 0.2
+DATASET_EVAL_FRACTION = 0.025

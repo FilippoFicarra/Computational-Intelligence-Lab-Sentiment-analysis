@@ -196,11 +196,13 @@ SentimentAnalysis/pretraining/data/datasets/All_Amazon_Review.json
 SentimentAnalysis/pretraining/data/datasets/dataset.json
 SentimentAnalysis/pretraining/data/datasets/dataset-cleaned.json
 SentimentAnalysis/pretraining/data/datasets/dataset-cleaned-no-unknown.json
+SentimentAnalysis/pretraining/data/datasets/dataset-two-classes.json
 SentimentAnalysis/pretraining/data/cleaning/profanities.txt
 SentimentAnalysis/pretraining/data/sentiment-knowledge/all-words-with-occurrences.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/words-seed-score.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/pmi.csv
 SentimentAnalysis/pretraining/data/sentiment-knowledge/polarity.csv
+SentimentAnalysis/pretraining/data/twitter-data
 
 .idea
 ReferencePapers/How Will Your Tweet Be Received\? Predicting the Sentiment Polarity of Tweet Replies.pdf

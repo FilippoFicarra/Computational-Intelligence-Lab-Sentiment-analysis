@@ -1,19 +1,20 @@
+import gc
+import math
 import random
+import time
 
+import numpy as np
 import pandas as pd
 import torch
-from alive_progress import alive_bar
+import torch_xla.core.xla_model as xm
+import torch_xla.distributed.parallel_loader as pl
+import torch_xla.distributed.xla_multiprocessing as xmp
 from matplotlib import pyplot as plt
-from torch.optim.lr_scheduler import LinearLR
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-import torch_xla
-import torch_xla.core.xla_model as xm
-import torch_xla.distributed.xla_multiprocessing as xmp
-import torch_xla.distributed.parallel_loader as pl
-
 from CONSTANTS import *
+from average_meter import AverageMeter
 from dataset import ReviewDataset
 from model import Roberta
 
@@ -37,195 +38,260 @@ def plot_accuracy_and_loss(training_accuracies, training_losses, eval_accuracies
     plt.savefig("loss.png")
 
 
-if __name__ == "__main__":
-    # DEVICE
-    device = xm.xla_device()
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    # TOKENIZER
-    tokenizer = AutoTokenizer.from_pretrained(PATH_TOKENIZER)
-
-    # DATA FOR TRAINING AND EVALUATION
-
+def get_training_and_validation_dataframes(path, dtype, grouping_key, train_fraction, eval_fraction, columns):
     # Load dataframe with dataset
-    df = pd.read_json(PATH_DATASET, lines=True, dtype="overall int, reviewText string")
+    df = pd.read_json(path, lines=True, dtype=dtype)
 
     # Group by overall
-    grouped_df = df.groupby('overall')
+    grouped_df = df.groupby(grouping_key)
 
     # Sample 20 % of dataset for training
     training_values = []
     indeces_to_drop_training = []
-    for overall, reviews_indeces in grouped_df.groups.items():
-        for ind in random.sample(reviews_indeces.tolist(), k=math.ceil(0.2 * len(reviews_indeces))):
-            training_values.append((overall, df.iloc[ind, 1]))
+    for key, group in grouped_df.groups.items():
+        for ind in random.sample(group.tolist(), k=math.ceil(train_fraction * len(group))):
+            training_values.append((key, df.iloc[ind, 1]))
             indeces_to_drop_training.append(ind)
 
     df_after_drop = df.drop(indeces_to_drop_training).reset_index(drop=True)
-    grouped_df_after_drop = df_after_drop.groupby('overall')
+    grouped_df_after_drop = df_after_drop.groupby(grouping_key)
 
     # Sample 1 % of dataset for validation
-    val_values = []
-    for overall, reviews_indeces in grouped_df_after_drop.groups.items():
-        for ind in random.sample(reviews_indeces.tolist(), k=math.ceil(0.025 * len(reviews_indeces))):
-            val_values.append((overall, df_after_drop.iloc[ind, 1]))
+    eval_values = []
+    for key, group in grouped_df_after_drop.groups.items():
+        for ind in random.sample(group.tolist(), k=math.ceil(eval_fraction * len(group))):
+            eval_values.append((key, df_after_drop.iloc[ind, 1]))
 
-    # Define training dataframe
-    df_training = pd.DataFrame(data=training_values, columns=["overall", "reviewText"])
+    # Delete unused variable
+    del df, grouped_df, df_after_drop, grouped_df_after_drop
+    gc.collect()
 
-    # Define validation dataframe
-    df_eval = pd.DataFrame(data=val_values, columns=["overall", "reviewText"])
+    # Return training and validation dataframes
+    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns)
 
-    # Create dataloader object for both training and validation
-    training_loader = DataLoader(ReviewDataset(df_training, tokenizer), batch_size=TRAIN_BATCH_SIZE, shuffle=True)
-    # mp_device_loader_training = pl.MpDeviceLoader(training_loader, device)
-    eval_loader = DataLoader(ReviewDataset(df_eval, tokenizer), batch_size=TRAIN_BATCH_SIZE)
-    # mp_device_loader_eval = pl.MpDeviceLoader(eval_loader, device)
+
+def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
+    # Set model for training
+    model.train()
+
+    # Define object for loss
+    training_loss_meter = AverageMeter()
+
+    # Train for the epoch
+    for i, data in enumerate(para_loader):
+        # Set gradients to zero
+        optimizer.zero_grad()
+        # Get mini-batch data
+        ids = data['ids'].to(device)
+        mask = data['mask'].to(device)
+        cls_targets = data['cls_targets'].to(device)
+        # Compute model output
+        outputs = model(ids, mask)
+        # Compute loss
+        loss = criterion(outputs, cls_targets)
+        # Update running average of loss for epoch
+        training_loss_meter.update(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)),
+                                   cls_targets.size(0))
+
+        # feedback
+        if i > 0 and i % VERBOSE_PARAM == 0:
+            xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}'.format(i, training_loss_meter.val,
+                                                                                       training_loss_meter.avg),
+                            flush=True)
+
+        # Compute gradient updates for learnable parameters
+        loss.backward()
+        # Update learnable parameters
+        xm.optimizer_step(optimizer)
+
+        # Free up memory
+        del ids, mask, cls_targets, outputs, loss
+        gc.collect()
+
+    # Return average training loss for the epoch
+    return training_loss_meter.avg
+
+
+def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
+    # Set model to evaluation
+    model.eval()
+
+    # Define object for loss
+    eval_loss_meter = AverageMeter()
+
+    with torch.no_grad():
+        for eval_batch in para_loader:
+            # Get mini-batch data
+            eval_ids = eval_batch['ids'].to(device)
+            eval_mask = eval_batch['mask'].to(device)
+            eval_cls_targets = eval_batch['cls_targets'].to(device)
+            # Compute model output
+            eval_outputs = model(eval_ids, eval_mask)
+            loss = criterion(eval_outputs, eval_cls_targets)
+
+            eval_loss_meter.update(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)),
+                                   eval_cls_targets.size(0))
+
+            # Free up memory
+            del eval_ids, eval_mask, eval_cls_targets, eval_outputs, loss
+            gc.collect()
+
+    # Output average evaluation loss for current epoch
+    xm.master_print('-- epoch {} | avg_eval_loss =  {:.6f}'.format(epoch, eval_loss_meter.avg), flush=True)
+
+    # Return average evaluation loss for the epoch
+    return eval_loss_meter.avg
+
+
+def _run():
+    # TOKENIZER
+
+    tokenizer = AutoTokenizer.from_pretrained(PATH_TOKENIZER)
+
+    # DATA FOR TRAINING AND EVALUATION
+    df_training, df_eval = get_training_and_validation_dataframes(PATH_DATASET,
+                                                                  "overall int, reviewText string",
+                                                                  "overall",
+                                                                  DATASET_TRAIN_FRACTION,
+                                                                  DATASET_EVAL_FRACTION,
+                                                                  ["overall", "reviewText"])
+
+    # Create train and eval datasets
+    training_dataset = ReviewDataset(df_training, tokenizer)
+    eval_dataset = ReviewDataset(df_eval, tokenizer)
+
+    # Create data samplers
+    train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,
+                                                                    num_replicas=xm.xrt_world_size(),
+                                                                    rank=xm.get_ordinal(),
+                                                                    shuffle=True)
+
+    eval_sampler = torch.utils.data.distributed.DistributedSampler(eval_dataset,
+                                                                   num_replicas=xm.xrt_world_size(),
+                                                                   rank=xm.get_ordinal(),
+                                                                   shuffle=False)
+
+    # Create dataloaders
+    training_loader = DataLoader(training_dataset,
+                                 batch_size=TRAIN_BATCH_SIZE,
+                                 shuffle=True,
+                                 sampler=train_sampler,
+                                 num_workers=0)
+
+    eval_loader = DataLoader(eval_dataset,
+                             batch_size=TRAIN_BATCH_SIZE,
+                             shuffle=False,
+                             sampler=eval_sampler,
+                             num_workers=0)
+    # DEVICE
+
+    device = xm.xla_device()
+
     # MODEL
 
-    model = Roberta().to(device)
+    model = Roberta()
+    model.to(device)
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
-    # Create the loss functions and Adam optimizer
-    loss_cls = torch.nn.CrossEntropyLoss(reduction="sum")
-    # loss_tokens_training = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
-    # VALUES FOR EARLY STOPPING
+    # LISTS FOR STORING LOSSES AND DICTIONARY FOR EARLY STOPPING
 
-    # Create dictionary for early stopping and other variables
-    early_stopping = {'best': 0, 'no_improvement': 0, 'patience': 2, 'stop': False}
-    training_accuracies = []
     training_losses = []
-    eval_accuracies = []
     eval_losses = []
+    early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': 2, 'stop': False}
 
-    # SCALER
-
-    # scaler = torch.cuda.amp.GradScaler()
-
-    # EPOCHS LOOP
+    # TRAINING
 
     for epoch in range(EPOCHS):
         if not early_stopping['stop']:
-            # Set model for training
-            model.train()
+            # Display info
+            xm.master_print('-' * 55, flush=True)
+            xm.master_print('EPOCH {}/{}'.format(epoch + 1, EPOCHS), flush=True)
+            xm.master_print('-' * 55, flush=True)
+            xm.master_print('- initialization | TPU cores = {}'.format(xm.xrt_world_size()), flush=True)
+            epoch_start = time.time()
 
-            # Define variables for epoch accuracy and loss
-            training_loss = 0
-            num_correct = 0
-            num_training_steps = 0
-            num_training_examples = 0
+            # Update training loader shuffling
+            train_sampler.set_epoch(epoch)
 
-            # Initialize optimizer learning rate and define scheduler
-            # optimizer.param_groups[0]['lr'] = LEARNING_RATE
-            # scheduler = LinearLR(optimizer, start_factor=1, end_factor=0.01, total_iters=WARMUP_STEPS)
+            # Training pass
+            train_start = time.time()
+            xm.master_print('- training...')
+            para_loader = pl.ParallelLoader(training_loader, [device])
+            training_loss = _train_epoch_fn(epoch=epoch + 1,
+                                            model=model,
+                                            para_loader=para_loader.per_device_loader(device),
+                                            criterion=criterion,
+                                            optimizer=optimizer,
+                                            device=device)
 
-            # Train for the epoch
-            with alive_bar(len(training_loader), force_tty=True, title=f"Epoch {epoch}") as bar:
-                for i, data in enumerate(training_loader, 0):
-                    # Set gradients to zero
-                    optimizer.zero_grad()
-                    # Obs: each element of the dataset is a dictionary with ids, mask, token_type_ids, cls_target and
-                    # tokens_targets. Cls target is a tensor containing one element between 1 and 5,
-                    # while tokens_targets is a tensor containing the id of each masked token.
-                    ids = data['ids'].to(device, dtype=torch.long)
-                    mask = data['mask'].to(device, dtype=torch.long)
-                    cls_targets = data['cls_target'].to(device, dtype=torch.long)
-                    # tokens_targets = twitter-data['tokens_targets'].to(device, dtype=torch.int)
+            del para_loader
+            gc.collect()
 
-                    outputs = model(ids, mask)
-                    loss_cls_val = loss_cls(outputs, cls_targets)
+            # Evaluation pass
+            valid_start = time.time()
+            xm.master_print('- validation...', flush=True)
+            para_loader = pl.ParallelLoader(eval_loader, [device])
+            eval_loss = _eval_epoch_fn(epoch=epoch + 1,
+                                       model=model,
+                                       para_loader=para_loader.per_device_loader(device),
+                                       criterion=criterion,
+                                       device=device)
 
-                    # loss_tokens_val = loss_tokens_training(outputs['tokens'].view(-1, outputs['tokens'].size(-1)),
-                    # tokens_targets.reshape(-1))
-                    # loss = loss_cls_val  # + loss_tokens_val
-                    training_loss += loss_cls_val.item()  # + loss_tokens_val.item()
+            del para_loader
+            gc.collect()
 
-                    # Accuracy on review prediction
-                    num_correct += torch.eq(torch.max(torch.softmax(outputs, 0).data, dim=1)[1],
-                                            cls_targets).sum().item()
-
-                    # Increase number of training steps and number of examples processed in the current epoch
-                    num_training_steps += 1
-                    num_training_examples += cls_targets.size(0)
-
-                    if i % 200 == 0:
-                        loss_step = training_loss / num_training_steps
-                        accu_step = (num_correct * 100) / num_training_examples
-                        print(f"Epoch {epoch} Training Accuracy after {num_training_steps} steps: {accu_step}")
-                        print(f"Epoch {epoch} Training Loss after {num_training_steps} steps: {loss_step}")
-
-                    # Compute gradient updates for learnable parameters
-                    loss_cls_val.backward()
-                    # Update learnable parameters using grad attribute of the parameters, which has been updated by
-                    # loss.backward()
-                    optimizer.step()
-                    # xm.optimizer_step(optimizer)
-                    # Compute new learning rate
-                    # scheduler.step()
-                    # xm step
-                    xm.mark_step()
-                    # scaler.update()
-                    # Update bar
-                    bar()
-
-            # Compute training measures for the epoch
-            epoch_accuracy = (num_correct * 100) / num_training_examples
-            epoch_loss = training_loss / num_training_steps
-            training_accuracies.append(epoch_accuracy)
-            training_losses.append(epoch_loss)
-            print(f'Total Training Accuracy for Epoch {epoch}: {epoch_accuracy}')
-            print(f"Average Training Loss for Epoch {epoch}: {epoch_loss}")
-
-            # Evaluate model for early stopping
-            model.eval()
-
-            eval_loss = 0
-            num_correct_eval = 0
-            num_eval_examples = 0
-            num_eval_steps = 0
-
-            with torch.no_grad():
-                for eval_batch in eval_loader:
-                    eval_ids = eval_batch['ids'].to(device, dtype=torch.long)
-                    eval_mask = eval_batch['mask'].to(device, dtype=torch.long)
-                    eval_cls_targets = eval_batch['cls_target'].to(device, dtype=torch.long)
-
-                    eval_outputs = model(eval_ids, eval_mask)
-                    loss_eval_val = loss_cls(eval_outputs, eval_cls_targets)
-                    eval_loss += loss_eval_val.item()
-
-                    num_correct_eval += torch.eq(torch.max(torch.softmax(eval_outputs, 0).data, dim=1)[1],
-                                                 eval_cls_targets).sum().item()
-
-                    num_eval_steps += 1
-                    num_eval_examples += eval_cls_targets.size(0)
-
-            # Compute training measures for the epoch
-            epoch_accuracy_eval = (num_correct_eval * 100) / num_eval_examples
-            epoch_loss_eval = eval_loss / num_eval_steps
-            eval_accuracies.append(epoch_accuracy_eval)
-            eval_losses.append(epoch_loss_eval)
-            print(f'Total Evaluation Accuracy for Epoch {epoch}: {epoch_accuracy_eval}')
-            print(f"Average Evaluation Loss for Epoch {epoch}: {epoch_loss_eval}")
-
-            # Early stopping
-            if epoch_accuracy_eval > early_stopping['best']:
-                early_stopping['best'] = epoch_accuracy_eval
+            # Save weights
+            if eval_loss < early_stopping['best']:
+                xm.save(model.state_dict(), 'weights_{}.pt'.format(MODEL_NAME))
+                early_stopping['best'] = eval_loss
+                early_stopping['no_improvement'] = 0
             else:
                 early_stopping['no_improvement'] += 1
+                if early_stopping['no_improvement'] == early_stopping['patience']:
+                    early_stopping['stop'] = True
 
-            if early_stopping['no_improvement'] >= early_stopping['patience']:
-                print("Early stopping triggered. No improvement in validation loss.")
-                early_stopping['stop'] = True
+            # Display info
+            xm.master_print('- elapsed time | train = {:.2f} min, valid = {:.2f} min'.format(
+                (valid_start - train_start) / 60, (time.time() - valid_start) / 60), flush=True)
+            xm.master_print('- average loss | train = {:.6f}, valid = {:.6f}'.format(training_loss, eval_loss),
+                            flush=True)
+            xm.master_print('-' * 55)
+            xm.master_print('')
 
-    # Save model
-    torch.save(model.roberta, PATH_MODEL)
+            # save losses
+            training_losses.append(training_loss)
+            eval_losses.append(eval_loss)
 
-    # Plot accuracies and losses
-    plot_accuracy_and_loss(training_accuracies, training_losses, eval_accuracies, eval_losses)
+            del training_loss, eval_loss
+            gc.collect()
 
-# if __name__ == "__main__":
-#  xmp.spawn(_mp_fn, args=(), nprocs=8, start_method="fork")
+        else:
+            xm.master_print('- early stopping triggered ', flush=True)
+            break
+
+    return training_losses, eval_losses
+
+
+def _map_fn(index, flags):
+    """
+    Function executed by all TPU cores.
+    Args:
+        index: Identifier of the worker node.
+        flags: Parameters.
+
+    Returns:
+
+    """
+    training_losses, eval_losses = _run()
+    np.save('trn_losses.npy', np.array(training_losses))
+    np.save('val_losses.npy', np.array(eval_losses))
+
+
+if __name__ == "__main__":
+    # Define model and model wrapper
+    flags = {}
+    xmp.spawn(_map_fn, args=(flags,), nprocs=NUMBER_OF_TPU_WORKERS, start_method='fork')
