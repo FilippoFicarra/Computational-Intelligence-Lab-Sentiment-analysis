@@ -22,11 +22,9 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained("roberta-base")
 
     # Load dataset as iterator
-    data = pd.read_json(open(PATH_DATASET, "r", encoding="utf8"), lines=True)
+    data = pd.read_json(open(PATH_DATASET_AMAZON, "r", encoding="utf8"), lines=True)
 
     new_tokenizer = tokenizer.train_new_from_iterator(list_generator(data), vocab_size=VOCABULARY_SIZE,
-                                                      new_special_tokens=["[EMAIL]", "[URL]", "[XML]", "[PATH]",
-                                                                          "[NUMBER]", "[CUR]", "[BAD]", "[UNKNOWN]",
-                                                                          "<user>", "<url>"])
+                                                      new_special_tokens=SPECIAL_TOKENS_AMAZON)
 
     new_tokenizer.save_pretrained(PATH_TOKENIZER)

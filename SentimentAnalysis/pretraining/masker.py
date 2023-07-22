@@ -28,8 +28,7 @@ class Embedder:
         for row in df.itertuples():
             self.sentiment_knowledge_kp.add_keyword(row.word, self.mask_tosken_for_replacement)
 
-    def encode_plus(self, text, add_special_tokens=True, max_length=MAX_LENGTH, return_attention_mask=True,
-                    return_token_type_ids=True):
+    def encode_plus(self, text, add_special_tokens=True, max_length=MAX_LENGTH, return_attention_mask=True):
         # Get tokens id for string with sentiment words
         tokens_with_replacement = self.tokenizer.encode(self.sentiment_knowledge_kp.replace_keywords(text),
                                                         None,

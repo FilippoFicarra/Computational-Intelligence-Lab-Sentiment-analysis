@@ -2,6 +2,8 @@ import gc
 import math
 import random
 import time
+import sys
+import getopt
 
 import numpy as np
 import pandas as pd
@@ -11,12 +13,66 @@ import torch_xla.distributed.parallel_loader as pl
 import torch_xla.distributed.xla_multiprocessing as xmp
 from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 
 from CONSTANTS import *
 from average_meter import AverageMeter
-from dataset import ReviewDataset
-from model import Roberta
+from dataset import ReviewDataset, TwitterDataset
+from bert_tweet_with_mask import BertTweetWithMask
+from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
+
+
+def parsing():
+    # Remove 1st argument from the list of command line arguments
+    arguments = sys.argv[1:]
+
+    # Options
+    options = "hmbed:"
+
+    # Long options
+    long_options = ["help", "model", "batch_size", "epoch", "dataset"]
+
+    # Prepare flags
+    flags = {"model": None, "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS}
+
+    # Parsing argument
+    arguments, values = getopt.getopt(arguments, options, long_options)
+
+    if arguments[0][0] in ("-h", "--help"):
+        print(f"""This script trains a model on a TPU with multiple cores.\n
+        -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS)} 
+        (default={MODEL_NAME_OPTIONS[1]}).\n
+        -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n
+        -e or --epoch: number of epochs (default={EPOCHS}).\n
+        -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)} 
+        (default={DATASET_NAME_OPTIONS[0]}).
+        """)
+        sys.exit()
+
+    # checking each argument
+    for arg, val in arguments:
+        if arg in ("-m", "--model"):
+            if val in MODEL_NAME_OPTIONS:
+                flags["model"] = val
+            else:
+                raise ValueError("Model argument not valid.")
+        elif arg in ("-b", "--batch_size"):
+            if val >= 1:
+                flags["batch_size"] = val
+            else:
+                raise ValueError("Batch size must be at least 1.")
+        elif arg in ("-e", "--epoch"):
+            if val >= 1:
+                flags["epoch"] = val
+            else:
+                raise ValueError("Number of epochs must be at least 1.")
+        elif arg in ("-d", "--dataset"):
+            if val in DATASET_NAME_OPTIONS:
+                flags["dataset"] = val
+            else:
+                raise ValueError("Dataset name is not valid.")
+
+    return flags
 
 
 def plot_accuracy_and_loss(training_accuracies, training_losses, eval_accuracies, eval_losses):
@@ -155,22 +211,25 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
     return eval_meter.avg_loss, eval_meter.avg_accuracy
 
 
-def _run():
+def _run(flags):
     # TOKENIZER
 
-    tokenizer = AutoTokenizer.from_pretrained(PATH_TOKENIZER)
+    tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-base")
 
     # DATA FOR TRAINING AND EVALUATION
-    df_training, df_eval = get_training_and_validation_dataframes(PATH_DATASET,
-                                                                  "overall int, reviewText string",
-                                                                  "overall",
-                                                                  DATASET_TRAIN_FRACTION,
-                                                                  DATASET_EVAL_FRACTION,
-                                                                  ["overall", "reviewText"])
 
-    # Create train and eval datasets
-    training_dataset = ReviewDataset(df_training, tokenizer)
-    eval_dataset = ReviewDataset(df_eval, tokenizer)
+    if flags["dataset"] == "amazon":
+        df_training, df_eval = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
+        tokenizer.add_special_tokens(SPECIAL_TOKENS_AMAZON)
+        # Create train and eval datasets
+        training_dataset = ReviewDataset(df_training, tokenizer)
+        eval_dataset = ReviewDataset(df_eval, tokenizer)
+    else:
+        df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
+        tokenizer.add_special_tokens(SPECIAL_TOKENS_TWITTER)
+        # Create train and eval datasets
+        training_dataset = TwitterDataset(df_training, tokenizer)
+        eval_dataset = TwitterDataset(df_eval, tokenizer)
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,
@@ -185,13 +244,13 @@ def _run():
 
     # Create dataloaders
     training_loader = DataLoader(training_dataset,
-                                 batch_size=TRAIN_BATCH_SIZE,
+                                 batch_size=flags["batch_size"],
                                  shuffle=True,
                                  sampler=train_sampler,
                                  num_workers=0)
 
     eval_loader = DataLoader(eval_dataset,
-                             batch_size=TRAIN_BATCH_SIZE,
+                             batch_size=flags["batch_size"],
                              shuffle=False,
                              sampler=eval_sampler,
                              num_workers=0)
@@ -201,7 +260,17 @@ def _run():
 
     # MODEL
 
-    model = Roberta()
+    # Define new configuration to change the vocabulary size
+    new_config = AutoConfig.from_pretrained("vinai/bertweet-base")
+    new_config.vocab_size = max(tokenizer.get_vocab().values())
+
+    if flags["model"] == "robertaMask":
+        model = BertTweetWithMask(AutoModel.from_config(new_config))
+    else:
+        model = BertTweetWithSparsemax(AutoModel.from_config(new_config))
+        for i in range(2):
+            model.base_model.encoder.layer[i - 1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+
     model.to(device)
 
     # LOSS FUNCTIONS AND OPTIMIZER
@@ -219,8 +288,10 @@ def _run():
 
     # TRAINING
 
-    for epoch in range(EPOCHS):
+    for epoch in range(flags["epoch"]):
         if not early_stopping['stop']:
+            # Update model parameter
+            model.update_epoch(epoch + 1)
             # Display info
             xm.master_print('-' * 55, flush=True)
             xm.master_print('EPOCH {}/{}'.format(epoch + 1, EPOCHS), flush=True)
@@ -259,7 +330,7 @@ def _run():
 
             # Save weights
             if eval_loss < early_stopping['best']:
-                xm.save(model.state_dict(), 'weights_{}.pt'.format(MODEL_NAME))
+                xm.save(model.model_representation(), '{}.pt'.format(flags["model"]))
                 early_stopping['best'] = eval_loss
                 early_stopping['no_improvement'] = 0
             else:
@@ -304,7 +375,7 @@ def _map_fn(index, flags):
     Returns:
 
     """
-    training_losses, eval_losses, training_accuracies, eval_accuracies = _run()
+    training_losses, eval_losses, training_accuracies, eval_accuracies = _run(flags)
     np.save('trn_losses.npy', np.array(training_losses))
     np.save('val_losses.npy', np.array(eval_losses))
     np.save('trn_accuracies.npy', np.array(training_accuracies))
@@ -313,5 +384,5 @@ def _map_fn(index, flags):
 
 if __name__ == "__main__":
     # Define model and model wrapper
-    flags = {}
+    flags = parsing()
     xmp.spawn(_map_fn, args=(flags,), nprocs=NUMBER_OF_TPU_WORKERS, start_method='fork')

@@ -2,11 +2,14 @@ import csv
 import os
 import re
 import shutil
-import numpy as np
 
 import contractions
+import numpy as np
+import wordninja
 from cleantext import clean
 from flashtext import KeywordProcessor
+import nltk
+from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 # GLOBAL VARIABLES
@@ -91,6 +94,20 @@ def save_list_to_csv(data_list, file_path, attributes) -> None:
         writer.writerows(data_list)
 
 
+# FUNCTION FOR LOADING STOPWORDS
+
+def load_stopwords():
+    try:
+        # Check if the stopwords data is available
+        nltk.data.find('corpora/stopwords')
+    except LookupError:
+        # Download the stopwords data if not available
+        nltk.download('stopwords')
+
+    # Load the stopwords once they are available
+    return set(stopwords.words('english'))
+
+
 # GLOBAL VARIABLE FOR CLEANING FUNCTIONS
 
 # Get emojis
@@ -121,6 +138,13 @@ with open(PATH_TO_PROFANITIES, "r") as f:
 KEYWORD_PROCESSOR_PROFANITIES = KeywordProcessor()
 for profanity in profanities:
     KEYWORD_PROCESSOR_PROFANITIES.add_keyword(profanity, " [BAD] ")
+
+# Download stopwords and create keyword processor
+stop_words = load_stopwords()
+
+KEYWORD_PROCESSOR_STOPWORDS = KeywordProcessor()
+for stopword in stop_words:
+    KEYWORD_PROCESSOR_STOPWORDS.add_keyword(stopword, "")
 
 
 # POLARITY CALCULATOR
@@ -221,7 +245,7 @@ def replace_emojis(string):
     return KEYWORD_PROCESSOR_EMOJIS.replace_keywords(string)
 
 
-def replace_special_tokens_with_placeholder(string, twitter) -> str:
+def replace_special_tokens_with_placeholder(string, twitter):
     # Choose pattern
     if not twitter:
         sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]"
@@ -321,17 +345,46 @@ def cleaning_function_no_unknown(string) -> str:
 
 # FUNCTION FOR CLEANING OF TWITTER DATASET
 
+def late_remove_special_characters_twitter(string):
+    return re.sub(r"([*@])+", "", re.sub(r"([$%])\1+", r' \1 ', re.sub(r"(#)\1+", r'\1', string)))
+
+
+def replace_hashtags(string):
+    # Use the regex pattern to find words starting with "#"
+    pattern = r'\B#\w+\b'
+    hashtags = re.findall(pattern, string)
+    kp = KeywordProcessor()
+
+    for hashtag in hashtags:
+        kp.add_keyword(hashtag, " ".join(wordninja.split(hashtag)))
+
+    return kp.replace_keywords(string)
+
+
+def remove_hashtags(string):
+    return re.sub(r"(#)", "", string)
+
+
+def remove_stopwords(string):
+    return KEYWORD_PROCESSOR_STOPWORDS.replace_keywords(string)
+
+
 def cleaning_function_twitter_dataset(string) -> str:
-    return clean(
-        divide_words_starting_with_numbers(
-            replace_currency_symbols(
-                late_remove_special_characters(
-                    replace_profanities(
-                        add_space_before_and_after_punctuation(
-                            remove_special_characters(
-                                replace_emojis(
-                                    contractions.fix(
-                                        string.lower())), twitter=True)))))), lower=False, no_line_breaks=True)
+    return remove_stopwords(
+        remove_hashtags(
+            replace_hashtags(
+                clean(
+                    replace_numbers(
+                        divide_words_starting_with_numbers(
+                            replace_currency_symbols(
+                                late_remove_special_characters_twitter(
+                                    replace_profanities(
+                                        add_space_before_and_after_punctuation(
+                                            remove_special_characters(
+                                                replace_emojis(
+                                                    contractions.fix(
+                                                        string.lower())), twitter=True))))))), lower=False,
+                    no_line_breaks=True))))
 
 
 # WORD TOKENIZER
@@ -400,9 +453,9 @@ def pmi(c_w1_w2, c_w1, c_w2, N):
 # FUNCTIONS FOR STORING DATASET
 
 
-def save_rdd_to_json_file(path, rdd):
+def save_rdd_to_json_file(path, rdd, schema=SCHEMA):
     # Save cleaned dataset with unknown words
-    rdd.toDF(schema=SCHEMA).write.json(path)
+    rdd.toDF(schema=schema).write.json(path)
 
 
 def merge_files(path_dataset_directory, path_merged_dataset):
