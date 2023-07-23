@@ -33,7 +33,7 @@ def parsing():
     long_options = ["help", "model", "batch_size", "epoch", "dataset"]
 
     # Prepare flags
-    flags = {"model": None, "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS, "dataset": "amazon"}
+    flags = {"model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS, "dataset": "twitter"}
 
     # Parsing argument
     arguments, values = getopt.getopt(arguments, options, long_options)
@@ -275,6 +275,8 @@ def _run(flags):
         for i in range(1, 11):
             for param in model.base_model.encoder.layer[i].parameters():
                 param.requires_grad = False
+
+    xm.master_print('{model}'.format(model), flush=True)
 
     model.to(device)
 
