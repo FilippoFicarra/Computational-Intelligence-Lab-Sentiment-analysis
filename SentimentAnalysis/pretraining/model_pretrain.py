@@ -27,10 +27,10 @@ def parsing():
     arguments = sys.argv[1:]
 
     # Options
-    options = "hmbed:"
+    options = "hm:b:e:d:"
 
     # Long options
-    long_options = ["help", "model", "batch_size", "epoch", "dataset"]
+    long_options = ["help", "model=", "batch_size=", "epoch=", "dataset="]
 
     # Prepare flags
     flags = {"model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS, "dataset": "twitter"}
