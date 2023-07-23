@@ -57,13 +57,13 @@ def parsing():
             else:
                 raise ValueError("Model argument not valid.")
         elif arg in ("-b", "--batch_size"):
-            if val >= 1:
-                flags["batch_size"] = val
+            if int(val) >= 1:
+                flags["batch_size"] = int(val)
             else:
                 raise ValueError("Batch size must be at least 1.")
         elif arg in ("-e", "--epoch"):
-            if val >= 1:
-                flags["epoch"] = val
+            if int(val) >= 1:
+                flags["epoch"] = int(val)
             else:
                 raise ValueError("Number of epochs must be at least 1.")
         elif arg in ("-d", "--dataset"):
@@ -148,12 +148,12 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
         # Compute loss
         loss = criterion(outputs, cls_targets)
         # Update running average of loss for epoch
-        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
+        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
         # Update running average of accuracy for epoch
         training_meter.update_accuracy(xm.mesh_reduce(
-            'accuracy_reduce', torch.eq(torch.argmax(outputs, dim=1), cls_targets).sum().item(),
-            lambda values: sum(values) / len(values)), cls_targets.size(0))
+            'accuracy_reduce', torch.eq(torch.argmax(outputs, dim=1), cls_targets).sum() / cls_targets.size(0),
+            lambda values: sum(values) / len(values)))
 
         # Feedback
         if i > 0 and i % VERBOSE_PARAM == 0:
@@ -192,12 +192,13 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
             loss = criterion(eval_outputs, eval_cls_targets)
 
             # Update running average of loss for epoch
-            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
+            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
             # Update running average of accuracy for epoch
             eval_meter.update_accuracy(xm.mesh_reduce(
-                'accuracy_reduce', torch.eq(torch.max(eval_outputs, dim=1), eval_cls_targets).sum().item(),
-                lambda values: sum(values) / len(values)), eval_cls_targets.size(0))
+                'accuracy_reduce', torch.eq(torch.argmax(eval_outputs, dim=1),
+                                            eval_cls_targets).sum() / eval_cls_targets.size(0),
+                lambda values: sum(values) / len(values)))
 
             # Free up memory
             del eval_ids, eval_mask, eval_cls_targets, eval_outputs, loss
@@ -219,12 +220,14 @@ def _run(flags):
     # DATA FOR TRAINING AND EVALUATION
 
     if flags["dataset"] == "amazon":
+        xm.master_print('- amazon dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
         tokenizer.add_special_tokens(SPECIAL_TOKENS_AMAZON)
         # Create train and eval datasets
         training_dataset = ReviewDataset(df_training, tokenizer)
         eval_dataset = ReviewDataset(df_eval, tokenizer)
     else:
+        xm.master_print('- twitter dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         tokenizer.add_special_tokens(SPECIAL_TOKENS_TWITTER)
         # Create train and eval datasets
@@ -263,22 +266,21 @@ def _run(flags):
     new_config.vocab_size = max(tokenizer.get_vocab().values())
 
     if flags["model"] == "robertaMask":
-        model = BertTweetWithMask(AutoModel.from_config(new_config))
+        mx = BertTweetWithMask(AutoModel.from_config(new_config))
     else:
-        model = BertTweetWithSparsemax(AutoModel.from_config(new_config))
+        mx = BertTweetWithSparsemax(AutoModel.from_config(new_config))
         for i in range(2):
-            model.base_model.encoder.layer[i - 1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            mx.base_model.encoder.layer[i - 1].attention.self = RobertaSelfAttention(config=mx.base_model.config)
 
         # Freeze parameters
         # for param in model.base_model.embeddings.parameters():
         #     param.requires_grad = False
         for i in range(1, 11):
-            for param in model.base_model.encoder.layer[i].parameters():
+            for param in mx.base_model.encoder.layer[i].parameters():
                 param.requires_grad = False
 
-    xm.master_print('{model}'.format(model), flush=True)
-
-    model.to(device)
+    model = mx.to(device)
+    xm.master_print(model, flush=True)
 
     # LOSS FUNCTIONS AND OPTIMIZER
 

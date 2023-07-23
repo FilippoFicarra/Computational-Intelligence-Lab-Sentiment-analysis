@@ -22,14 +22,14 @@ class AverageMeter(object):
         self.sum_accuracy = 0
         self.val_accuracy = 0
 
-    def update_loss(self, val, n=1):
+    def update_loss(self, val):
         self.val_loss = val
-        self.sum_loss += val * n
-        self.count_loss += n
+        self.sum_loss += val
+        self.count_loss += 1
         self.avg_loss = self.sum_loss / self.count_loss
 
-    def update_accuracy(self, val, n=1):
-        self.val_accuracy = (val * 100) / n
+    def update_accuracy(self, val):
+        self.val_accuracy = (val * 100)
         self.sum_accuracy += val
-        self.count_accuracy += n
+        self.count_accuracy += 1
         self.avg_accuracy = self.sum_accuracy * 100 / self.count_accuracy
