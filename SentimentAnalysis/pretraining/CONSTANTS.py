@@ -47,5 +47,5 @@ TWITTER_OPTIONS = {
 }
 
 SPECIAL_TOKENS_AMAZON = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]",
-                                                       "[BAD]", "[UNKNOWN]", "<user>", "<url>"]}
-SPECIAL_TOKENS_TWITTER = {"additional_special_tokens": ["[NUMBER]", "[CUR]", "[BAD]", "<user>", "<url>"]}
+                                                       "[BAD]", "<user>", "<url>"]}
+SPECIAL_TOKENS_TWITTER = {"additional_special_tokens": ["[CUR]", "[BAD]", "<user>", "<url>"]}

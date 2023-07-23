@@ -8,8 +8,6 @@ import numpy as np
 import wordninja
 from cleantext import clean
 from flashtext import KeywordProcessor
-import nltk
-from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 # GLOBAL VARIABLES
@@ -36,11 +34,11 @@ EMOTICONS = {':*': 'kiss', ':-*': 'kiss', ':x': 'kiss', ':-)': 'happy', ':)': 'h
              ':O': 'surprise', '°o°': 'surprise', 'o_O': 'surprise', 'o_0': 'surprise', 'o.O': 'surprise',
              'o-o': 'surprise', '8-0': 'surprise', '|-O': 'surprise', ';-)': 'wink', ';)': 'wink', '*-)': 'wink',
              '*)': 'wink', ';-]': 'wink', ';]': 'wink', ';D': 'wink', ';^)': 'wink', ':-,': 'wink', '>:P': 'tong',
-             ':-P': 'tong', ':P': 'tong', 'X-P': 'tong', 'x-p': 'tong', 'xp': 'tong', 'XP': 'tong', ':-p': 'tong',
-             ':p': 'tong', '=p': 'tong', ':-Þ': 'tong', ':Þ': 'tong', ':-b': 'tong', ':b': 'tong', ':-&': 'tong',
-             '>:\\': 'annoyed', '>:/': 'annoyed', ':-/': 'annoyed', ':-.': 'annoyed', ':/': 'annoyed', ':\\': 'annoyed',
-             '=/': 'annoyed', '=\\': 'annoyed', ':L': 'annoyed', '=L': 'annoyed', ':S': 'annoyed', '>.<': 'annoyed',
-             ':-|': 'annoyed', '<:-|': 'annoyed', ':-X': 'seallips', ':X': 'seallips', ':-#': 'seallips',
+             ':-P': 'tong', ':P': 'tong', 'X-P': 'tong', 'x-p': 'tong', 'xp': 'tong', 'xpp': 'tong', 'XP': 'tong',
+             ':-p': 'tong', ':p': 'tong', '=p': 'tong', ':-Þ': 'tong', ':Þ': 'tong', ':-b': 'tong', ':b': 'tong',
+             ':-&': 'tong', '>:\\': 'annoyed', '>:/': 'annoyed', ':-/': 'annoyed', ':-.': 'annoyed', ':/': 'annoyed',
+             ':\\': 'annoyed', '=/': 'annoyed', '=\\': 'annoyed', ':L': 'annoyed', '=L': 'annoyed', ':S': 'annoyed',
+             '>.<': 'annoyed', ':-|': 'annoyed', '<:-|': 'annoyed', ':-X': 'seallips', ':X': 'seallips',
              ':#': 'seallips', 'O:-)': 'angel', '0:-3': 'angel', '0:3': 'angel', '0:-)': 'angel', '0:)': 'angel',
              '0;^)': 'angel', '>:)': 'devil', '>:D': 'devil', '>:-D': 'devil', '>;)': 'devil', '>:-)': 'devil',
              '}:-)': 'devil', '}:)': 'devil', '3:-)': 'devil', '3:)': 'devil', 'o/\\o': 'highfive', '^5': 'highfive',
@@ -56,7 +54,235 @@ EMOTICONS = {':*': 'kiss', ':-*': 'kiss', ':x': 'kiss', ':-)': 'happy', ':)': 'h
              'd;': 'sad', 'd=': 'sad', 'dx': 'sad', "d-':": 'sad', '>:o': 'surprise', ':o': 'surprise',
              'o_o': 'surprise', 'o.o': 'surprise', '|-o': 'surprise', ';d': 'wink', '>:p': 'tong', ':-þ': 'tong',
              ':þ': 'tong', ':l': 'annoyed', '=l': 'annoyed', ':s': 'annoyed', ':-x': 'seallips', 'o:-)': 'angel',
-             '>:d': 'devil', '>:-d': 'devil', 'o:<': 'surprise', 'o:': 'surprise', '(-:o': 'angel'}
+             '>:d': 'devil', '>:-d': 'devil', 'o:<': 'surprise', 'o:': 'surprise', '(-:o': 'angel', ':-#': 'seallips'}
+
+ABBREVIATIONS = {
+    "4ao": "for adults only",
+    "a.m": "before midday",
+    "a3": "anytime anywhere anyplace",
+    "aamof": "as a matter of fact",
+    "acct": "account",
+    "adih": "another day in hell",
+    "afaic": "as far as i am concerned",
+    "afaict": "as far as i can tell",
+    "afaik": "as far as i know",
+    "afair": "as far as i remember",
+    "afk": "away from keyboard",
+    "app": "application",
+    "approx": "approximately",
+    "apps": "applications",
+    "asap": "as soon as possible",
+    "asl": "age, sex, location",
+    "atk": "at the keyboard",
+    "ave.": "avenue",
+    "aymm": "are you my mother",
+    "ayor": "at your own risk",
+    "b&b": "bed and breakfast",
+    "b+b": "bed and breakfast",
+    "b.c": "before christ",
+    "b2b": "business to business",
+    "b2c": "business to customer",
+    "b4": "before",
+    "b4n": "bye for now",
+    "b@u": "back at you",
+    "bae": "before anyone else",
+    "bak": "back at keyboard",
+    "bbbg": "bye bye be good",
+    "bbias": "be back in a second",
+    "bbl": "be back later",
+    "bbs": "be back soon",
+    "be4": "before",
+    "bfn": "bye for now",
+    "blvd": "boulevard",
+    "bout": "about",
+    "brb": "be right back",
+    "bros": "brothers",
+    "brt": "be right there",
+    "bsaaw": "big smile and a wink",
+    "btw": "by the way",
+    "bwl": "bursting with laughter",
+    "c/o": "care of",
+    "cet": "central european time",
+    "cf": "compare",
+    "cia": "central intelligence agency",
+    "csl": "can not stop laughing",
+    "cu": "see you",
+    "cul8r": "see you later",
+    "cv": "curriculum vitae",
+    "cwot": "complete waste of time",
+    "cya": "see you",
+    "cyt": "see you tomorrow",
+    "dae": "does anyone else",
+    "dbmib": "do not bother me i am busy",
+    "diy": "do it yourself",
+    "dm": "direct message",
+    "dwh": "during work hours",
+    "e123": "easy as one two three",
+    "eet": "eastern european time",
+    "eg": "example",
+    "embm": "early morning business meeting",
+    "encl": "enclosed",
+    "encl.": "enclosed",
+    "etc": "and so on",
+    "faq": "frequently asked questions",
+    "fawc": "for anyone who cares",
+    "fb": "facebook",
+    "fc": "fingers crossed",
+    "fig": "figure",
+    "fimh": "forever in my heart",
+    "ft.": "feet",
+    "ft": "featuring",
+    "ftl": "for the loss",
+    "ftw": "for the win",
+    "fwiw": "for what it is worth",
+    "fyi": "for your information",
+    "g9": "genius",
+    "gahoy": "get a hold of yourself",
+    "gal": "get a life",
+    "gcse": "general certificate of secondary education",
+    "gfn": "gone for now",
+    "gg": "good game",
+    "gl": "good luck",
+    "glhf": "good luck have fun",
+    "gmt": "greenwich mean time",
+    "gmta": "great minds think alike",
+    "gn": "good night",
+    "g.o.a.t": "greatest of all time",
+    "goat": "greatest of all time",
+    "goi": "get over it",
+    "gps": "global positioning system",
+    "gr8": "great",
+    "gratz": "congratulations",
+    "gyal": "girl",
+    "h&c": "hot and cold",
+    "hp": "horsepower",
+    "hr": "hour",
+    "hrh": "his royal highness",
+    "ht": "height",
+    "ibrb": "i will be right back",
+    "ic": "i see",
+    "icq": "i seek you",
+    "icymi": "in case you missed it",
+    "idc": "i do not care",
+    "idgadf": "i do not give a damn fuck",
+    "idgaf": "i do not give a fuck",
+    "idk": "i do not know",
+    "ie": "that is",
+    "i.e": "that is",
+    "ifyp": "i feel your pain",
+    "IG": "instagram",
+    "iirc": "if i remember correctly",
+    "ilu": "i love you",
+    "ily": "i love you",
+    "imho": "in my humble opinion",
+    "imo": "in my opinion",
+    "imu": "i miss you",
+    "iow": "in other words",
+    "irl": "in real life",
+    "j4f": "just for fun",
+    "jic": "just in case",
+    "jk": "just kidding",
+    "jsyk": "just so you know",
+    "l8r": "later",
+    "lb": "pound",
+    "lbs": "pounds",
+    "ldr": "long distance relationship",
+    "lmao": "laugh my ass off",
+    "lmfao": "laugh my fucking ass off",
+    "lol": "laughing out loud",
+    "ltd": "limited",
+    "ltns": "long time no see",
+    "m8": "mate",
+    "mf": "motherfucker",
+    "mfs": "motherfuckers",
+    "mfw": "my face when",
+    "mofo": "motherfucker",
+    "mph": "miles per hour",
+    "mr": "mister",
+    "mrw": "my reaction when",
+    "ms": "miss",
+    "mte": "my thoughts exactly",
+    "nagi": "not a good idea",
+    "nbc": "national broadcasting company",
+    "nbd": "not big deal",
+    "nfs": "not for sale",
+    "ngl": "not going to lie",
+    "nhs": "national health service",
+    "nrn": "no reply necessary",
+    "nsfl": "not safe for life",
+    "nsfw": "not safe for work",
+    "nth": "nice to have",
+    "nvr": "never",
+    "nyc": "new york city",
+    "oc": "original content",
+    "og": "original",
+    "ohp": "overhead projector",
+    "oic": "oh i see",
+    "omdb": "over my dead body",
+    "omg": "oh my god",
+    "omw": "on my way",
+    "p.a": "per annum",
+    "p.m": "after midday",
+    "poc": "people of color",
+    "pov": "point of view",
+    "pp": "pages",
+    "ppl": "people",
+    "prw": "parents are watching",
+    "ps": "postscript",
+    "pt": "point",
+    "ptb": "please text back",
+    "pto": "please turn over",
+    "qpsa": "what happens",  # "que pasa",
+    "ratchet": "rude",
+    "rbtl": "read between the lines",
+    "rlrt": "real life retweet",
+    "rofl": "rolling on the floor laughing",
+    "roflol": "rolling on the floor laughing out loud",
+    "rotflmao": "rolling on the floor laughing my ass off",
+    "rt": "retweet",
+    "ruok": "are you ok",
+    "sfw": "safe for work",
+    "sk8": "skate",
+    "smh": "shake my head",
+    "sq": "square",
+    "srsly": "seriously",
+    "ssdd": "same stuff different day",
+    "tbh": "to be honest",
+    "tbs": "tablespooful",
+    "tbsp": "tablespooful",
+    "tfw": "that feeling when",
+    "thks": "thank you",
+    "tho": "though",
+    "thx": "thank you",
+    "tia": "thanks in advance",
+    "til": "today i learned",
+    "tl;dr": "too long i did not read",
+    "tldr": "too long i did not read",
+    "tmb": "tweet me back",
+    "tntl": "trying not to laugh",
+    "ttyl": "talk to you later",
+    "u": "you",
+    "u2": "you too",
+    "u4e": "yours for ever",
+    "utc": "coordinated universal time",
+    "w/": "with",
+    "w/o": "without",
+    "w8": "wait",
+    "wassup": "what is up",
+    "wb": "welcome back",
+    "wtf": "what the fuck",
+    "wtg": "way to go",
+    "wtpa": "where the party at",
+    "wuf": "where are you from",
+    "wuzup": "what is up",
+    "wywh": "wish you were here",
+    "yd": "yard",
+    "ygtr": "you got that right",
+    "ynk": "you never know",
+    "zzz": "sleeping bored and tired"
+}
+
+STOPWORDS = []
 
 PATH_TO_DOMAINS = "../data/cleaning/domain_extensions.txt"
 PATH_TO_FILE_EXTENSIONS = "../data/cleaning/file_extensions.txt"
@@ -94,20 +320,6 @@ def save_list_to_csv(data_list, file_path, attributes) -> None:
         writer.writerows(data_list)
 
 
-# FUNCTION FOR LOADING STOPWORDS
-
-def load_stopwords():
-    try:
-        # Check if the stopwords data is available
-        nltk.data.find('corpora/stopwords')
-    except LookupError:
-        # Download the stopwords data if not available
-        nltk.download('stopwords')
-
-    # Load the stopwords once they are available
-    return set(stopwords.words('english'))
-
-
 # GLOBAL VARIABLE FOR CLEANING FUNCTIONS
 
 # Get emojis
@@ -121,7 +333,7 @@ with open(PATH_TO_DOMAINS, "r") as f:
     read_lines(f, domains)
 
 # Regex subpattern to match urls
-SUB_PATTERN_DOMAINS = "|".join(['\\' + domain + '(?=/| )' for domain in domains])
+SUB_PATTERN_DOMAINS = "|".join(['\\' + domain for domain in domains])
 
 # Get file extensions
 file_extensions = []
@@ -139,12 +351,13 @@ KEYWORD_PROCESSOR_PROFANITIES = KeywordProcessor()
 for profanity in profanities:
     KEYWORD_PROCESSOR_PROFANITIES.add_keyword(profanity, " [BAD] ")
 
-# Download stopwords and create keyword processor
-stop_words = load_stopwords()
+KEYWORD_PROCESSOR_ABBREVIATIONS = KeywordProcessor()
+for abbreviation, value in ABBREVIATIONS.items():
+    KEYWORD_PROCESSOR_ABBREVIATIONS.add_keyword(abbreviation, value)
 
 KEYWORD_PROCESSOR_STOPWORDS = KeywordProcessor()
-for stopword in stop_words:
-    KEYWORD_PROCESSOR_STOPWORDS.add_keyword(stopword, "")
+for stopword in STOPWORDS:
+    KEYWORD_PROCESSOR_STOPWORDS.add_keyword(stopword, " ")
 
 
 # POLARITY CALCULATOR
@@ -219,11 +432,11 @@ def replace_link(string) -> str:
 
     pattern = \
         rf"(?:https?://)?(?:www\.)?(?!.*--)[a-zA-Z0-9-]{{1,63}}(?:\.[a-zA-Z0-9-]{{1,63}})*(?:{SUB_PATTERN_DOMAINS})(\
-        ?:[^ ]*)?"
+        ?:/[^ ]*)?"
     string = re.sub(pattern, ' [URL] ', string)
     pattern = \
         rf"(?:https?://)(?:www\.)?(?!.*--)[a-zA-Z0-9-]{{1,63}}(?:\.[a-zA-Z0-9-]{{1,63}})*(?:{SUB_PATTERN_DOMAINS})?(\
-        ?:[^ ]*)?"
+        ?:/[^ ]*)?"
     return re.sub(pattern, ' [URL] ', string)
 
 
@@ -245,12 +458,16 @@ def replace_emojis(string):
     return KEYWORD_PROCESSOR_EMOJIS.replace_keywords(string)
 
 
+def replace_abbreviations(string):
+    return KEYWORD_PROCESSOR_ABBREVIATIONS.replace_keywords(string)
+
+
 def replace_special_tokens_with_placeholder(string, twitter):
     # Choose pattern
     if not twitter:
-        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]"
+        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]"
     else:
-        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD|UNKNOWN)\]|<(?:url|user)>"
+        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]|<(?:url|user)>"
 
     # Find all matches of the sequence pattern in the text
     sequence_matches = re.findall(sequence_pattern, string)
@@ -308,9 +525,12 @@ def replace_currency_symbols(string):
     return pattern.sub(lambda x: CURRENCY_SYMBOLS[x.group()], string)
 
 
-def divide_words_starting_with_numbers(string):
+def divide_words_starting_with_numbers(string, twitter=False):
     pattern = r'\b([0-9]+)([a-zA-Z]+)\b'  # regular expression pattern for words starting with a number
-    return re.sub(pattern, r'\1 \2', string)
+    if not twitter:
+        return re.sub(pattern, r'[NUMBER] \2', string)
+    else:
+        return re.sub(pattern, r'\1 \2', string)
 
 
 def replace_numbers(string):
@@ -326,24 +546,32 @@ def replace_numbers(string):
     return re.sub(pattern, ' [NUMBER] ', string)
 
 
+def remove_stopwords(string):
+    return KEYWORD_PROCESSOR_STOPWORDS.replace_keywords(string)
+
+
 def cleaning_function_no_unknown(string) -> str:
-    return clean(replace_numbers(
-        divide_words_starting_with_numbers(
-            replace_currency_symbols(
-                late_remove_special_characters(
-                    replace_profanities(
-                        add_space_before_and_after_punctuation(
-                            remove_special_characters(
-                                replace_emojis(
-                                    contractions.fix(
-                                        replace_path(
-                                            replace_link(
-                                                replace_email(
-                                                    replace_xml_tag(string.lower()))))))))))))), lower=False,
+    return clean(
+        replace_numbers(
+            divide_words_starting_with_numbers(
+                replace_currency_symbols(
+                    late_remove_special_characters(
+                        replace_profanities(
+                            add_space_before_and_after_punctuation(
+                                remove_special_characters(
+                                    replace_abbreviations(
+                                        replace_emojis(
+                                            contractions.fix(
+                                                replace_path(
+                                                    replace_link(
+                                                        replace_email(
+                                                            replace_xml_tag(string.lower())))))))))))))),
+        lower=False,
         no_line_breaks=True)
 
 
 # FUNCTION FOR CLEANING OF TWITTER DATASET
+
 
 def late_remove_special_characters_twitter(string):
     return re.sub(r"([*@])+", "", re.sub(r"([$%])\1+", r' \1 ', re.sub(r"(#)\1+", r'\1', string)))
@@ -354,9 +582,11 @@ def replace_hashtags(string):
     pattern = r'\B#\w+\b'
     hashtags = re.findall(pattern, string)
     kp = KeywordProcessor()
+    kp.add_keyword("howamigonnagotocollege", "how am i going to go to college")
 
     for hashtag in hashtags:
-        kp.add_keyword(hashtag, " ".join(wordninja.split(hashtag)))
+        if hashtag != "howamigonnagotocollege":
+            kp.add_keyword(hashtag, " ".join(wordninja.split(hashtag)))
 
     return kp.replace_keywords(string)
 
@@ -365,26 +595,27 @@ def remove_hashtags(string):
     return re.sub(r"(#)", "", string)
 
 
-def remove_stopwords(string):
-    return KEYWORD_PROCESSOR_STOPWORDS.replace_keywords(string)
+def remove_numbers(string):
+    pattern = r'\b\d+(?:-\d+)?\b'  # Regex pattern to match numbers or number ranges
+    return re.sub(pattern, '', string)
 
 
 def cleaning_function_twitter_dataset(string) -> str:
-    return remove_stopwords(
-        remove_hashtags(
-            replace_hashtags(
-                clean(
-                    replace_numbers(
-                        divide_words_starting_with_numbers(
+    return divide_words_starting_with_numbers(
+        remove_numbers(
+                remove_hashtags(
+                    replace_hashtags(
+                        clean(
                             replace_currency_symbols(
                                 late_remove_special_characters_twitter(
                                     replace_profanities(
                                         add_space_before_and_after_punctuation(
                                             remove_special_characters(
-                                                replace_emojis(
-                                                    contractions.fix(
-                                                        string.lower())), twitter=True))))))), lower=False,
-                    no_line_breaks=True))))
+                                                replace_abbreviations(
+                                                    replace_emojis(
+                                                        contractions.fix(
+                                                            string.lower()))), twitter=True))))), lower=False,
+                            no_line_breaks=True)))), True)
 
 
 # WORD TOKENIZER

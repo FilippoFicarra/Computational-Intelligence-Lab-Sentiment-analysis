@@ -197,6 +197,7 @@ SentimentAnalysis/pretraining/data/datasets/dataset.json
 SentimentAnalysis/pretraining/data/datasets/dataset-cleaned.json
 SentimentAnalysis/pretraining/data/datasets/dataset-cleaned-no-unknown.json
 SentimentAnalysis/pretraining/data/datasets/dataset-two-classes.json
+SentimentAnalysis/pretraining/data/datasets/twitter-dataset-cleaned.json
 SentimentAnalysis/pretraining/data/datasets/twitter-dataset.json
 SentimentAnalysis/pretraining/data/cleaning/profanities.txt
 SentimentAnalysis/pretraining/data/sentiment-knowledge/all-words-with-occurrences.csv
