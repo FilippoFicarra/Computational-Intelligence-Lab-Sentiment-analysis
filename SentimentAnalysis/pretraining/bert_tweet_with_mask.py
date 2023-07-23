@@ -14,7 +14,6 @@ class BertTweetWithMask(torch.nn.Module):
         self.first_linear = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
         self.classifier_dropout = torch.nn.Dropout(p=DROPOUT_PROB)
         self.second_linear = torch.nn.Linear(HIDDEN_SIZE, CLASSES_NUM)
-        self.sigmoid = torch.nn.Sigmoid()
         self.epoch = 0
 
     def forward(self, input_ids, attention_mask):
@@ -25,8 +24,7 @@ class BertTweetWithMask(torch.nn.Module):
         hidden_state = base_model_output['last_hidden_state']
         cls_first_linear = self.first_linear(hidden_state[:, 0])
         cls_dropout = self.classifier_dropout(cls_first_linear)
-        cls_second_linear = self.second_linear(cls_dropout)
-        cls_output = self.sigmoid(cls_second_linear)
+        cls_output = self.second_linear(cls_dropout)
 
         return cls_output
 

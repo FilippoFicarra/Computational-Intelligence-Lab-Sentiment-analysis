@@ -33,7 +33,7 @@ def parsing():
     long_options = ["help", "model", "batch_size", "epoch", "dataset"]
 
     # Prepare flags
-    flags = {"model": None, "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS}
+    flags = {"model": None, "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS, "dataset": "amazon"}
 
     # Parsing argument
     arguments, values = getopt.getopt(arguments, options, long_options)
@@ -275,7 +275,7 @@ def _run(flags):
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
-    criterion = torch.nn.BCELoss()
+    criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
     # LISTS FOR STORING LOSSES AND DICTIONARY FOR EARLY STOPPING
@@ -375,6 +375,7 @@ def _map_fn(index, flags):
     Returns:
 
     """
+    torch.set_default_tensor_type('torch.FloatTensor')
     training_losses, eval_losses, training_accuracies, eval_accuracies = _run(flags)
     np.save('trn_losses.npy', np.array(training_losses))
     np.save('val_losses.npy', np.array(eval_losses))
@@ -385,4 +386,4 @@ def _map_fn(index, flags):
 if __name__ == "__main__":
     # Define model and model wrapper
     flags = parsing()
-    xmp.spawn(_map_fn, args=(flags,), nprocs=NUMBER_OF_TPU_WORKERS, start_method='fork')
+    xmp.spawn(_map_fn, args=(flags,), nprocs=8, start_method='fork')

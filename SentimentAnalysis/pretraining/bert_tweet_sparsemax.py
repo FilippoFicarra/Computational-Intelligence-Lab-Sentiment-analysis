@@ -15,15 +15,14 @@ class BertTweetWithSparsemax(nn.Module):
         self.base_model = model
         self.dropout = nn.Dropout(DROPOUT_PROB)
         self.classifier = nn.Linear(hidden_size, CLASSES_NUM)
-        self.sigmoid = nn.Sigmoid()
         self.epoch = 0
 
     def forward(self, input_ids, attention_mask):
         outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask, return_dict=True)
         cls = outputs['last_hidden_state'][:, 0]
-        linear_out = self.classifier(cls)
-        probabilites = self.sigmoid(linear_out)
-        return probabilites
+        droput = self.dropout(cls)
+        out = self.classifier(droput)
+        return out
 
     def update_epoch(self, epoch):
         self.epoch = epoch
