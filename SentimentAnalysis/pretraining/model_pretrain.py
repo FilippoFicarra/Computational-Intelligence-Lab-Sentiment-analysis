@@ -192,11 +192,11 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
             loss = criterion(eval_outputs, eval_cls_targets)
 
             # Update running average of loss for epoch
-            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
 
             # Update running average of accuracy for epoch
             eval_meter.update_accuracy(xm.mesh_reduce(
-                'accuracy_reduce', torch.eq(torch.max(eval_outputs, dim=1)[1], eval_cls_targets).sum(),
+                'accuracy_reduce', torch.eq(torch.max(eval_outputs, dim=1)[1], eval_cls_targets).sum().item(),
                 lambda values: sum(values) / len(values)), eval_cls_targets.size(0))
 
             # Free up memory
@@ -250,7 +250,6 @@ def _run(flags):
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
-                             shuffle=False,
                              sampler=eval_sampler,
                              num_workers=0)
     # DEVICE
