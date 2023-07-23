@@ -270,6 +270,8 @@ def _run(flags):
 
     if flags["model"] == "robertaMask":
         mx = BertTweetWithMask(AutoModel.from_config(new_config))
+        for param in mx.base_model.parameters():
+            param.requires_grad = False
     else:
         mx = BertTweetWithSparsemax(AutoModel.from_config(new_config))
         for i in range(2):

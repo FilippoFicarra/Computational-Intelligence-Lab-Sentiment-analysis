@@ -78,11 +78,11 @@ class Embedder:
 
         for ind_indeces in sampled_indeces:
             while tokens_with_replacement[ind_indeces] != encode_plus_res['input_ids'][ind_input_ids] \
-                        and encode_plus_res['input_ids'][ind_input_ids] != self.tokenizer.eos_token_id:
+                        and ind_input_ids < limit:
                 # Go to next input token
                 ind_input_ids += 1
 
-            if ind_input_ids <= limit:
+            if ind_input_ids < limit:
                 # Add mask for token
                 attention_mask[ind_input_ids] = 0
                 # Go to next input token
