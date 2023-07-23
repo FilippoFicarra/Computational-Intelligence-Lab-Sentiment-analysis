@@ -41,8 +41,8 @@ TWITTER_OPTIONS = {
     "path": PATH_DATASET_TWITTER,
     "dtype": "label int, text string",
     "grouping_key": "label",
-    "train_fraction": 0.9,
-    "eval_fraction": 1.,
+    "train_fraction": 0.25,
+    "eval_fraction": 1 / 15,
     "columns": ["label", "text"]
 }
 

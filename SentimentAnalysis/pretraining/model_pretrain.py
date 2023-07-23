@@ -152,7 +152,7 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
 
         # Update running average of accuracy for epoch
         training_meter.update_accuracy(xm.mesh_reduce(
-            'accuracy_reduce', torch.eq(torch.argmax(outputs, dim=1), cls_targets).sum().items(),
+            'accuracy_reduce', torch.eq(torch.argmax(outputs, dim=1), cls_targets).sum().item(),
             lambda values: sum(values) / len(values)), cls_targets.size(0))
 
         # Feedback
@@ -268,6 +268,13 @@ def _run(flags):
         model = BertTweetWithSparsemax(AutoModel.from_config(new_config))
         for i in range(2):
             model.base_model.encoder.layer[i - 1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+
+        # Freeze parameters
+        # for param in model.base_model.embeddings.parameters():
+        #     param.requires_grad = False
+        for i in range(1, 11):
+            for param in model.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
 
     model.to(device)
 
