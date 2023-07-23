@@ -148,13 +148,13 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
         # Compute loss
         loss = criterion(outputs, cls_targets)
         # Update running average of loss for epoch
-        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
 
         # Update running average of accuracy for epoch
         training_meter.update_accuracy(
             xm.mesh_reduce(
                 'accuracy_reduce',
-                (torch.argmax(outputs, dim=1) == cls_targets).sum() / cls_targets.size(0),
+                (torch.argmax(outputs, dim=1) == cls_targets).sum().item() / cls_targets.size(0),
                 lambda values: sum(values) / len(values)
             )
         )
@@ -196,13 +196,13 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
             loss = criterion(eval_outputs, eval_cls_targets)
 
             # Update running average of loss for epoch
-            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
 
             # Update running average of accuracy for epoch
             eval_meter.update_accuracy(
                 xm.mesh_reduce(
                     'accuracy_reduce',
-                    (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum() / eval_cls_targets.size(0),
+                    (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum().item() / eval_cls_targets.size(0),
                     lambda values: sum(values) / len(values)
                 )
             )
@@ -296,7 +296,7 @@ def _run(flags):
     eval_losses = []
     training_accuracies = []
     eval_accuracies = []
-    early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': 2, 'stop': False}
+    early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': PATIENCE, 'stop': False}
 
     # TRAINING
 
