@@ -126,7 +126,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
     return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns)
 
 
-def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
+def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
     # Set model for training
     model.train()
 
@@ -151,12 +151,16 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
         training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
         # Update running average of accuracy for epoch
-        training_meter.update_accuracy(xm.mesh_reduce(
-            'accuracy_reduce', torch.eq(torch.argmax(outputs, dim=1), cls_targets).sum() / cls_targets.size(0),
-            lambda values: sum(values) / len(values)))
+        training_meter.update_accuracy(
+            xm.mesh_reduce(
+                'accuracy_reduce',
+                (torch.argmax(outputs, dim=1) == cls_targets).sum() / cls_targets.size(0),
+                lambda values: sum(values) / len(values)
+            )
+        )
 
         # Feedback
-        if i > 0 and i % VERBOSE_PARAM == 0:
+        if i % VERBOSE_PARAM == 0:
             xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = {:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
                                     training_meter.avg_accuracy), flush=True)
@@ -174,7 +178,7 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
     return training_meter.avg_loss, training_meter.avg_accuracy
 
 
-def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
+def _eval_epoch_fn(model, para_loader, criterion, device):
     # Set model to evaluation
     model.eval()
 
@@ -195,18 +199,17 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
             eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
             # Update running average of accuracy for epoch
-            eval_meter.update_accuracy(xm.mesh_reduce(
-                'accuracy_reduce', torch.eq(torch.argmax(eval_outputs, dim=1),
-                                            eval_cls_targets).sum() / eval_cls_targets.size(0),
-                lambda values: sum(values) / len(values)))
+            eval_meter.update_accuracy(
+                xm.mesh_reduce(
+                    'accuracy_reduce',
+                    (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum() / eval_cls_targets.size(0),
+                    lambda values: sum(values) / len(values)
+                )
+            )
 
             # Free up memory
             del eval_ids, eval_mask, eval_cls_targets, eval_outputs, loss
             gc.collect()
-
-    # Output average evaluation loss and accuracy for current epoch
-    xm.master_print('-- epoch {} | avg_eval_loss =  {:.6f}, avg_eval_acc = {:.6f}'
-                    .format(epoch, eval_meter.avg_loss, eval_meter.avg_accuracy), flush=True)
 
     # Return average evaluation loss for the epoch
     return eval_meter.avg_loss, eval_meter.avg_accuracy
@@ -314,8 +317,7 @@ def _run(flags):
             train_start = time.time()
             xm.master_print('- training...')
             para_loader = pl.ParallelLoader(training_loader, [device])
-            training_loss, training_accuracy = _train_epoch_fn(epoch=epoch + 1,
-                                                               model=model,
+            training_loss, training_accuracy = _train_epoch_fn(model=model,
                                                                para_loader=para_loader.per_device_loader(device),
                                                                criterion=criterion,
                                                                optimizer=optimizer,
@@ -328,8 +330,7 @@ def _run(flags):
             valid_start = time.time()
             xm.master_print('- validation...', flush=True)
             para_loader = pl.ParallelLoader(eval_loader, [device])
-            eval_loss, eval_accuracy = _eval_epoch_fn(epoch=epoch + 1,
-                                                      model=model,
+            eval_loss, eval_accuracy = _eval_epoch_fn(model=model,
                                                       para_loader=para_loader.per_device_loader(device),
                                                       criterion=criterion,
                                                       device=device)
