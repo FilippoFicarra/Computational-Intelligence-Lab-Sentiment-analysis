@@ -20,8 +20,8 @@ class BertTweetWithSparsemax(nn.Module):
     def forward(self, input_ids, attention_mask):
         outputs = self.base_model(input_ids=input_ids, attention_mask=attention_mask, return_dict=True)
         cls = outputs['last_hidden_state'][:, 0]
-        droput = self.dropout(cls)
-        out = self.classifier(droput)
+        dropout = self.dropout(cls)
+        out = self.classifier(dropout)
         return out
 
     def update_epoch(self, epoch):

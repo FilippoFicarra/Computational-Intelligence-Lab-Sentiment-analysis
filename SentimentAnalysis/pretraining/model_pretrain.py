@@ -148,11 +148,11 @@ def _train_epoch_fn(epoch, model, para_loader, criterion, optimizer, device):
         # Compute loss
         loss = criterion(outputs, cls_targets)
         # Update running average of loss for epoch
-        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
 
         # Update running average of accuracy for epoch
         training_meter.update_accuracy(xm.mesh_reduce(
-            'accuracy_reduce', torch.eq(torch.max(outputs, dim=1)[1], cls_targets).sum(),
+            'accuracy_reduce', torch.eq(torch.argmax(outputs, dim=1), cls_targets).sum().items(),
             lambda values: sum(values) / len(values)), cls_targets.size(0))
 
         # Feedback
@@ -196,7 +196,7 @@ def _eval_epoch_fn(epoch, model, para_loader, criterion, device):
 
             # Update running average of accuracy for epoch
             eval_meter.update_accuracy(xm.mesh_reduce(
-                'accuracy_reduce', torch.eq(torch.max(eval_outputs, dim=1)[1], eval_cls_targets).sum().item(),
+                'accuracy_reduce', torch.eq(torch.max(eval_outputs, dim=1), eval_cls_targets).sum().item(),
                 lambda values: sum(values) / len(values)), eval_cls_targets.size(0))
 
             # Free up memory
