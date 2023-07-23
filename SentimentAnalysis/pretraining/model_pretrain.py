@@ -38,7 +38,7 @@ def parsing():
     # Parsing argument
     arguments, values = getopt.getopt(arguments, options, long_options)
 
-    if arguments[0][0] in ("-h", "--help"):
+    if len(arguments) > 0 and arguments[0][0] in ("-h", "--help"):
         print(f"""This script trains a model on a TPU with multiple cores.\n
         -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS)} 
         (default={MODEL_NAME_OPTIONS[1]}).\n
@@ -245,7 +245,6 @@ def _run(flags):
     # Create dataloaders
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
-                                 shuffle=True,
                                  sampler=train_sampler,
                                  num_workers=0)
 
