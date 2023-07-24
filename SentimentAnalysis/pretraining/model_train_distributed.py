@@ -90,16 +90,13 @@ def parsing():
 
 
 def get_model(flags):
-    # TOKENIZER
-
+    # Get tokenizer
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
     if flags["dataset"] == "amazon":
         tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
     else:
         tokenizer.add_tokens(SPECIAL_TOKENS_TWITTER)
-
-    # MODEL
 
     # Get model
     base_model = AutoModel.from_pretrained(MODEL)
@@ -123,8 +120,8 @@ def get_model(flags):
             for param in m.base_model.encoder.layer[i].parameters():
                 param.requires_grad = False
 
-    # Wrap model
-    return xmp.MpModelWrapper(m), tokenizer
+    # Return model and tokenizer
+    return m, tokenizer
 
 
 def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, filename):
@@ -274,20 +271,24 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
 
 
 def _run(flags):
+    # MODEL AND TOKENIZER
+
+    m, tokenizer = get_model(flags)
+
     # DATA FOR TRAINING AND EVALUATION
 
     if flags["dataset"] == "amazon":
         xm.master_print('- amazon dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
         # Create train and eval datasets
-        training_dataset = ReviewDataset(df_training, flags["tokenizer"])
-        eval_dataset = ReviewDataset(df_eval, flags["tokenizer"])
+        training_dataset = ReviewDataset(df_training, tokenizer)
+        eval_dataset = ReviewDataset(df_eval, tokenizer)
     else:
         xm.master_print('- twitter dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         # Create train and eval datasets
-        training_dataset = TwitterDataset(df_training, flags["tokenizer"])
-        eval_dataset = TwitterDataset(df_eval, flags["tokenizer"])
+        training_dataset = TwitterDataset(df_training, tokenizer)
+        eval_dataset = TwitterDataset(df_eval, tokenizer)
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,
@@ -310,10 +311,10 @@ def _run(flags):
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
                              num_workers=flags["num_workers"])
-    # DEVICE AND MODEL WRAPPER
+    # DEVICE
 
     device = xm.xla_device()
-    model = flags["model_wrapper"].to(device)
+    model = m.to(device)
     xm.master_print(model, flush=True)
 
     # LOSS FUNCTIONS AND OPTIMIZER
@@ -438,8 +439,4 @@ def _map_fn(index, flags):
 if __name__ == "__main__":
     # Define model and model wrapper
     flags = parsing()
-
-    # Get model wrapper and tokenizer
-    flags["model_wrapper"], flags["tokenizer"] = get_model(flags)
-
     xmp.spawn(_map_fn, args=(flags,), nprocs=flags["cores"], start_method='fork')
