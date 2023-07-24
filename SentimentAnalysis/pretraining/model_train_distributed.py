@@ -127,12 +127,12 @@ def get_model(flags):
     return xmp.MpModelWrapper(m), tokenizer
 
 
-def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies):
+def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, filename):
     xm.master_print("- saving accuracies and losses...")
-    xm.save(training_losses, 'trn_losses.txt', master_only=True)
-    xm.save(eval_losses, 'val_losses.txt', master_only=True)
-    xm.save(training_accuracies, 'trn_accuracies.txt', master_only=True)
-    xm.save(eval_accuracies, 'val_accuracies.txt', master_only=True)
+    xm.save(training_losses, 'trn-losses-{}.txt'.format(filename), master_only=True)
+    xm.save(eval_losses, 'val-losses-{}.txt'.format(filename), master_only=True)
+    xm.save(training_accuracies, 'trn-accuracies-{}.txt'.format(filename), master_only=True)
+    xm.save(eval_accuracies, 'val-accuracies-{}.txt'.format(filename), master_only=True)
     xm.master_print("- saved!")
 
 
@@ -332,7 +332,7 @@ def _run(flags):
     # SIGNAL HANDLER
 
     def interrupt_handler(signal, frame):
-        save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies)
+        save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
 
     signal.signal(signal.SIGINT, interrupt_handler)
 
@@ -432,7 +432,7 @@ def _map_fn(index, flags):
     """
     torch.set_default_tensor_type('torch.FloatTensor')
     training_losses, eval_losses, training_accuracies, eval_accuracies = _run(flags)
-    save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies)
+    save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
 
 
 if __name__ == "__main__":
