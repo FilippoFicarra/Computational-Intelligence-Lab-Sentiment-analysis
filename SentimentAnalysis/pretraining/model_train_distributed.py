@@ -33,7 +33,7 @@ def parsing():
     long_options = ["help", "cores=", "model=", "batch_size=", "epoch=", "dataset=", "filename="]
 
     # Prepare flags
-    flags = {"cores": 1, "num_workers": 1, "model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
+    flags = {"cores": 1, "model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
              "dataset": "twitter"}
 
     # Parsing argument
@@ -57,7 +57,6 @@ def parsing():
         if arg in ("-c", "--cores"):
             if int(val) <= len(xm.get_xla_supported_devices()):
                 flags["cores"] = int(val)
-                flags["num_workers"] = int(val)
             else:
                 raise ValueError("Not enough xla devices.")
         if arg in ("-m", "--model"):
@@ -275,12 +274,16 @@ def _run(flags):
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
                                  sampler=train_sampler,
-                                 num_workers=flags["num_workers"])
+                                 num_workers=0)
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
-                             num_workers=flags["num_workers"])
+                             num_workers=0)
+
+    # DEVICE
+
+    device = xm.xla_device()
 
     # MODEL
 
@@ -306,9 +309,6 @@ def _run(flags):
             for param in m.base_model.encoder.layer[i].parameters():
                 param.requires_grad = False
 
-    # DEVICE
-
-    device = xm.xla_device()
     model = m.to(device)
     xm.master_print(model, flush=True)
 
