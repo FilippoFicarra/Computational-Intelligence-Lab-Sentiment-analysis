@@ -55,7 +55,7 @@ def parsing():
     # checking each argument
     for arg, val in arguments:
         if arg in ("-c", "--cores"):
-            if int(val) <= len(xm.get_xla_supported_devices()):
+            if int(val) <= 8:
                 flags["cores"] = int(val)
             else:
                 raise ValueError("Not enough xla devices.")
@@ -330,14 +330,12 @@ def _run(flags):
     def interrupt_handler(signal, frame):
         save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
 
-    signal.signal(signal.SIGINT, interrupt_handler)
+    if xm.is_master_ordinal():
+        signal.signal(signal.SIGINT, interrupt_handler)
 
     # TRAINING
 
     for epoch in range(flags["epoch"]):
-        for i in range(1, 11):
-            for param in model.base_model.encoder.layer[i].parameters():
-                xm.master_print(param.requires_grad)
         if not early_stopping['stop']:
             # Update model parameter
             model.update_epoch(epoch + 1)
