@@ -89,41 +89,6 @@ def parsing():
     return flags
 
 
-def get_model(flags):
-    # Get tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(MODEL)
-
-    if flags["dataset"] == "amazon":
-        tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
-    else:
-        tokenizer.add_tokens(SPECIAL_TOKENS_TWITTER)
-
-    # Get model
-    base_model = AutoModel.from_pretrained(MODEL)
-    base_model.resize_token_embeddings(len(tokenizer))
-
-    if flags["model"] == "robertaMask":
-        m = BertTweetWithMask(base_model)
-        # Freeze parameters of all layers of the encoder except for the first and last layer
-        for i in range(1, len(m.base_model.encoder.layer) - 1):
-            for param in m.base_model.encoder.layer[i].parameters():
-                param.requires_grad = False
-
-    else:
-        m = BertTweetWithSparsemax(base_model)
-        # Change first and last self-attention layers of the model
-        m.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=m.base_model.config)
-        m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
-
-        # Freeze parameters of all layers of the encoder except for the first and last layer
-        for i in range(1, len(m.base_model.encoder.layer) - 1):
-            for param in m.base_model.encoder.layer[i].parameters():
-                param.requires_grad = False
-
-    # Return model and tokenizer
-    return m, tokenizer
-
-
 def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, filename):
     xm.master_print("- saving accuracies and losses...")
     xm.save(training_losses, 'trn-losses-{}.txt'.format(filename), master_only=True)
@@ -271,9 +236,14 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
 
 
 def _run(flags):
-    # MODEL AND TOKENIZER
+    # TOKENIZER
 
-    m, tokenizer = get_model(flags)
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+
+    if flags["dataset"] == "amazon":
+        tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
+    else:
+        tokenizer.add_tokens(SPECIAL_TOKENS_TWITTER)
 
     # DATA FOR TRAINING AND EVALUATION
 
@@ -311,6 +281,31 @@ def _run(flags):
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
                              num_workers=flags["num_workers"])
+
+    # MODEL
+
+    # Get model
+    base_model = AutoModel.from_pretrained(MODEL)
+    base_model.resize_token_embeddings(len(tokenizer))
+
+    if flags["model"] == "robertaMask":
+        m = BertTweetWithMask(base_model)
+        # Freeze parameters of all layers of the encoder except for the first and last layer
+        for i in range(1, len(m.base_model.encoder.layer) - 1):
+            for param in m.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
+
+    else:
+        m = BertTweetWithSparsemax(base_model)
+        # Change first and last self-attention layers of the model
+        m.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=m.base_model.config)
+        m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
+
+        # Freeze parameters of all layers of the encoder except for the first and last layer
+        for i in range(1, len(m.base_model.encoder.layer) - 1):
+            for param in m.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
+
     # DEVICE
 
     device = xm.xla_device()
