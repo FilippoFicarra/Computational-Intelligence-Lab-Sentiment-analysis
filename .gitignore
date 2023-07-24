@@ -191,3 +191,14 @@ SentimentAnalysis/data/twitter-datasets/preprocessed/train_embeddings_bert-base-
 SentimentAnalysis/twitter-roberta-base-sentiment/config.json
 SentimentAnalysis/twitter-roberta-base-sentiment/pytorch_model.bin
 SentimentAnalysis/data/twitter-datasets/predictions_twitter-roberta-base-sentiment.csv
+SentimentAnalysis/statistics.ipynb
+SentimentAnalysis/bertweet_400k_sparsemax_0_11_majority_output.txt
+SentimentAnalysis/bertweet_400k_sparsemax_1.pt
+SentimentAnalysis/bertweet_400k_sparsemax_2.pt
+SentimentAnalysis/bertweet_400k_sparsemax_3.pt
+SentimentAnalysis/bertweet300k_out.txt
+SentimentAnalysis/train.ipynb
+SentimentAnalysis/train.py
+SentimentAnalysis/data/twitter-datasets/bertweet_400k_sparsemax_majority.csv
+SentimentAnalysis/preprocessor/text_preprocessor.py
+SentimentAnalysis/train.ipynb
