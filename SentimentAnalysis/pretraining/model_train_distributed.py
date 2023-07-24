@@ -4,6 +4,7 @@ import random
 import time
 import sys
 import getopt
+import signal
 
 import numpy as np
 import pandas as pd
@@ -11,9 +12,8 @@ import torch
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.distributed.xla_multiprocessing as xmp
-from matplotlib import pyplot as plt
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModel, AutoConfig
+from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
 from average_meter import AverageMeter
@@ -27,30 +27,39 @@ def parsing():
     arguments = sys.argv[1:]
 
     # Options
-    options = "hm:b:e:d:"
+    options = "hc:m:b:e:d:n:"
 
     # Long options
-    long_options = ["help", "model=", "batch_size=", "epoch=", "dataset="]
+    long_options = ["help", "cores=", "model=", "batch_size=", "epoch=", "dataset=", "filename="]
 
     # Prepare flags
-    flags = {"model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS, "dataset": "twitter"}
+    flags = {"cores": 1, "num_workers": 1, "model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
+             "dataset": "twitter"}
 
     # Parsing argument
     arguments, values = getopt.getopt(arguments, options, long_options)
 
     if len(arguments) > 0 and arguments[0][0] in ("-h", "--help"):
         print(f"""This script trains a model on a TPU with multiple cores.\n
+        -c or --cores: whether to train on a single core or on all available cores (default=1).\n
         -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS)} 
         (default={MODEL_NAME_OPTIONS[1]}).\n
         -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n
         -e or --epoch: number of epochs (default={EPOCHS}).\n
         -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)} 
-        (default={DATASET_NAME_OPTIONS[0]}).
+        (default={DATASET_NAME_OPTIONS[0]}).\n
+        -n or --filename: name of the file for the model (valid name with no extension).
         """)
         sys.exit()
 
     # checking each argument
     for arg, val in arguments:
+        if arg in ("-c", "--cores"):
+            if int(val) <= len(xm.get_xla_supported_devices()):
+                flags["cores"] = int(val)
+                flags["num_workers"] = int(val)
+            else:
+                raise ValueError("Not enough xla devices.")
         if arg in ("-m", "--model"):
             if val in MODEL_NAME_OPTIONS:
                 flags["model"] = val
@@ -71,27 +80,60 @@ def parsing():
                 flags["dataset"] = val
             else:
                 raise ValueError("Dataset name is not valid.")
+        elif arg in ("-n", "--filename"):
+            flags["filename"] = '{}.pt'.format(val)
+
+        if "filename" not in flags.keys():
+            flags["filename"] = '{}.pt'.format(flags["model"])
 
     return flags
 
 
-def plot_accuracy_and_loss(training_accuracies, training_losses, eval_accuracies, eval_losses):
-    # Plot training and validation accuracy
-    plt.plot(training_accuracies, label="Training Accuracy")
-    plt.plot(eval_accuracies, label="Validation Accuracy")
-    plt.title("Training and Validation Accuracy")
-    plt.xlabel("Epoch")
-    plt.ylabel("Accuracy")
-    plt.legend(loc='best')
-    plt.savefig("accuracy.png")
-    # Plot the training and validation loss
-    plt.plot(training_losses, label="Training Loss")
-    plt.plot(eval_losses, label="Validation Loss")
-    plt.title("Training and Validation Loss")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend(loc='best')
-    plt.savefig("loss.png")
+def get_model(flags):
+    # TOKENIZER
+
+    tokenizer = AutoTokenizer.from_pretrained(MODEL)
+
+    if flags["dataset"] == "amazon":
+        tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
+    else:
+        tokenizer.add_tokens(SPECIAL_TOKENS_TWITTER)
+
+    # MODEL
+
+    # Get model
+    base_model = AutoModel.from_pretrained(MODEL)
+    base_model.resize_token_embeddings(len(tokenizer))
+
+    if flags["model"] == "robertaMask":
+        m = BertTweetWithMask(base_model)
+        # Freeze parameters of all layers of the encoder except for the first and last layer
+        for i in range(1, len(m.base_model.encoder.layer) - 1):
+            for param in m.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
+
+    else:
+        m = BertTweetWithSparsemax(base_model)
+        # Change first and last self-attention layers of the model
+        m.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=m.base_model.config)
+        m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
+
+        # Freeze parameters of all layers of the encoder except for the first and last layer
+        for i in range(1, len(m.base_model.encoder.layer) - 1):
+            for param in m.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
+
+    # Wrap model
+    return xmp.MpModelWrapper(m), tokenizer
+
+
+def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies):
+    xm.master_print("- saving accuracies and losses...")
+    xm.save(training_losses, 'trn_losses.txt', master_only=True)
+    xm.save(eval_losses, 'val_losses.txt', master_only=True)
+    xm.save(training_accuracies, 'trn_accuracies.txt', master_only=True)
+    xm.save(eval_accuracies, 'val_accuracies.txt', master_only=True)
+    xm.master_print("- saved!")
 
 
 def get_training_and_validation_dataframes(path, dtype, grouping_key, train_fraction, eval_fraction, columns):
@@ -133,6 +175,10 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
     # Define object for loss
     training_meter = AverageMeter()
 
+    # Define list for accuracies and losses
+    accuracies = []
+    losses = []
+
     # Train for the epoch
     for i, data in enumerate(para_loader):
         # Set gradients to zero
@@ -164,6 +210,9 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
             xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = {:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
                                     training_meter.avg_accuracy), flush=True)
+            # Save values
+            accuracies.append((i, training_meter.val_accuracy))
+            losses.append((i, training_meter.val_loss))
 
         # Compute gradient updates for learnable parameters
         loss.backward()
@@ -174,8 +223,8 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
         del ids, mask, cls_targets, outputs, loss
         gc.collect()
 
-    # Return average training loss for the epoch
-    return training_meter.avg_loss, training_meter.avg_accuracy
+    # Return accuracies and losses
+    return accuracies, losses, training_meter.avg_accuracy, training_meter.avg_loss
 
 
 def _eval_epoch_fn(model, para_loader, criterion, device):
@@ -185,8 +234,12 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
     # Define object for loss
     eval_meter = AverageMeter()
 
+    # Define list for accuracies and losses
+    accuracies = []
+    losses = []
+
     with torch.no_grad():
-        for eval_batch in para_loader:
+        for i, eval_batch in enumerate(para_loader):
             # Get mini-batch data
             eval_ids = eval_batch['ids'].to(device)
             eval_mask = eval_batch['mask'].to(device)
@@ -207,35 +260,34 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
                 )
             )
 
+            # Save values every VERBOSE_PARAM steps
+            if i % VERBOSE_PARAM == 0:
+                accuracies.append((i, eval_meter.val_accuracy))
+                losses.append((i, eval_meter.val_loss))
+
             # Free up memory
             del eval_ids, eval_mask, eval_cls_targets, eval_outputs, loss
             gc.collect()
 
-    # Return average evaluation loss for the epoch
-    return eval_meter.avg_loss, eval_meter.avg_accuracy
+    # Return accuracies and losses
+    return accuracies, losses, eval_meter.avg_accuracy, eval_meter.avg_loss
 
 
 def _run(flags):
-    # TOKENIZER
-
-    tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-base")
-
     # DATA FOR TRAINING AND EVALUATION
 
     if flags["dataset"] == "amazon":
         xm.master_print('- amazon dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
-        tokenizer.add_special_tokens(SPECIAL_TOKENS_AMAZON)
         # Create train and eval datasets
-        training_dataset = ReviewDataset(df_training, tokenizer)
-        eval_dataset = ReviewDataset(df_eval, tokenizer)
+        training_dataset = ReviewDataset(df_training, flags["tokenizer"])
+        eval_dataset = ReviewDataset(df_eval, flags["tokenizer"])
     else:
         xm.master_print('- twitter dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
-        tokenizer.add_special_tokens(SPECIAL_TOKENS_TWITTER)
         # Create train and eval datasets
-        training_dataset = TwitterDataset(df_training, tokenizer)
-        eval_dataset = TwitterDataset(df_eval, tokenizer)
+        training_dataset = TwitterDataset(df_training, flags["tokenizer"])
+        eval_dataset = TwitterDataset(df_eval, flags["tokenizer"])
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,
@@ -252,41 +304,16 @@ def _run(flags):
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
                                  sampler=train_sampler,
-                                 num_workers=0)
+                                 num_workers=flags["num_workers"])
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
-                             num_workers=0)
-    # DEVICE
+                             num_workers=flags["num_workers"])
+    # DEVICE AND MODEL WRAPPER
 
     device = xm.xla_device()
-
-    # MODEL
-
-    # Define new configuration to change the vocabulary size
-    new_config = AutoConfig.from_pretrained("vinai/bertweet-base")
-    new_config.vocab_size = max(tokenizer.get_vocab().values())
-
-    if flags["model"] == "robertaMask":
-        mx = BertTweetWithMask(AutoModel.from_config(new_config))
-        for i in range(1, 11):
-            for param in mx.base_model.encoder.layer[i].parameters():
-                param.requires_grad = False
-
-    else:
-        mx = BertTweetWithSparsemax(AutoModel.from_config(new_config))
-        for i in range(2):
-            mx.base_model.encoder.layer[i - 1].attention.self = RobertaSelfAttention(config=mx.base_model.config)
-
-        # Freeze parameters
-        # for param in model.base_model.embeddings.parameters():
-        #     param.requires_grad = False
-        for i in range(1, 11):
-            for param in mx.base_model.encoder.layer[i].parameters():
-                param.requires_grad = False
-
-    model = mx.to(device)
+    model = flags["model_wrapper"].to(device)
     xm.master_print(model, flush=True)
 
     # LOSS FUNCTIONS AND OPTIMIZER
@@ -302,9 +329,19 @@ def _run(flags):
     eval_accuracies = []
     early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': PATIENCE, 'stop': False}
 
+    # SIGNAL HANDLER
+
+    def interrupt_handler(signal, frame):
+        save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies)
+
+    signal.signal(signal.SIGINT, interrupt_handler)
+
     # TRAINING
 
     for epoch in range(flags["epoch"]):
+        for i in range(1, 11):
+            for param in model.base_model.encoder.layer[i].parameters():
+                xm.master_print(param.requires_grad)
         if not early_stopping['stop']:
             # Update model parameter
             model.update_epoch(epoch + 1)
@@ -321,30 +358,40 @@ def _run(flags):
             train_start = time.time()
             xm.master_print('- training...')
             para_loader = pl.ParallelLoader(training_loader, [device])
-            training_loss, training_accuracy = _train_epoch_fn(model=model,
-                                                               para_loader=para_loader.per_device_loader(device),
-                                                               criterion=criterion,
-                                                               optimizer=optimizer,
-                                                               device=device)
+            new_accuracies, new_losses, training_accuracy, training_loss = _train_epoch_fn(model=model,
+                                                                                           para_loader=para_loader
+                                                                                           .per_device_loader(device),
+                                                                                           criterion=criterion,
+                                                                                           optimizer=optimizer,
+                                                                                           device=device)
 
-            del para_loader
+            # Add new accuracies and losses
+            training_accuracies += new_accuracies
+            training_losses += new_losses
+
+            del para_loader, new_accuracies, new_losses
             gc.collect()
 
             # Evaluation pass
             valid_start = time.time()
             xm.master_print('- validation...', flush=True)
             para_loader = pl.ParallelLoader(eval_loader, [device])
-            eval_loss, eval_accuracy = _eval_epoch_fn(model=model,
-                                                      para_loader=para_loader.per_device_loader(device),
-                                                      criterion=criterion,
-                                                      device=device)
+            new_accuracies, new_losses, eval_accuracy, eval_loss = _eval_epoch_fn(model=model,
+                                                                                  para_loader=para_loader
+                                                                                  .per_device_loader(device),
+                                                                                  criterion=criterion,
+                                                                                  device=device)
 
-            del para_loader
+            # Add new accuracies and losses
+            eval_accuracies += new_accuracies
+            eval_losses += new_losses
+
+            del para_loader, new_accuracies, new_losses
             gc.collect()
 
             # Save weights
             if eval_loss < early_stopping['best']:
-                xm.save(model.model_representation(), '{}.pt'.format(flags["model"]))
+                xm.save(model.model_representation(), flags["filename"], master_only=True)
                 early_stopping['best'] = eval_loss
                 early_stopping['no_improvement'] = 0
             else:
@@ -363,13 +410,7 @@ def _run(flags):
             xm.master_print('-' * 55)
             xm.master_print('')
 
-            # Save losses and accuracies
-            training_losses.append(training_loss)
-            eval_losses.append(eval_loss)
-            training_accuracies.append(training_accuracy)
-            eval_accuracies.append(eval_accuracy)
-
-            del training_loss, eval_loss
+            del training_loss, eval_loss, training_accuracy, eval_accuracy
             gc.collect()
 
         else:
@@ -391,13 +432,14 @@ def _map_fn(index, flags):
     """
     torch.set_default_tensor_type('torch.FloatTensor')
     training_losses, eval_losses, training_accuracies, eval_accuracies = _run(flags)
-    np.save('trn_losses.npy', np.array(training_losses))
-    np.save('val_losses.npy', np.array(eval_losses))
-    np.save('trn_accuracies.npy', np.array(training_accuracies))
-    np.save('val_accuracies.npy', np.array(eval_accuracies))
+    save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies)
 
 
 if __name__ == "__main__":
     # Define model and model wrapper
     flags = parsing()
-    xmp.spawn(_map_fn, args=(flags,), nprocs=8, start_method='fork')
+
+    # Get model wrapper and tokenizer
+    flags["model_wrapper"], flags["tokenizer"] = get_model(flags)
+
+    xmp.spawn(_map_fn, args=(flags,), nprocs=flags["cores"], start_method='fork')

@@ -289,7 +289,7 @@ PATH_TO_FILE_EXTENSIONS = "../data/cleaning/file_extensions.txt"
 PATH_TO_PROFANITIES = "../data/cleaning/profanities.txt"
 PATH_TO_UNKNOWN = "../data/cleaning/unknown_words.txt"
 
-SCHEMA = "overall float, reviewText string"
+SCHEMA = "label int, text string"
 
 PLACEHOLDER = 'SEQUENCE'
 
@@ -378,13 +378,13 @@ def calculate_polarity_of_occurrence(overall) -> int:
     """
     base_value = 2
 
-    if overall == 1.:
+    if overall == 1:
         return -5 * base_value
-    elif overall == 2.:
+    elif overall == 2:
         return -base_value
-    elif overall == 3.:
+    elif overall == 3:
         return 0
-    elif overall == 4.:
+    elif overall == 4:
         return base_value
     else:
         return 5 * base_value
