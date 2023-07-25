@@ -263,11 +263,11 @@ def _run(flags):
         df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         # Create train and eval datasets
         if flags["model"] == "robertaMask":
-            training_dataset = TwitterDataset(df_training, tokenizer, device, use_embedder=True)
-            eval_dataset = TwitterDataset(df_eval, tokenizer, device, use_embedder=True)
+            training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
+            eval_dataset = TwitterDataset(df_eval, tokenizer, use_embedder=True)
         else:
-            training_dataset = TwitterDataset(df_training, tokenizer, device)
-            eval_dataset = TwitterDataset(df_eval, tokenizer, device)
+            training_dataset = TwitterDataset(df_training, tokenizer)
+            eval_dataset = TwitterDataset(df_eval, tokenizer)
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,

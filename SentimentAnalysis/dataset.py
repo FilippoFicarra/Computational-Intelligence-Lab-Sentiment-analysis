@@ -43,7 +43,7 @@ class ReviewDataset(Dataset):
 
 
 class TwitterDataset(Dataset):
-    def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, device, max_length=MAX_LENGTH,
+    def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH,
                  use_embedder=False):
         self.tokenizer = tokenizer
         self.text = dataframe.text
@@ -51,7 +51,6 @@ class TwitterDataset(Dataset):
         self.max_length = max_length
         self.use_embedder = use_embedder
         self.embedder = Embedder(tokenizer)
-        self.device = device
 
     def __len__(self):
         return len(self.text)
@@ -70,7 +69,7 @@ class TwitterDataset(Dataset):
                                                          truncation=True)
 
         return {
-            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long).to(self.device),
-            'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long).to(self.device),
-            'cls_targets': torch.tensor(self.targets[index], dtype=torch.long).to(self.device)
+            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
+            'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
+            'cls_targets': torch.tensor(self.targets[index], dtype=torch.long)
         }
