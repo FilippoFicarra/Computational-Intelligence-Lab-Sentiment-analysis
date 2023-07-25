@@ -98,6 +98,11 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
 
 def get_training_and_validation_dataframes(path, dtype, grouping_key, train_fraction, eval_fraction, columns):
     # Load dataframe with dataset
+
+    # Set random seed so the same dataset is sampled every time
+    random_seed = 42
+    random.seed(random_seed)
+
     df = pd.read_json(path, lines=True, dtype=dtype)
 
     # Group by overall
@@ -296,9 +301,9 @@ def _run(flags):
     if flags["model"] == "robertaMask":
         m = BertTweetWithMask(base_model)
         # Freeze parameters of all layers of the encoder except for the first and last layer
-        for i in range(1, len(m.base_model.encoder.layer) - 1):
-            for param in m.base_model.encoder.layer[i].parameters():
-                param.requires_grad = False
+        # for i in range(1, len(m.base_model.encoder.layer) - 1):
+        #     for param in m.base_model.encoder.layer[i].parameters():
+        #         param.requires_grad = False
 
     else:
         m = BertTweetWithSparsemax(base_model)
@@ -307,9 +312,9 @@ def _run(flags):
         m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
 
         # Freeze parameters of all layers of the encoder except for the first and last layer
-        for i in range(1, len(m.base_model.encoder.layer) - 1):
-            for param in m.base_model.encoder.layer[i].parameters():
-                param.requires_grad = False
+        # for i in range(1, len(m.base_model.encoder.layer) - 1):
+        #     for param in m.base_model.encoder.layer[i].parameters():
+        #         param.requires_grad = False
 
     model = m.to(device)
     xm.master_print(model, flush=True)
