@@ -1,4 +1,6 @@
-SentimentAnalysis/data/datasets
+SentimentAnalysis/data/datasets/*
+!SentimentAnalysis/data/datasets/twitter-test.json
+
 SentimentAnalysis/data/cleaning/profanities.txt
 SentimentAnalysis/data/sentiment-knowledge/amazon-all-words-with-occurrences.csv
 SentimentAnalysis/data/sentiment-knowledge/amazon-words-seed-score.csv
@@ -11,3 +13,5 @@ SentimentAnalysis/data/sentiment-knowledge/twitter-words-seed-score.csv
 SentimentAnalysis/data/twitter-data
 
 .idea
+
+__pycache__/

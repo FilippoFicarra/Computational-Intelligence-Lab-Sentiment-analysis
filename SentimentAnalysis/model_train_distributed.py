@@ -119,7 +119,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
     df_after_drop = df.drop(indeces_to_drop_training).reset_index(drop=True)
     grouped_df_after_drop = df_after_drop.groupby(grouping_key)
 
-    # Sample 1 % of dataset for validation
+    # Sample dataset for validation
     eval_values = []
     for key, group in grouped_df_after_drop.groups.items():
         for ind in random.sample(group.tolist(), k=math.ceil(eval_fraction * len(group))):
@@ -130,7 +130,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
     gc.collect()
 
     # Return training and validation dataframes plus the splits
-    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns),\
+    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns), \
         len(training_values) / dataset_size, len(eval_values) / dataset_size
 
 
@@ -341,8 +341,9 @@ def _run(flags):
     early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': PATIENCE, 'stop': False}
 
     # Print parameters before starting training
-    xm.master_print(f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the\
-    model are the following:\n\
+    xm.master_print(
+        f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the' +
+        'model are the following:\n\
     - Number of epochs: {flags["epoch"]}\n\
     - Batch size: {flags["cores"]*flags["batch_size"]}\n\
     - Training fraction: {training_frac:.6f}\n\

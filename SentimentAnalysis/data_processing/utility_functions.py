@@ -561,6 +561,15 @@ def cleaning_function_no_unknown(string) -> str:
 
 # FUNCTION FOR CLEANING OF TWITTER DATASET
 
+def contains_numbers(word):
+    pattern = r'\d'  # \d matches any digit (0-9)
+    return bool(re.search(pattern, word))
+
+
+def contains_numbers_and_x(word):
+    pattern = r'\b\d+(?:x\d+)+\b'
+    return bool(re.search(pattern, word))
+
 
 def late_remove_special_characters_twitter(string):
     return re.sub(r"([*@])+", "", re.sub(r"([$%])\1+", r' \1 ', re.sub(r"(#)\1+", r'\1', string)))
@@ -592,19 +601,19 @@ def remove_numbers(string):
 def cleaning_function_twitter_dataset(string) -> str:
     return divide_words_starting_with_numbers(
         remove_numbers(
-                remove_hashtags(
-                    replace_hashtags(
-                        clean(
-                            replace_currency_symbols(
-                                late_remove_special_characters_twitter(
-                                    replace_profanities(
-                                        add_space_before_and_after_punctuation(
-                                            remove_special_characters(
-                                                replace_abbreviations(
-                                                    replace_emojis(
-                                                        contractions.fix(
-                                                            string.lower()))), twitter=True))))), lower=False,
-                            no_line_breaks=True)))), True)
+            remove_hashtags(
+                replace_hashtags(
+                    clean(
+                        replace_currency_symbols(
+                            late_remove_special_characters_twitter(
+                                replace_profanities(
+                                    add_space_before_and_after_punctuation(
+                                        remove_special_characters(
+                                            replace_abbreviations(
+                                                replace_emojis(
+                                                    contractions.fix(
+                                                        string.lower()))), twitter=True))))), lower=False,
+                        no_line_breaks=True)))), True)
 
 
 def new_cleaning_function_twitter_dataset(string) -> str:
