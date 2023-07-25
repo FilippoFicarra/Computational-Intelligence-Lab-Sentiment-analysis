@@ -133,7 +133,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
     return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns)
 
 
-def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
+def _train_epoch_fn(model, para_loader, criterion, optimizer):
     # Set model for training
     model.train()
 
@@ -192,7 +192,7 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
     return accuracies, losses, training_meter.avg_accuracy, training_meter.avg_loss
 
 
-def _eval_epoch_fn(model, para_loader, criterion, device):
+def _eval_epoch_fn(model, para_loader, criterion):
     # Set model to evaluation
     model.eval()
 
@@ -263,8 +263,8 @@ def _run(flags):
         df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         # Create train and eval datasets
         if flags["model"] == "robertaMask":
-            training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
-            eval_dataset = TwitterDataset(df_eval, tokenizer, use_embedder=True)
+            training_dataset = TwitterDataset(df_training, tokenizer, device, use_embedder=True)
+            eval_dataset = TwitterDataset(df_eval, tokenizer, device, use_embedder=True)
         else:
             training_dataset = TwitterDataset(df_training, tokenizer, device)
             eval_dataset = TwitterDataset(df_eval, tokenizer, device)
@@ -290,8 +290,6 @@ def _run(flags):
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
                              num_workers=0)
-
-   
 
     # MODEL
 
@@ -357,8 +355,7 @@ def _run(flags):
                                                                                            para_loader=para_loader
                                                                                            .per_device_loader(device),
                                                                                            criterion=criterion,
-                                                                                           optimizer=optimizer,
-                                                                                           device=device)
+                                                                                           optimizer=optimizer)
 
             # Add new accuracies and losses
             training_accuracies += new_accuracies
@@ -374,8 +371,7 @@ def _run(flags):
             new_accuracies, new_losses, eval_accuracy, eval_loss = _eval_epoch_fn(model=model,
                                                                                   para_loader=para_loader
                                                                                   .per_device_loader(device),
-                                                                                  criterion=criterion,
-                                                                                  device=device)
+                                                                                  criterion=criterion)
 
             # Add new accuracies and losses
             eval_accuracies += new_accuracies
