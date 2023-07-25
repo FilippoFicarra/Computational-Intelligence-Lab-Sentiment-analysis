@@ -194,10 +194,14 @@ SentimentAnalysis/data/twitter-datasets/predictions_twitter-roberta-base-sentime
 
 SentimentAnalysis/pretraining/data/datasets
 SentimentAnalysis/pretraining/data/cleaning/profanities.txt
-SentimentAnalysis/pretraining/data/sentiment-knowledge/all-words-with-occurrences.csv
-SentimentAnalysis/pretraining/data/sentiment-knowledge/words-seed-score.csv
-SentimentAnalysis/pretraining/data/sentiment-knowledge/pmi.csv
-SentimentAnalysis/pretraining/data/sentiment-knowledge/polarity.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/amazon-all-words-with-occurrences.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/amazon-words-seed-score.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/amazon-pmi.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/amazon-polarity.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/twitter-all-words-with-occurrences.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/twitter-pmi.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/twitter-polarity.csv
+SentimentAnalysis/pretraining/data/sentiment-knowledge/twitter-words-seed-score.csv
 SentimentAnalysis/pretraining/data/twitter-data
 
 .idea

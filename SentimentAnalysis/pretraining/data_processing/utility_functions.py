@@ -362,32 +362,22 @@ for stopword in STOPWORDS:
 
 # POLARITY CALCULATOR
 
-def calculate_polarity_of_occurrence(overall) -> int:
+def calculate_polarity_of_occurrence(label) -> int:
     """
     This function calculates the polarity of the occurrence of a word. If the word appears in a negative review, then
     the occurrence receives a negative value, else it receives a positive value. The value are assigned as follows:
-    - Overall 1 receives -10.
-    - Overall 2 receives -2.
-    - Overall 3 receives 0.
-    - Overall 4 receives 2.
-    - Overall 5 receives 10.
+    - Label 0 receives -1.
+    - Label 1 receives 1.
     Args:
-        overall: the score of the review.
+        label: the score of the review.
 
     Returns: The score assigned to the occurrence.
     """
-    base_value = 2
 
-    if overall == 1:
-        return -5 * base_value
-    elif overall == 2:
-        return -base_value
-    elif overall == 3:
-        return 0
-    elif overall == 4:
-        return base_value
+    if label == 0:
+        return -1
     else:
-        return 5 * base_value
+        return 1
 
 
 # FUNCTIONS FOR CLEANING
@@ -618,6 +608,23 @@ def cleaning_function_twitter_dataset(string) -> str:
                             no_line_breaks=True)))), True)
 
 
+def new_cleaning_function_twitter_dataset(string) -> str:
+    return divide_words_starting_with_numbers(
+        remove_hashtags(
+            replace_hashtags(
+                clean(
+                    late_remove_special_characters_twitter(
+                        add_space_before_and_after_punctuation(
+                            remove_special_characters(
+                                replace_abbreviations(
+                                    replace_emojis(
+                                        contractions.fix(
+                                            string.lower()))), twitter=True))),
+                    lower=False,
+                    no_line_breaks=True))),
+        True)
+
+
 # WORD TOKENIZER
 
 def remove_symbols_before_tokenization(string, twitter=False):
@@ -664,11 +671,15 @@ def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict, checked_dict):
     pairs = []
     for i in range(0, len(tokens)):
         # Check if current token is a seed
-        if seeds_dict[tokens[i]]:
-            if i - 1 >= 0 and occurrences_dict[tokens[i - 1]] >= 250 and checked_dict[tokens[i - 1]]:
-                pairs.append((tokens[i], tokens[i - 1]))
-            if i + 1 < len(tokens) and occurrences_dict[tokens[i + 1]] >= 250 and checked_dict[tokens[i + 1]]:
-                pairs.append((tokens[i], tokens[i + 1]))
+        try:
+            if seeds_dict[tokens[i]]:
+                if i - 1 >= 0 and occurrences_dict[tokens[i - 1]] >= 250 and checked_dict[tokens[i - 1]]:
+                    pairs.append((tokens[i], tokens[i - 1]))
+                if i + 1 < len(tokens) and occurrences_dict[tokens[i + 1]] >= 250 and checked_dict[tokens[i + 1]]:
+                    pairs.append((tokens[i], tokens[i + 1]))
+        except Exception:
+            pass
+
     # Return the pairs
     return pairs
 

@@ -11,19 +11,25 @@ from CONSTANTS import *
 
 class Embedder:
     def __init__(self, tokenizer: PreTrainedTokenizerFast, fraction_masking=FRACTION_MASKING,
-                 lower_limit_fraction_masking=LOWER_LIMIT_FRACTION_MASKING):
+                 lower_limit_fraction_masking=LOWER_LIMIT_FRACTION_MASKING, twitter=True):
         self.tokenizer = tokenizer
         self.mask_tosken_for_replacement = "<mask>"
         self.mask_token_id = self.tokenizer.get_vocab()[self.mask_tosken_for_replacement]
         self.sentiment_knowledge_kp = KeywordProcessor(case_sensitive=True)
-        self.load_sentiment_knowledge_words()
+        self.load_sentiment_knowledge_words(twitter)
         self.fraction_masking = fraction_masking
         self.lower_limit_fraction_masking = lower_limit_fraction_masking
 
-    def load_sentiment_knowledge_words(self):
-        df = pd.read_csv(PATH_POLARITY, dtype={"word": str, "polarity": float})
+    def load_sentiment_knowledge_words(self, twitter):
+        if twitter:
+            df = pd.read_csv(PATH_POLARITY_TWITTER, dtype={"word": str, "polarity": float})
+            threashold = 20.
+        else:
+            df = pd.read_csv(PATH_POLARITY_AMAZON, dtype={"word": str, "polarity": float})
+            threashold = 25.
+
         # Filter by pmi value (keep pmi bigger than 5)
-        df = df[abs(df.polarity) > 25.0]
+        df = df[abs(df.polarity) > threashold]
         # Insert words in keyword processor.
         for row in df.itertuples():
             if row.word not in ["an", "are", "his", "her", "do"]:
@@ -89,6 +95,6 @@ class Embedder:
                 ind_input_ids += 1
 
         return {
-            'ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
-            'mask': torch.tensor(attention_mask, dtype=torch.long)
+            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
+            'attention_mask': torch.tensor(attention_mask, dtype=torch.long)
         }

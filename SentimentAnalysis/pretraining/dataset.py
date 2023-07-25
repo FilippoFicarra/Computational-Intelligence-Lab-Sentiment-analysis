@@ -13,7 +13,7 @@ class ReviewDataset(Dataset):
         self.text = dataframe.reviewText
         self.targets = dataframe.overall
         self.max_length = max_length
-        self.embedder = Embedder(tokenizer)
+        self.embedder = Embedder(tokenizer, twitter=False)
 
     def __len__(self):
         return len(self.text)
@@ -43,27 +43,33 @@ class ReviewDataset(Dataset):
 
 
 class TwitterDataset(Dataset):
-    def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH):
+    def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH,
+                 use_embedder=False):
         self.tokenizer = tokenizer
         self.text = dataframe.text
         self.targets = dataframe.label
         self.max_length = max_length
+        self.use_embedder = use_embedder
+        self.embedder = Embedder(tokenizer)
 
     def __len__(self):
         return len(self.text)
 
     def __getitem__(self, index):
         text = " ".join(self.text[index].split())
-        encode_plus_res = self.tokenizer.encode_plus(text,
-                                                     None,
-                                                     add_special_tokens=True,
-                                                     padding='max_length',
-                                                     max_length=MAX_LENGTH,
-                                                     return_attention_mask=True,
-                                                     truncation=True)
+        if self.use_embedder:
+            encode_plus_res = self.embedder.encode_plus(text, max_length=self.max_length)
+        else:
+            encode_plus_res = self.tokenizer.encode_plus(text,
+                                                         None,
+                                                         add_special_tokens=True,
+                                                         padding='max_length',
+                                                         max_length=self.max_length,
+                                                         return_attention_mask=True,
+                                                         truncation=True)
 
         return {
-            'ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
-            'mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
+            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
+            'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
             'cls_targets': torch.tensor(self.targets[index], dtype=torch.long)
         }

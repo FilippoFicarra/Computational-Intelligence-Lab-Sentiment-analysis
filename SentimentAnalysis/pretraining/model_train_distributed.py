@@ -145,8 +145,8 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
         # Set gradients to zero
         optimizer.zero_grad()
         # Get mini-batch data
-        ids = data['ids'].to(device)
-        mask = data['mask'].to(device)
+        ids = data['input_ids'].to(device)
+        mask = data['attention_mask'].to(device)
         cls_targets = data['cls_targets'].to(device)
         # Compute model output
         outputs = model(ids, mask)
@@ -202,8 +202,8 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
     with torch.no_grad():
         for i, eval_batch in enumerate(para_loader):
             # Get mini-batch data
-            eval_ids = eval_batch['ids'].to(device)
-            eval_mask = eval_batch['mask'].to(device)
+            eval_ids = eval_batch['input_ids'].to(device)
+            eval_mask = eval_batch['attention_mask'].to(device)
             eval_cls_targets = eval_batch['cls_targets'].to(device)
             # Compute model output
             eval_outputs = model(eval_ids, eval_mask)
@@ -241,8 +241,6 @@ def _run(flags):
 
     if flags["dataset"] == "amazon":
         tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
-    else:
-        tokenizer.add_tokens(SPECIAL_TOKENS_TWITTER)
 
     # DATA FOR TRAINING AND EVALUATION
 
@@ -256,8 +254,12 @@ def _run(flags):
         xm.master_print('- twitter dataset.', flush=True)
         df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         # Create train and eval datasets
-        training_dataset = TwitterDataset(df_training, tokenizer)
-        eval_dataset = TwitterDataset(df_eval, tokenizer)
+        if flags["model"] == "robertaMask":
+            training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
+            eval_dataset = TwitterDataset(df_eval, tokenizer, use_embedder=True)
+        else:
+            training_dataset = TwitterDataset(df_training, tokenizer)
+            eval_dataset = TwitterDataset(df_eval, tokenizer)
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,
@@ -289,7 +291,8 @@ def _run(flags):
 
     # Get model
     base_model = AutoModel.from_pretrained(MODEL)
-    base_model.resize_token_embeddings(len(tokenizer))
+    if flags["dataset"] == "amazon":
+        base_model.resize_token_embeddings(len(tokenizer))
 
     if flags["model"] == "robertaMask":
         m = BertTweetWithMask(base_model)
@@ -327,10 +330,10 @@ def _run(flags):
 
     # SIGNAL HANDLER
 
-    def interrupt_handler(signal, frame):
-        save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
-
     if xm.is_master_ordinal():
+        def interrupt_handler(signal, frame):
+            save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
+
         signal.signal(signal.SIGINT, interrupt_handler)
 
     # TRAINING
