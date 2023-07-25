@@ -39,16 +39,15 @@ def parsing():
     arguments, values = getopt.getopt(arguments, options, long_options)
 
     if len(arguments) > 0 and arguments[0][0] in ("-h", "--help"):
-        print(f"""This script trains a model on a TPU with multiple cores.\n
-        -c or --cores: whether to train on a single core or on all available cores (default={flags["cores"]}).\n
-        -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS)} 
-        (default={flags["model"]}).\n
-        -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n
-        -e or --epoch: number of epochs (default={EPOCHS}).\n
-        -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)} 
-        (default={flags["dataset"]}).\n
-        -n or --filename: name of the file for the model (valid name with no extension).
-        """)
+        print(f'This script trains a model on a TPU with multiple cores.\n\
+        -c or --cores: whether to train on a single core or on all available cores (default={flags["cores"]}).\n\
+        -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS)} \
+        (default={flags["model"]}).\n\
+        -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n\
+        -e or --epoch: number of epochs (default={EPOCHS}).\n\
+        -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)}\
+        (default={flags["dataset"]}).\n\
+        -n or --filename: name of the file for the model (valid name with no extension).')
         sys.exit()
 
     # checking each argument
@@ -174,7 +173,8 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
 
         # Feedback
         if i % VERBOSE_PARAM == 0:
-            xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = {:.6f}'
+            xm.master_print('-- step {} training | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = '
+                            '{:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
                                     training_meter.avg_accuracy), flush=True)
 
@@ -229,6 +229,13 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
                 )
             )
 
+            # Feedback
+            if i % VERBOSE_PARAM == 0:
+                xm.master_print('-- step {} evaluation | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, '
+                                'avg_acc = {:.6f}'
+                                .format(i, eval_meter.val_loss, eval_meter.avg_loss, eval_meter.val_accuracy,
+                                        eval_meter.avg_accuracy), flush=True)
+
             # Save values every VERBOSE_PARAM steps
             if i % VERBOSE_PARAM_FOR_SAVING == 0:
                 accuracies.append((i, eval_meter.val_accuracy))
@@ -253,13 +260,11 @@ def _run(flags):
     # DATA FOR TRAINING AND EVALUATION
 
     if flags["dataset"] == "amazon":
-        xm.master_print('- amazon dataset.', flush=True)
         df_training, df_eval, training_frac, eval_frac = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
         # Create train and eval datasets
         training_dataset = ReviewDataset(df_training, tokenizer)
         eval_dataset = ReviewDataset(df_eval, tokenizer)
     else:
-        xm.master_print('- twitter dataset.', flush=True)
         df_training, df_eval, training_frac, eval_frac = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         # Create train and eval datasets
         if flags["model"] == "robertaMask":
@@ -336,17 +341,16 @@ def _run(flags):
     early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': PATIENCE, 'stop': False}
 
     # Print parameters before starting training
-    xm.master_print(f"""Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the 
-    model are the following:
-    - Number of epochs: {flags["epoch"]}.
-    - Batch size: {flags["cores"]*flags["batch_size"]}.
-    - Training fraction: {training_frac}.
-    - Validation fraction: {eval_frac}.
-    - Dataset: {flags["dataset"]}.
-    - Patience: {early_stopping["patience"]}.
-    - Learning rate: {LEARNING_RATE}.
-    - Optimizer: Adam.
-    """, flush=True)
+    xm.master_print(f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the\
+    model are the following:\n\
+    - Number of epochs: {flags["epoch"]}\n\
+    - Batch size: {flags["cores"]*flags["batch_size"]}\n\
+    - Training fraction: {training_frac:.6f}\n\
+    - Validation fraction: {eval_frac:.6f}\n\
+    - Dataset: {flags["dataset"]}\n\
+    - Patience: {early_stopping["patience"]}\n\
+    - Learning rate: {LEARNING_RATE}\n\
+    - Optimizer: Adam.', flush=True)
 
     # TRAINING
 
