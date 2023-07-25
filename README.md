@@ -5,32 +5,41 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 
 # The structure of the project:
 ```bash
+├── README.md
 ├── ReferencePapers
-│   
 ├── SentimentAnalysis
-│   └── data
-├── embedder
-│   └── embedder.py
-├── ngrams
-│   └── ngrams.py
-├── preprocessor
-│   └── text_preprocessor.py
-├── common
-│   ├── constants.py
-│   └── utils.py
-├── config.py
-├── ethz-cil-text-classification-2023/
-├── main.py
-└── train.ipynb
+│   ├── CONSTANTS.py
+│   ├── average_meter.py
+│   ├── bert_tweet_sparsemax.py
+│   ├── bert_tweet_with_mask.py
+│   ├── data
+│   │   ├── cleaning
+│   │   │   ├── domain_extensions.txt
+│   │   │   └── file_extensions.txt
+│   │   └── sentiment-knowledge
+│   │       ├── seeds-negative.txt
+│   │       └── seeds-positive.txt
+│   ├── data_processing
+│   │   ├── data-cleaning.ipynb
+│   │   ├── data-processing.ipynb
+│   │   ├── dataset-two-classes-generator.ipynb
+│   │   ├── seeds-finder.ipynb
+│   │   ├── sentiment-knowledge-miner.ipynb
+│   │   ├── twitter-dataset-generator.ipynb
+│   │   └── utility_functions.py
+│   ├── dataset.py
+│   ├── masker.py
+│   ├── model_train_distributed.py
+│   └── tokenizer_train.py
+└── setup_enviroment.sh
 ```
 
-- Data: It contains all the data used in the process
-- DataFrameManager: It contains a manager to load and create dataframes from the file in the folder Data
-- Embedder: It contains a word embedder (using either BERT or RoBERTa model)
-- NGrams: It contains a ngram creator from embeddings
-- Preprocessing: It contains all the preprocessing methods
-- main.py: It preprocesses the data and create the embeddings
-- train.ipynb: It contains the model to train
+- data_preprocessing: It contains all the preprocessing applied to the dataset
+- average_meter.py: It constains all the metrics used for the distributed computing
+- bert_tweet_sparsemax.py : It contains Bertweet model with a modified RobertaSelfAttention using Sparsemax instead of softmax
+- model_train_distributed.py : It performs the training in a TPU distributed enviroment on Google Cloud
+- bert_tweet_with_mask.py: It contains Bertweet model with a custom masked technique
+- dataset.py: It contains the dataset for the twitter datasets and for the masking training with amazon reviews 
 
 # Data
 The data given to us are located in Data/twitter-datasets. They consist of:

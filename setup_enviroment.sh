@@ -7,44 +7,19 @@ source venv/bin/activate
 # Windows
 # .\venv\Scripts\activate
 
-pip install language-tool-python
+pip install emoji==0.6.0 
+pip install packaging==20.9
+pip install sparsemax
+pip install numpy
+pip install pandas
+pip install transformers
+pip install matplotlib
+pip install flashtext
+pip install torch
+pip install pyspark
 pip install contractions
-pip install spacy==3.2.2
-pip install pandas==1.4.1
-pip install tqdm==4.62.3
-pip install gensim==4.1.2
-pip install beautifulsoup4==4.10.0
-pip install googletrans==3.0.0
-pip install matplotlib==3.5.1
-pip install spacytextblob
-pip install lxml==4.8.0
-pip install transformers[torch]
-pip install unidecode==2.8
-pip install seaborn==0.11.2
-pip install sklearn==0.24.1
-pip install wordcloud==1.8.1
-pip install fightin-words==1.0.5
-pip install eli5==0.11.0
-pip install flair==0.7.0
-pip install tensorflow==2.4.1
-pip install keras==2.4.3
-pip install sentencepiece==0.1.91
-pip install scikit-learn-extra==0.1.0b2
-pip install pyldavis==3.2.2
-pip install hdbscan==0.8.27
-pip install pydot
-pip install environ-config==23.2.0
-
-pip install emoji
-pip install emot
-pip install termcolor
-# spacy
-python3 -m spacy download en_core_web_sm
-
-# nltk
+pip install wordninja
+pip install clean-text
 pip install nltk
-python3 -c "import nltk; nltk.download('wordnet')"
-python3 -c "import nltk; nltk.download('stopwords')"
-python3 -c "import nltk; nltk.download('vader_lexicon')"
-python3 -c "import nltk; nltk.download('punkt')"
 
+pip install https://storage.googleapis.com/tpu-pytorch/wheels/tpuvm/torch_xla-2.0-cp38-cp38-linux_x86_64.whl
