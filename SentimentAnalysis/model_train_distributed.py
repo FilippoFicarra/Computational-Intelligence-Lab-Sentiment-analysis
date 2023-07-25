@@ -149,9 +149,9 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
         # Set gradients to zero
         optimizer.zero_grad()
         # Get mini-batch data
-        ids = data['input_ids'].to(device)
-        mask = data['attention_mask'].to(device)
-        cls_targets = data['cls_targets'].to(device)
+        ids = data['input_ids']
+        mask = data['attention_mask']
+        cls_targets = data['cls_targets']
         # Compute model output
         outputs = model(ids, mask)
         # Compute accuracy
@@ -206,9 +206,9 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
     with torch.no_grad():
         for i, eval_batch in enumerate(para_loader):
             # Get mini-batch data
-            eval_ids = eval_batch['input_ids'].to(device)
-            eval_mask = eval_batch['attention_mask'].to(device)
-            eval_cls_targets = eval_batch['cls_targets'].to(device)
+            eval_ids = eval_batch['input_ids']
+            eval_mask = eval_batch['attention_mask']
+            eval_cls_targets = eval_batch['cls_targets']
             # Compute model output
             eval_outputs = model(eval_ids, eval_mask)
             loss = criterion(eval_outputs, eval_cls_targets)
@@ -243,6 +243,10 @@ def _run(flags):
 
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
+    # DEVICE
+
+    device = xm.xla_device()
+
     if flags["dataset"] == "amazon":
         tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
 
@@ -262,8 +266,8 @@ def _run(flags):
             training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
             eval_dataset = TwitterDataset(df_eval, tokenizer, use_embedder=True)
         else:
-            training_dataset = TwitterDataset(df_training, tokenizer)
-            eval_dataset = TwitterDataset(df_eval, tokenizer)
+            training_dataset = TwitterDataset(df_training, tokenizer, device)
+            eval_dataset = TwitterDataset(df_eval, tokenizer, device)
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,
@@ -287,9 +291,7 @@ def _run(flags):
                              sampler=eval_sampler,
                              num_workers=0)
 
-    # DEVICE
-
-    device = xm.xla_device()
+   
 
     # MODEL
 
