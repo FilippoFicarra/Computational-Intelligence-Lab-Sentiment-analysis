@@ -287,7 +287,6 @@ STOPWORDS = []
 PATH_TO_DOMAINS = "../data/cleaning/domain_extensions.txt"
 PATH_TO_FILE_EXTENSIONS = "../data/cleaning/file_extensions.txt"
 PATH_TO_PROFANITIES = "../data/cleaning/profanities.txt"
-PATH_TO_UNKNOWN = "../data/cleaning/unknown_words.txt"
 
 SCHEMA = "label int, text string"
 

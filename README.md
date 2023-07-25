@@ -5,12 +5,10 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 
 # The structure of the project:
 ```bash
-├── data
-│   └── twitter-datasets/
-│        ├── preprocessed/
-│        └── create_unique_dataset.py
-├── data_frame_manager
-│   └── data_frame_manager.py
+├── ReferencePapers
+│   
+├── SentimentAnalysis
+│   └── data
 ├── embedder
 │   └── embedder.py
 ├── ngrams

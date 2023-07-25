@@ -388,7 +388,7 @@ def _run(flags):
 
             # Save weights
             if eval_loss < early_stopping['best']:
-                xm.save(model.model_representation(), flags["filename"], master_only=True)
+                xm.save(model.model_representation(), "model/" + flags["filename"], master_only=True)
                 early_stopping['best'] = eval_loss
                 early_stopping['no_improvement'] = 0
             else:
