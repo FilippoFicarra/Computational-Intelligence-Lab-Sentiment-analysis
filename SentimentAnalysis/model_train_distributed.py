@@ -4,7 +4,6 @@ import random
 import time
 import sys
 import getopt
-import signal
 
 import numpy as np
 import pandas as pd
@@ -33,7 +32,7 @@ def parsing():
     long_options = ["help", "cores=", "model=", "batch_size=", "epoch=", "dataset=", "filename="]
 
     # Prepare flags
-    flags = {"cores": 1, "model": "sparsemax", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
+    flags = {"cores": 1, "model": "robertaMask", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
              "dataset": "twitter"}
 
     # Parsing argument
@@ -41,13 +40,13 @@ def parsing():
 
     if len(arguments) > 0 and arguments[0][0] in ("-h", "--help"):
         print(f"""This script trains a model on a TPU with multiple cores.\n
-        -c or --cores: whether to train on a single core or on all available cores (default=1).\n
+        -c or --cores: whether to train on a single core or on all available cores (default={flags["cores"]}).\n
         -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS)} 
-        (default={MODEL_NAME_OPTIONS[1]}).\n
+        (default={flags["model"]}).\n
         -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n
         -e or --epoch: number of epochs (default={EPOCHS}).\n
         -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)} 
-        (default={DATASET_NAME_OPTIONS[0]}).\n
+        (default={flags["dataset"]}).\n
         -n or --filename: name of the file for the model (valid name with no extension).
         """)
         sys.exit()
@@ -328,14 +327,6 @@ def _run(flags):
     eval_accuracies = []
     early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': PATIENCE, 'stop': False}
 
-    # SIGNAL HANDLER
-
-    if xm.is_master_ordinal():
-        def interrupt_handler(signal, frame):
-            save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
-
-        signal.signal(signal.SIGINT, interrupt_handler)
-
     # TRAINING
 
     for epoch in range(flags["epoch"]):
@@ -410,11 +401,12 @@ def _run(flags):
             del training_loss, eval_loss, training_accuracy, eval_accuracy
             gc.collect()
 
+            # Save training and evaluation values collected up to the current epoch
+            save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
+
         else:
             xm.master_print('- early stopping triggered ', flush=True)
             break
-
-    return training_losses, eval_losses, training_accuracies, eval_accuracies
 
 
 def _map_fn(index, flags):
@@ -428,8 +420,7 @@ def _map_fn(index, flags):
 
     """
     torch.set_default_tensor_type('torch.FloatTensor')
-    training_losses, eval_losses, training_accuracies, eval_accuracies = _run(flags)
-    save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
+    _run(flags)
 
 
 if __name__ == "__main__":
