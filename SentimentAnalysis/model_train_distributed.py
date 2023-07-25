@@ -104,6 +104,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
     random.seed(random_seed)
 
     df = pd.read_json(path, lines=True, dtype=dtype)
+    dataset_size = df.shape[0]
 
     # Group by overall
     grouped_df = df.groupby(grouping_key)
@@ -129,8 +130,9 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
     del df, grouped_df, df_after_drop, grouped_df_after_drop
     gc.collect()
 
-    # Return training and validation dataframes
-    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns)
+    # Return training and validation dataframes plus the splits
+    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns),\
+        len(training_values) / dataset_size, len(eval_values) / dataset_size
 
 
 def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
@@ -175,6 +177,8 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
             xm.master_print('-- step {} | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = {:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
                                     training_meter.avg_accuracy), flush=True)
+
+        if i % VERBOSE_PARAM_FOR_SAVING == 0:
             # Save values
             accuracies.append((i, training_meter.val_accuracy))
             losses.append((i, training_meter.val_loss))
@@ -226,7 +230,7 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
             )
 
             # Save values every VERBOSE_PARAM steps
-            if i % VERBOSE_PARAM == 0:
+            if i % VERBOSE_PARAM_FOR_SAVING == 0:
                 accuracies.append((i, eval_meter.val_accuracy))
                 losses.append((i, eval_meter.val_loss))
 
@@ -250,13 +254,13 @@ def _run(flags):
 
     if flags["dataset"] == "amazon":
         xm.master_print('- amazon dataset.', flush=True)
-        df_training, df_eval = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
+        df_training, df_eval, training_frac, eval_frac = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
         # Create train and eval datasets
         training_dataset = ReviewDataset(df_training, tokenizer)
         eval_dataset = ReviewDataset(df_eval, tokenizer)
     else:
         xm.master_print('- twitter dataset.', flush=True)
-        df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
+        df_training, df_eval, training_frac, eval_frac = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
         # Create train and eval datasets
         if flags["model"] == "robertaMask":
             training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
@@ -317,7 +321,6 @@ def _run(flags):
         #         param.requires_grad = False
 
     model = m.to(device)
-    xm.master_print(model, flush=True)
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
@@ -331,6 +334,19 @@ def _run(flags):
     training_accuracies = []
     eval_accuracies = []
     early_stopping = {'best': np.Inf, 'no_improvement': 0, 'patience': PATIENCE, 'stop': False}
+
+    # Print parameters before starting training
+    xm.master_print(f"""Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the 
+    model are the following:
+    - Number of epochs: {flags["epoch"]}.
+    - Batch size: {flags["cores"]*flags["batch_size"]}.
+    - Training fraction: {training_frac}.
+    - Validation fraction: {eval_frac}.
+    - Dataset: {flags["dataset"]}.
+    - Patience: {early_stopping["patience"]}.
+    - Learning rate: {LEARNING_RATE}.
+    - Optimizer: Adam.
+    """, flush=True)
 
     # TRAINING
 
