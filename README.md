@@ -27,7 +27,7 @@ First of all you need to setup your enviroment. A virtual enviroment will be cre
 │   │   ├── sentiment-knowledge-miner.ipynb
 │   │   ├── twitter-dataset-generator.ipynb
 │   │   └── utility_functions.py
-│   ├── dataset.py
+│   ├── datasets.py
 │   ├── masker.py
 │   ├── model_train_distributed.py
 │   └── tokenizer_train.py

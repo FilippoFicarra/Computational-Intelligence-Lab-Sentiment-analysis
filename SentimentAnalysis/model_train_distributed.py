@@ -16,7 +16,7 @@ from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
 from average_meter import AverageMeter
-from dataset import ReviewDataset, TwitterDataset
+from datasets import ReviewDataset, TwitterDataset
 from bert_tweet_with_mask import BertTweetWithMask
 from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
 
@@ -26,7 +26,7 @@ def parsing():
     arguments = sys.argv[1:]
 
     # Options
-    options = "hc:m:b:e:d:n:"
+    options = "hc:m:b:e:d:f:"
 
     # Long options
     long_options = ["help", "cores=", "model=", "batch_size=", "epoch=", "dataset=", "filename="]
@@ -47,7 +47,7 @@ def parsing():
         -e or --epoch: number of epochs (default={EPOCHS}).\n\
         -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)}\
         (default={flags["dataset"]}).\n\
-        -n or --filename: name of the file for the model (valid name with no extension).')
+        -f or --filename: name of the file for the model (valid name with no extension).')
         sys.exit()
 
     # checking each argument
@@ -77,11 +77,11 @@ def parsing():
                 flags["dataset"] = val
             else:
                 raise ValueError("Dataset name is not valid.")
-        elif arg in ("-n", "--filename"):
+        elif arg in ("-f", "--filename"):
             flags["filename"] = '{}.pt'.format(val)
 
-        if "filename" not in flags.keys():
-            flags["filename"] = '{}.pt'.format(flags["model"])
+    if "filename" not in flags.keys():
+        flags["filename"] = '{}.pt'.format(flags["model"])
 
     return flags
 

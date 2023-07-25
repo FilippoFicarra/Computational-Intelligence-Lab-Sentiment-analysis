@@ -11,7 +11,9 @@ PATH_POLARITY_AMAZON = "data/sentiment-knowledge/amazon-polarity.csv"
 PATH_POLARITY_TWITTER = "data/sentiment-knowledge/twitter-polarity.csv"
 PATH_DATASET_AMAZON = "data/datasets/amazon-two-classes.json"
 PATH_DATASET_TWITTER = "data/datasets/twitter.json"
-PATH_TOKENIZER = "model/tokenizer"
+PATH_DATASET_TWITTER_TEST = "data/datasets/twitter-test.json"
+PATH_TOKENIZER = "tokenizer"
+PATH_MODELS = "model"
 
 EPOCHS = 20
 TRAIN_BATCH_SIZE = 32
@@ -45,6 +47,8 @@ TWITTER_OPTIONS = {
     "eval_fraction": 1,
     "columns": ["label", "text"]
 }
+
+DTYPE_TWITTER_TEST = "text string"
 
 SPECIAL_TOKENS_AMAZON = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]",
                                                        "[BAD]"]}
