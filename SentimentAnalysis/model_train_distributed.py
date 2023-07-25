@@ -284,12 +284,12 @@ def _run(flags):
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
                                  sampler=train_sampler,
-                                 num_workers=0)
+                                 num_workers=4)
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
-                             num_workers=0)
+                             num_workers=4)
 
     # MODEL
 
@@ -317,7 +317,6 @@ def _run(flags):
         #         param.requires_grad = False
 
     model = m.to(device)
-    xm.master_print(model, flush=True)
 
     # LOSS FUNCTIONS AND OPTIMIZER
 

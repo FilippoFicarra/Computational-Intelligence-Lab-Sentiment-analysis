@@ -59,6 +59,8 @@ class TwitterDataset(Dataset):
         text = " ".join(self.text[index].split())
         if self.use_embedder:
             encode_plus_res = self.embedder.encode_plus(text, max_length=self.max_length)
+            ids = encode_plus_res['input_ids']
+            attention_mask = encode_plus_res['attention_mask']
         else:
             encode_plus_res = self.tokenizer.encode_plus(text,
                                                          None,
@@ -67,9 +69,11 @@ class TwitterDataset(Dataset):
                                                          max_length=self.max_length,
                                                          return_attention_mask=True,
                                                          truncation=True)
+            ids = torch.tensor(encode_plus_res['input_ids'], dtype=torch.long)
+            attention_mask = torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long)
 
         return {
-            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
-            'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
+            'input_ids': ids,
+            'attention_mask': attention_mask,
             'cls_targets': torch.tensor(self.targets[index], dtype=torch.long)
         }
