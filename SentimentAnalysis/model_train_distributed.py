@@ -237,13 +237,15 @@ def _run(flags):
     # Create dataloaders
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
-                                 sampler=train_sampler,
-                                 num_workers=4)
+                                 sampler=train_sampler)
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
-                             sampler=eval_sampler,
-                             num_workers=4)
+                             sampler=eval_sampler)
+
+    train_device_loader = pl.MpDeviceLoader(training_loader, device)
+
+    test_device_loader = pl.MpDeviceLoader(eval_loader, device)
 
     # MODEL
 
@@ -304,7 +306,7 @@ def _run(flags):
             train_start = time.time()
             xm.master_print('- training...')
             new_accuracies, new_losses, training_accuracy, training_loss = _train_epoch_fn(model=model,
-                                                                                           para_loader=training_loader,
+                                                                                           para_loader=train_device_loader,
                                                                                            criterion=criterion,
                                                                                            optimizer=optimizer)
 
@@ -319,7 +321,7 @@ def _run(flags):
             valid_start = time.time()
             xm.master_print('- validation...', flush=True)
             new_accuracies, new_losses, eval_accuracy, eval_loss = _eval_epoch_fn(model=model,
-                                                                                  para_loader=eval_loader,
+                                                                                  para_loader=test_device_loader,
                                                                                   criterion=criterion)
 
             # Add new accuracies and losses
