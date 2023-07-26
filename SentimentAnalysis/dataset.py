@@ -68,12 +68,13 @@ class DatasetPreprocessingDataset(Dataset):
 
 class TwitterDataset(Dataset):
     def __init__(self, data: dict, device):
-        self.ids = data['input_ids'].to(device)
-        self.masks = data['attention_mask'].to(device)
-        self.targets = data["cls_targets"].to(device)
+        self._count = data['input_ids'].size(0)
+        self.ids = data['input_ids'].to(device, dtype=torch.long)
+        self.masks = data['attention_mask'].to(device, dtype=torch.long)
+        self.targets = data["cls_targets"].to(device, dtype=torch.long)
 
     def __len__(self):
-        return self.targets.shape(0)
+        return self._count
 
     def __getitem__(self, index):
         return {

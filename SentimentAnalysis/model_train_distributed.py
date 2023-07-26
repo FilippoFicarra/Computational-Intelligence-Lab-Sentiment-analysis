@@ -303,10 +303,8 @@ def _run(flags):
             # Training pass
             train_start = time.time()
             xm.master_print('- training...')
-            para_loader = pl.ParallelLoader(training_loader, [device])
             new_accuracies, new_losses, training_accuracy, training_loss = _train_epoch_fn(model=model,
-                                                                                           para_loader=para_loader
-                                                                                           .per_device_loader(device),
+                                                                                           para_loader=training_loader,
                                                                                            criterion=criterion,
                                                                                            optimizer=optimizer)
 
@@ -314,23 +312,21 @@ def _run(flags):
             training_accuracies += new_accuracies
             training_losses += new_losses
 
-            del para_loader, new_accuracies, new_losses
+            del new_accuracies, new_losses
             gc.collect()
 
             # Evaluation pass
             valid_start = time.time()
             xm.master_print('- validation...', flush=True)
-            para_loader = pl.ParallelLoader(eval_loader, [device])
             new_accuracies, new_losses, eval_accuracy, eval_loss = _eval_epoch_fn(model=model,
-                                                                                  para_loader=para_loader
-                                                                                  .per_device_loader(device),
+                                                                                  para_loader=eval_loader,
                                                                                   criterion=criterion)
 
             # Add new accuracies and losses
             eval_accuracies += new_accuracies
             eval_losses += new_losses
 
-            del para_loader, new_accuracies, new_losses
+            del new_accuracies, new_losses
             gc.collect()
 
             # Save weights
