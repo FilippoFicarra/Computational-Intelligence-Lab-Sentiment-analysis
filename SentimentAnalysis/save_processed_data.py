@@ -7,7 +7,7 @@ import torch
 from transformers import AutoTokenizer
 
 from CONSTANTS import *
-from dataset import TwitterDataset
+from dataset import DatasetPreprocessingDataset
 
 
 def get_training_and_validation_dataframes(path, dtype, grouping_key, train_fraction, eval_fraction, columns):
@@ -49,7 +49,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
 
 def save_tensor(df, tokenizer, path):
     # Save tensors for training
-    dataset = TwitterDataset(df, tokenizer)
+    dataset = DatasetPreprocessingDataset(df, tokenizer)
     samples = []
     for sample in iter(dataset):
         try:
