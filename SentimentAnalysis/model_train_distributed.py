@@ -1,12 +1,9 @@
 import gc
-import math
-import random
-import time
-import sys
 import getopt
+import sys
+import time
 
 import numpy as np
-import pandas as pd
 import torch
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
@@ -16,9 +13,9 @@ from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
 from average_meter import AverageMeter
-from dataset import ReviewDataset, TwitterDataset
-from bert_tweet_with_mask import BertTweetWithMask
 from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
+from bert_tweet_with_mask import BertTweetWithMask
+from dataset import TwitterDataset
 
 
 def parsing():
@@ -45,8 +42,7 @@ def parsing():
         (default={flags["model"]}).\n
         -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n
         -e or --epoch: number of epochs (default={EPOCHS}).\n
-        -d or --dataset: dataset name,  available options are {", ".join(DATASET_NAME_OPTIONS)} 
-        (default={flags["dataset"]}).\n
+        -d or --dataset: dataset name,  available options is "twitter (default={flags["dataset"]}).\n
         -n or --filename: name of the file for the model (valid name with no extension).
         """)
         sys.exit()
@@ -74,7 +70,7 @@ def parsing():
             else:
                 raise ValueError("Number of epochs must be at least 1.")
         elif arg in ("-d", "--dataset"):
-            if val in DATASET_NAME_OPTIONS:
+            if val is not "twitter":
                 flags["dataset"] = val
             else:
                 raise ValueError("Dataset name is not valid.")
@@ -94,43 +90,6 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
     xm.save(training_accuracies, 'trn-accuracies-{}.txt'.format(filename), master_only=True)
     xm.save(eval_accuracies, 'val-accuracies-{}.txt'.format(filename), master_only=True)
     xm.master_print("- saved!")
-
-
-def get_training_and_validation_dataframes(path, dtype, grouping_key, train_fraction, eval_fraction, columns):
-    # Load dataframe with dataset
-
-    # Set random seed so the same dataset is sampled every time
-    random_seed = 42
-    random.seed(random_seed)
-
-    df = pd.read_json(path, lines=True, dtype=dtype)
-
-    # Group by overall
-    grouped_df = df.groupby(grouping_key)
-
-    # Sample 20 % of dataset for training
-    training_values = []
-    indeces_to_drop_training = []
-    for key, group in grouped_df.groups.items():
-        for ind in random.sample(group.tolist(), k=math.ceil(train_fraction * len(group))):
-            training_values.append((key, df.iloc[ind, 1]))
-            indeces_to_drop_training.append(ind)
-
-    df_after_drop = df.drop(indeces_to_drop_training).reset_index(drop=True)
-    grouped_df_after_drop = df_after_drop.groupby(grouping_key)
-
-    # Sample 1 % of dataset for validation
-    eval_values = []
-    for key, group in grouped_df_after_drop.groups.items():
-        for ind in random.sample(group.tolist(), k=math.ceil(eval_fraction * len(group))):
-            eval_values.append((key, df_after_drop.iloc[ind, 1]))
-
-    # Delete unused variable
-    del df, grouped_df, df_after_drop, grouped_df_after_drop
-    gc.collect()
-
-    # Return training and validation dataframes
-    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns)
 
 
 def _train_epoch_fn(model, para_loader, criterion, optimizer):
@@ -252,22 +211,17 @@ def _run(flags):
 
     # DATA FOR TRAINING AND EVALUATION
 
-    if flags["dataset"] == "amazon":
-        xm.master_print('- amazon dataset.', flush=True)
-        df_training, df_eval = get_training_and_validation_dataframes(**AMAZON_OPTIONS)
-        # Create train and eval datasets
-        training_dataset = ReviewDataset(df_training, tokenizer)
-        eval_dataset = ReviewDataset(df_eval, tokenizer)
+    xm.master_print('- twitter dataset.', flush=True)
+    training = torch.load(TENSOR_TRAINING_DATA_PATH)
+    evaluation = torch.load(TENSOR_EVAL_DATA_PATH)
+
+    # Create train and eval datasets
+    if flags["model"] == "robertaMask":
+        training_dataset = TwitterDataset(training, device)
+        eval_dataset = TwitterDataset(evaluation, device)
     else:
-        xm.master_print('- twitter dataset.', flush=True)
-        df_training, df_eval = get_training_and_validation_dataframes(**TWITTER_OPTIONS)
-        # Create train and eval datasets
-        if flags["model"] == "robertaMask":
-            training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
-            eval_dataset = TwitterDataset(df_eval, tokenizer, use_embedder=True)
-        else:
-            training_dataset = TwitterDataset(df_training, tokenizer)
-            eval_dataset = TwitterDataset(df_eval, tokenizer)
+        training_dataset = TwitterDataset(training, device)
+        eval_dataset = TwitterDataset(evaluation, device)
 
     # Create data samplers
     train_sampler = torch.utils.data.distributed.DistributedSampler(training_dataset,

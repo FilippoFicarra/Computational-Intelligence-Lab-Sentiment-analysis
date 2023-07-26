@@ -47,3 +47,6 @@ TWITTER_OPTIONS = {
 
 SPECIAL_TOKENS_AMAZON = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]",
                                                        "[BAD]"]}
+
+TENSOR_TRAINING_DATA_PATH = "data/datasets/twitter-tensor-training-no-special-masks.pt"
+TENSOR_EVAL_DATA_PATH = "data/datasets/twitter-tensor-eval-no-special-masks.pt"

@@ -11,3 +11,5 @@ SentimentAnalysis/data/sentiment-knowledge/twitter-words-seed-score.csv
 SentimentAnalysis/data/twitter-data
 
 .idea
+
+SentimentAnalysis/.__pychache__/
