@@ -8,7 +8,6 @@ import getopt
 import numpy as np
 import pandas as pd
 import torch
-import torch_xla.debug.profiler as xp
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.distributed.xla_multiprocessing as xmp
@@ -290,13 +289,11 @@ def _run(flags):
     # Create dataloaders
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
-                                 sampler=train_sampler,
-                                 num_workers=4)
+                                 sampler=train_sampler)
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
-                             sampler=eval_sampler,
-                             num_workers=4)
+                             sampler=eval_sampler)
 
     # DEVICE
 
@@ -464,6 +461,5 @@ def _map_fn(index, flags):
 
 if __name__ == "__main__":
     # Define model and model wrapper
-    server = xp.start_server(9012)
     flags = parsing()
     xmp.spawn(_map_fn, args=(flags,), nprocs=flags["cores"], start_method='fork')

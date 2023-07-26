@@ -11,6 +11,8 @@ SentimentAnalysis/data/sentiment-knowledge/twitter-pmi.csv
 SentimentAnalysis/data/sentiment-knowledge/twitter-polarity.csv
 SentimentAnalysis/data/sentiment-knowledge/twitter-words-seed-score.csv
 SentimentAnalysis/data/twitter-data
+SentimentAnalysis/model/
+SentimentAnalysis/predictions/
 
 .idea
 

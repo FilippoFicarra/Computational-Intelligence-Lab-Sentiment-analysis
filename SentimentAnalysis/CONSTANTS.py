@@ -1,7 +1,7 @@
 CLASSES_NUM = 2
-HIDDEN_SIZE = 1024
+HIDDEN_SIZE = 768
 DROPOUT_PROB = 0.1
-MODEL = "vinai/bertweet-large"
+MODEL = "vinai/bertweet-base"
 
 MODEL_NAME_OPTIONS = ("sparsemax", "robertaMask")
 DATASET_NAME_OPTIONS = ("amazon", "twitter")
@@ -14,6 +14,7 @@ PATH_DATASET_TWITTER = "data/datasets/twitter.json"
 PATH_DATASET_TWITTER_TEST = "data/datasets/twitter-test.json"
 PATH_TOKENIZER = "tokenizer"
 PATH_MODELS = "model"
+PATH_PREDICTIONS = "predictions"
 
 EPOCHS = 20
 TRAIN_BATCH_SIZE = 16
@@ -49,6 +50,7 @@ TWITTER_OPTIONS = {
 }
 
 DTYPE_TWITTER_TEST = "text string"
+TEST_BATCH_SIZE = 16
 
 SPECIAL_TOKENS_AMAZON = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]",
                                                        "[BAD]"]}

@@ -4,7 +4,6 @@ from typing import Optional, Tuple
 import torch
 from sparsemax import Sparsemax
 from torch import nn
-from torch_xla.utils.serialization import load
 
 from CONSTANTS import *
 
@@ -34,7 +33,7 @@ class BertTweetWithSparsemax(nn.Module):
         }
 
     def load_model(self, file_path):
-        state = load(file_path)
+        state = torch.load(file_path)
         self.epoch = state['epoch']
         self.load_state_dict(state['model_state_dict'])
 
