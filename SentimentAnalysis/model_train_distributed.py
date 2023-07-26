@@ -8,6 +8,7 @@ import getopt
 import numpy as np
 import pandas as pd
 import torch
+import torch_xla.debug.profiler as xp
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.distributed.xla_multiprocessing as xmp
@@ -356,16 +357,16 @@ def _run(flags):
 
     # Print parameters before starting training
     xm.master_print(
-        f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the' +
-        'model are the following:\n\
-    - Number of epochs: {flags["epoch"]}\n\
-    - Batch size: {flags["cores"]*flags["batch_size"]}\n\
-    - Training fraction: {training_frac:.6f}\n\
-    - Validation fraction: {eval_frac:.6f}\n\
-    - Dataset: {flags["dataset"]}\n\
-    - Patience: {early_stopping["patience"]}\n\
-    - Learning rate: {LEARNING_RATE}\n\
-    - Optimizer: Adam.', flush=True)
+        f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the'
+        + 'model are the following:+\n'
+        + f'- Number of epochs: {flags["epoch"]}\n'
+        + f'- Batch size: {flags["cores"] * flags["batch_size"]}\n'
+        + f'- Training fraction: {training_frac:.6f}\n'
+        + f'- Validation fraction: {eval_frac:.6f}\n'
+        + f'- Dataset: {flags["dataset"]}\n'
+        + f'- Patience: {early_stopping["patience"]}\n'
+        + f'- Learning rate: {LEARNING_RATE}\n'
+        + f'- Optimizer: Adam.', flush=True)
 
     # TRAINING
 
@@ -463,5 +464,6 @@ def _map_fn(index, flags):
 
 if __name__ == "__main__":
     # Define model and model wrapper
+    server = xp.start_server(9012)
     flags = parsing()
     xmp.spawn(_map_fn, args=(flags,), nprocs=flags["cores"], start_method='fork')
