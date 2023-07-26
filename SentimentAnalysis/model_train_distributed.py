@@ -8,12 +8,12 @@ import getopt
 import numpy as np
 import pandas as pd
 import torch
+import torch_xla.debug.profiler as xp
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.distributed.xla_multiprocessing as xmp
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
-import tensorflow.compat.v2 as tf2
 
 from CONSTANTS import *
 from average_meter import AverageMeter
@@ -464,6 +464,6 @@ def _map_fn(index, flags):
 
 if __name__ == "__main__":
     # Define model and model wrapper
-    tf2.profiler.experimental.server.start(6000)
+    server = xp.start_server(9012)
     flags = parsing()
     xmp.spawn(_map_fn, args=(flags,), nprocs=flags["cores"], start_method='fork')
