@@ -386,8 +386,7 @@ def _run(flags):
                                                                                            para_loader=para_loader
                                                                                            .per_device_loader(device),
                                                                                            criterion=criterion,
-                                                                                           optimizer=optimizer,
-                                                                                           device=device)
+                                                                                           optimizer=optimizer)
 
             # Add new accuracies and losses
             training_accuracies += new_accuracies
@@ -403,8 +402,7 @@ def _run(flags):
             new_accuracies, new_losses, eval_accuracy, eval_loss = _eval_epoch_fn(model=model,
                                                                                   para_loader=para_loader
                                                                                   .per_device_loader(device),
-                                                                                  criterion=criterion,
-                                                                                  device=device)
+                                                                                  criterion=criterion)
 
             # Add new accuracies and losses
             eval_accuracies += new_accuracies
