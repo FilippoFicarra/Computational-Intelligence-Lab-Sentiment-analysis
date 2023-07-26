@@ -1,7 +1,7 @@
 CLASSES_NUM = 2
 HIDDEN_SIZE = 1024
 DROPOUT_PROB = 0.1
-MODEL = "vinai/bertweet-base"
+MODEL = "vinai/bertweet-large"
 
 MODEL_NAME_OPTIONS = ("sparsemax", "robertaMask")
 DATASET_NAME_OPTIONS = ("amazon", "twitter")
