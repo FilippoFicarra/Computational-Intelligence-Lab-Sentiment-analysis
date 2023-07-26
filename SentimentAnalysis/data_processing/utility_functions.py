@@ -22,39 +22,75 @@ CURRENCY_SYMBOLS = {
     # Add more currency symbols and their names as needed
 }
 
-EMOTICONS = {':*': 'kiss', ':-*': 'kiss', ':x': 'kiss', ':-)': 'happy', ':)': 'happy', ':o)': 'happy', ':]': 'happy',
-             ':3': 'happy', ':c)': 'happy', ':>': 'happy', '=]': 'happy', '8)': 'happy', '=)': 'happy', ':}': 'happy',
-             ':^)': 'happy', '|;-)': 'happy', ":'-)": 'happy', ":')": 'happy', '\\o/': 'happy', '*\\0/*': 'happy',
-             ':-D': 'laugh', ':D': 'laugh', '8-D': 'laugh', '8D': 'laugh', 'x-D': 'laugh', 'xD': 'laugh',
-             'X-D': 'laugh', 'XD': 'laugh', '=-D': 'laugh', '=D': 'laugh', '=-3': 'laugh', '=3': 'laugh',
-             'B^D': 'laugh', '>:[': 'sad', ':-(': 'sad', ':(': 'sad', ':-c': 'sad', ':c': 'sad', ':-<': 'sad',
-             ':<': 'sad', ':-[': 'sad', ':[': 'sad', ':{': 'sad', ':-||': 'sad', ':@': 'sad', ":'-(": 'sad',
-             ":'(": 'sad', 'D:<': 'sad', 'D:': 'sad', 'D8': 'sad', 'D;': 'sad', 'D=': 'sad', 'DX': 'sad', 'v.v': 'sad',
-             "D-':": 'sad', '(>_<)': 'sad', ':|': 'sad', '>:O': 'surprise', ':-O': 'surprise', ':-o': 'surprise',
-             ':O': 'surprise', '°o°': 'surprise', 'o_O': 'surprise', 'o_0': 'surprise', 'o.O': 'surprise',
-             'o-o': 'surprise', '8-0': 'surprise', '|-O': 'surprise', ';-)': 'wink', ';)': 'wink', '*-)': 'wink',
-             '*)': 'wink', ';-]': 'wink', ';]': 'wink', ';D': 'wink', ';^)': 'wink', ':-,': 'wink', '>:P': 'tong',
-             ':-P': 'tong', ':P': 'tong', 'X-P': 'tong', 'x-p': 'tong', 'xp': 'tong', 'xpp': 'tong', 'XP': 'tong',
-             ':-p': 'tong', ':p': 'tong', '=p': 'tong', ':-Þ': 'tong', ':Þ': 'tong', ':-b': 'tong', ':b': 'tong',
-             ':-&': 'tong', '>:\\': 'annoyed', '>:/': 'annoyed', ':-/': 'annoyed', ':-.': 'annoyed', ':/': 'annoyed',
-             ':\\': 'annoyed', '=/': 'annoyed', '=\\': 'annoyed', ':L': 'annoyed', '=L': 'annoyed', ':S': 'annoyed',
-             '>.<': 'annoyed', ':-|': 'annoyed', '<:-|': 'annoyed', ':-X': 'seallips', ':X': 'seallips',
-             ':#': 'seallips', 'O:-)': 'angel', '0:-3': 'angel', '0:3': 'angel', '0:-)': 'angel', '0:)': 'angel',
-             '0;^)': 'angel', '>:)': 'devil', '>:D': 'devil', '>:-D': 'devil', '>;)': 'devil', '>:-)': 'devil',
-             '}:-)': 'devil', '}:)': 'devil', '3:-)': 'devil', '3:)': 'devil', 'o/\\o': 'highfive', '^5': 'highfive',
-             '>_>^': 'highfive', '^<_<': 'highfive', '<3': 'heart', '*:': 'kiss', '*-:': 'kiss', 'x:': 'kiss',
-             '(-:': 'happy', '(:': 'happy', '(o:': 'happy', '[:': 'happy', '<:': 'happy', '[=': 'happy', '(=': 'happy',
-             '{:': 'happy', "(-':": 'happy', "(':": 'happy', ']:<': 'sad', ')-:': 'sad', '):': 'sad', '>-:': 'sad',
-             '>:': 'sad', ']-:': 'sad', ']:': 'sad', '}:': 'sad', '||-:': 'sad', '@:': 'sad', ")-':": 'sad',
-             ")':": 'sad', '|:': 'sad', 'O:<': 'surprise', 'O-:': 'surprise', 'o-:': 'surprise', 'O:': 'surprise',
-             '.-:': 'annoyed', '|-:': 'annoyed', '|-:>': 'annoyed', '#-:': 'seallips', '#:': 'seallips',
-             '(-:O': 'angel', '(-:0': 'angel', '(:0': 'angel', '(:<': 'devil', '(-:<': 'devil', '(-:{': 'devil',
-             '(:{': 'devil', ':-d': 'laugh', ':d': 'laugh', '8-d': 'laugh', '8d': 'laugh', 'x-d': 'laugh',
-             'xd': 'laugh', '=-d': 'laugh', '=d': 'laugh', 'b^d': 'laugh', 'd:<': 'sad', 'd:': 'sad', 'd8': 'sad',
-             'd;': 'sad', 'd=': 'sad', 'dx': 'sad', "d-':": 'sad', '>:o': 'surprise', ':o': 'surprise',
-             'o_o': 'surprise', 'o.o': 'surprise', '|-o': 'surprise', ';d': 'wink', '>:p': 'tong', ':-þ': 'tong',
-             ':þ': 'tong', ':l': 'annoyed', '=l': 'annoyed', ':s': 'annoyed', ':-x': 'seallips', 'o:-)': 'angel',
-             '>:d': 'devil', '>:-d': 'devil', 'o:<': 'surprise', 'o:': 'surprise', '(-:o': 'angel', ':-#': 'seallips'}
+EMOTICONS = {':*': ':kiss:', ':-*': ':kiss:', ':x': ':kiss:', ':-)': ':smiling_face:', ':)': ':smiling_face:',
+             ':o)': ':smiling_face:', ':]': ':smiling_face:',
+             ':3': ':smiling_face:', ':c)': ':smiling_face:', ':>': ':smiling_face:', '=]': ':smiling_face:',
+             '8)': ':smiling_face:', '=)': ':smiling_face:', ':}': ':smiling_face:',
+             ':^)': ':smiling_face:', '|;-)': ':smiling_face:', ":'-)": ':smiling_face:', ":')": ':smiling_face:',
+             '\\o/': ':smiling_face:', '*\\0/*': ':smiling_face:',
+             ':-D': ':laughing:', ':D': ':laughing:', '8-D': ':laughing:', '8D': ':laughing:', 'x-D': ':laughing:',
+             'xD': ':laughing:',
+             'X-D': ':laughing:', 'XD': ':laughing:', '=-D': ':laughing:', '=D': ':laughing:', '=-3': ':laughing:',
+             '=3': ':laughing:',
+             'B^D': ':laughing:', '>:[': ':frowning_face:', ':-(': ':frowning_face:', ':(': ':frowning_face:',
+             ':-c': ':frowning_face:', ':c': ':frowning_face:', ':-<': ':frowning_face:',
+             ':<': ':frowning_face:', ':-[': ':frowning_face:', ':[': ':frowning_face:', ':{': ':frowning_face:',
+             ':-||': ':frowning_face:', ':@': ':frowning_face:', ":'-(": ':frowning_face:',
+             ":'(": ':frowning_face:', 'D:<': ':frowning_face:', 'D:': ':frowning_face:', 'D8': ':frowning_face:',
+             'D;': ':frowning_face:', 'D=': ':frowning_face:', 'DX': ':frowning_face:', 'v.v': ':frowning_face:',
+             "D-':": ':frowning_face:', '(>_<)': ':frowning_face:', ':|': ':frowning_face:',
+             '>:O': ':face_with_open_mouth:', ':-O': ':face_with_open_mouth:', ':-o': ':face_with_open_mouth:',
+             ':O': ':face_with_open_mouth:', '°o°': ':face_with_open_mouth:', 'o_O': ':face_with_open_mouth:',
+             'o_0': ':face_with_open_mouth:', 'o.O': ':face_with_open_mouth:',
+             'o-o': ':face_with_open_mouth:', '8-0': ':face_with_open_mouth:', '|-O': ':face_with_open_mouth:',
+             ';-)': ':winking_face:', ';)': ':winking_face:', '*-)': ':winking_face:',
+             '*)': ':winking_face:', ';-]': ':winking_face:', ';]': ':winking_face:', ';D': ':winking_face:',
+             ';^)': ':winking_face:', ':-,': ':winking_face:', '>:P': ':face_with_tongue:',
+             ':-P': ':face_with_tongue:', ':P': ':face_with_tongue:', 'X-P': ':face_with_tongue:',
+             'x-p': ':face_with_tongue:', 'xp': ':face_with_tongue:', 'xpp': ':face_with_tongue:',
+             'XP': ':face_with_tongue:',
+             ':-p': ':face_with_tongue:', ':p': ':face_with_tongue:', '=p': ':face_with_tongue:',
+             ':-Þ': ':face_with_tongue:', ':Þ': ':face_with_tongue:', ':-b': ':face_with_tongue:',
+             ':b': ':face_with_tongue:',
+             ':-&': ':face_with_tongue:', '>:\\': ':unamused_face:', '>:/': ':unamused_face:', ':-/': ':unamused_face:',
+             ':-.': ':unamused_face:', ':/': ':unamused_face:',
+             ':\\': ':unamused_face:', '=/': ':unamused_face:', '=\\': ':unamused_face:', ':L': ':unamused_face:',
+             '=L': ':unamused_face:', ':S': ':unamused_face:',
+             '>.<': ':unamused_face:', ':-|': ':unamused_face:', '<:-|': ':unamused_face:',
+             ':-X': ':zipper-mouth_face:', ':X': ':zipper-mouth_face:',
+             ':#': ':zipper-mouth_face:', 'O:-)': ':smiling_face_with_halo:', '0:-3': ':smiling_face_with_halo:',
+             '0:3': ':smiling_face_with_halo:', '0:-)': ':smiling_face_with_halo:', '0:)': ':smiling_face_with_halo:',
+             '0;^)': ':smiling_face_with_halo:', '>:)': ':smiling_face_with_horns:', '>:D': ':smiling_face_with_horns:',
+             '>:-D': ':smiling_face_with_horns:', '>;)': ':smiling_face_with_horns:',
+             '>:-)': ':smiling_face_with_horns:',
+             '}:-)': ':smiling_face_with_horns:', '}:)': ':smiling_face_with_horns:',
+             '3:-)': ':smiling_face_with_horns:', '3:)': ':smiling_face_with_horns:', '<3': ':red_heart:',
+             '*:': ':kissing_face:', '*-:': ':kissing_face:', 'x:': ':kissing_face:',
+             '(-:': ':smiling_face:', '(:': ':smiling_face:', '(o:': ':smiling_face:', '[:': ':smiling_face:',
+             '<:': ':smiling_face:', '[=': ':smiling_face:', '(=': ':smiling_face:',
+             '{:': ':smiling_face:', "(-':": ':smiling_face:', "(':": ':smiling_face:', ']:<': ':frowning_face:',
+             ')-:': ':frowning_face:', '):': ':frowning_face:', '>-:': ':frowning_face:',
+             '>:': ':frowning_face:', ']-:': ':frowning_face:', ']:': ':frowning_face:', '}:': ':frowning_face:',
+             '||-:': ':frowning_face:', '@:': ':frowning_face:', ")-':": ':frowning_face:',
+             ")':": ':frowning_face:', '|:': ':frowning_face:', 'O:<': ':face_with_open_mouth:',
+             'O-:': ':face_with_open_mouth:', 'o-:': ':face_with_open_mouth:', 'O:': ':face_with_open_mouth:',
+             '.-:': ':unamused_face:', '|-:': ':unamused_face:', '|-:>': ':unamused_face:',
+             '#-:': ':zipper-mouth_face:', '#:': ':zipper-mouth_face:',
+             '(-:O': ':smiling_face_with_halo:', '(-:0': ':smiling_face_with_halo:', '(:0': ':smiling_face_with_halo:',
+             '(:<': ':smiling_face_with_horns:', '(-:<': ':smiling_face_with_horns:',
+             '(-:{': ':smiling_face_with_horns:',
+             '(:{': ':smiling_face_with_horns:', ':-d': ':laughing:', ':d': ':laughing:', '8-d': ':laughing:',
+             '8d': ':laughing:', 'x-d': ':laughing:',
+             'xd': ':laughing:', '=-d': ':laughing:', '=d': ':laughing:', 'b^d': ':laughing:', 'd:<': ':frowning_face:',
+             'd:': ':frowning_face:', 'd8': ':frowning_face:',
+             'd;': ':frowning_face:', 'd=': ':frowning_face:', 'dx': ':frowning_face:', "d-':": ':frowning_face:',
+             '>:o': ':face_with_open_mouth:', ':o': ':face_with_open_mouth:',
+             'o_o': ':face_with_open_mouth:', 'o.o': ':face_with_open_mouth:', '|-o': ':face_with_open_mouth:',
+             ';d': ':winking_face:', '>:p': ':face_with_tongue:', ':-þ': ':face_with_tongue:',
+             ':þ': ':face_with_tongue:', ':l': ':unamused_face:', '=l': ':unamused_face:', ':s': ':unamused_face:',
+             ':-x': ':zipper-mouth_face:', 'o:-)': ':smiling_face_with_halo:',
+             '>:d': ':smiling_face_with_horns:', '>:-d': ':smiling_face_with_horns:', 'o:<': ':face_with_open_mouth:',
+             'o:': ':face_with_open_mouth:', '(-:o': ':smiling_face_with_halo:', ':-#': ':zipper-mouth_face:'}
 
 ABBREVIATIONS = {
     "4ao": "for adults only",
@@ -456,7 +492,7 @@ def replace_special_tokens_with_placeholder(string, twitter):
     if not twitter:
         sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]"
     else:
-        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]|<(?:url|user)>"
+        sequence_pattern = r"<(?:url|user)>"
 
     # Find all matches of the sequence pattern in the text
     sequence_matches = re.findall(sequence_pattern, string)
@@ -479,8 +515,8 @@ def remove_special_characters(string, twitter=False):
     # Note that spaces are managed by clean, * by multiple functions, and currencies by replace_currency_symbols
     text_with_placeholders, sequence_matches = replace_special_tokens_with_placeholder(string, twitter)
 
-    cleaned_text = re.sub(r"[^a-zA-Z0-9\s,*.!?%@#$€£¥₹]", " ", text_with_placeholders)
-    cleaned_text = re.sub(r"([,!?€£¥₹])\1+", r'\1', cleaned_text)
+    cleaned_text = re.sub(r"[^a-zA-Z0-9\s,*.!?%@#$€£¥₹_:]", " ", text_with_placeholders)
+    cleaned_text = re.sub(r"([,!?€£¥₹_:])\1+", r'\1', cleaned_text)
     cleaned_text = re.sub(r'([.])\1+', '...', cleaned_text)
     if sequence_matches:
         pattern = re.compile(re.escape(PLACEHOLDER))
@@ -567,7 +603,7 @@ def contains_numbers(word):
 
 
 def contains_numbers_and_x(word):
-    pattern = r'\b\d+(?:x\d+)+\b'
+    pattern = r'\b\d*(?:x\d+)+\b'
     return bool(re.search(pattern, word))
 
 
@@ -617,20 +653,12 @@ def cleaning_function_twitter_dataset(string) -> str:
 
 
 def new_cleaning_function_twitter_dataset(string) -> str:
-    return divide_words_starting_with_numbers(
-        remove_hashtags(
-            replace_hashtags(
-                clean(
-                    late_remove_special_characters_twitter(
-                        add_space_before_and_after_punctuation(
-                            remove_special_characters(
-                                replace_abbreviations(
-                                    replace_emojis(
-                                        contractions.fix(
-                                            string.lower()))), twitter=True))),
-                    lower=False,
-                    no_line_breaks=True))),
-        True)
+    return remove_hashtags(
+        replace_hashtags(
+            late_remove_special_characters_twitter(
+                remove_special_characters(
+                    replace_emojis(
+                        string.lower()), twitter=True))))
 
 
 # WORD TOKENIZER
