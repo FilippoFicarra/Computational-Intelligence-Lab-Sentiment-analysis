@@ -1,5 +1,5 @@
 CLASSES_NUM = 2
-HIDDEN_SIZE = 768
+HIDDEN_SIZE = 1024
 DROPOUT_PROB = 0.1
 MODEL = "vinai/bertweet-base"
 
@@ -15,7 +15,7 @@ PATH_TOKENIZER = "model/tokenizer"
 
 EPOCHS = 20
 TRAIN_BATCH_SIZE = 32
-LEARNING_RATE = 0.00005
+LEARNING_RATE = 3e-5
 PATIENCE = 5
 
 CHUNK_SIZE = 100000
@@ -40,8 +40,8 @@ TWITTER_OPTIONS = {
     "path": PATH_DATASET_TWITTER,
     "dtype": "label int, text string",
     "grouping_key": "label",
-    "train_fraction": 0.8,
-    "eval_fraction": 1,
+    "train_fraction": 0.1,
+    "eval_fraction": 0.01,
     "columns": ["label", "text"]
 }
 
