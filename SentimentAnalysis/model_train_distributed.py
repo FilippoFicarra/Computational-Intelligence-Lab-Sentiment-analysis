@@ -319,12 +319,16 @@ def _run(flags):
         m = BertTweetWithSparsemax(base_model)
         # Change first and last self-attention layers of the model
         m.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=m.base_model.config)
+        m.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=m.base_model.config)
+        m.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=m.base_model.config)
         m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
 
         # Freeze parameters of all layers of the encoder except for the first and last layer
-        # for i in range(1, len(m.base_model.encoder.layer) - 1):
-        #     for param in m.base_model.encoder.layer[i].parameters():
-        #         param.requires_grad = False
+        for param in m.base_model.embeddings.parameters():
+            param.requires_grad = False
+        for i in range(2, len(m.base_model.encoder.layer) - 2):
+            for param in m.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
 
     model = m.to(device)
 
