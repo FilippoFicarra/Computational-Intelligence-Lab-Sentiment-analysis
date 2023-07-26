@@ -164,13 +164,13 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer):
         if i % VERBOSE_PARAM == 0:
             # Update running average of loss for epoch
             training_meter.update_loss(
-                xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
+                xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
             # Update running average of accuracy for epoch
             training_meter.update_accuracy(
                 xm.mesh_reduce(
                     'accuracy_reduce',
-                    (torch.argmax(outputs, dim=1) == cls_targets).sum().item() / cls_targets.size(0),
+                    (torch.argmax(outputs, dim=1) == cls_targets).sum() / cls_targets.size(0),
                     lambda values: sum(values) / len(values)
                 )
             )
@@ -222,13 +222,13 @@ def _eval_epoch_fn(model, para_loader, criterion):
             if i % VERBOSE_PARAM == 0:
                 # Update running average of loss for epoch
                 eval_meter.update_loss(
-                    xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
+                    xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
                 # Update running average of accuracy for epoch
                 eval_meter.update_accuracy(
                     xm.mesh_reduce(
                         'accuracy_reduce',
-                        (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum().item() / eval_cls_targets.size(0),
+                        (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum() / eval_cls_targets.size(0),
                         lambda values: sum(values) / len(values)
                     )
                 )
