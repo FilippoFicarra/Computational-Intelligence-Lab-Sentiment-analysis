@@ -134,7 +134,7 @@ def get_training_and_validation_dataframes(path, dtype, grouping_key, train_frac
         len(training_values) / dataset_size, len(eval_values) / dataset_size
 
 
-def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
+def _train_epoch_fn(model, para_loader, criterion, optimizer):
     # Set model for training
     model.train()
 
@@ -150,29 +150,30 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
         # Set gradients to zero
         optimizer.zero_grad()
         # Get mini-batch data
-        ids = data['input_ids'].to(device)
-        mask = data['attention_mask'].to(device)
-        cls_targets = data['cls_targets'].to(device)
+        ids = data['input_ids']
+        mask = data['attention_mask']
+        cls_targets = data['cls_targets']
         # Compute model output
         outputs = model(ids, mask)
         # Compute accuracy
 
         # Compute loss
         loss = criterion(outputs, cls_targets)
-        # Update running average of loss for epoch
-        training_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
-
-        # Update running average of accuracy for epoch
-        training_meter.update_accuracy(
-            xm.mesh_reduce(
-                'accuracy_reduce',
-                (torch.argmax(outputs, dim=1) == cls_targets).sum().item() / cls_targets.size(0),
-                lambda values: sum(values) / len(values)
-            )
-        )
 
         # Feedback
         if i % VERBOSE_PARAM == 0:
+            # Update running average of loss for epoch
+            training_meter.update_loss(
+                xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
+
+            # Update running average of accuracy for epoch
+            training_meter.update_accuracy(
+                xm.mesh_reduce(
+                    'accuracy_reduce',
+                    (torch.argmax(outputs, dim=1) == cls_targets).sum().item() / cls_targets.size(0),
+                    lambda values: sum(values) / len(values)
+                )
+            )
             xm.master_print('-- step {} training | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = '
                             '{:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
@@ -196,7 +197,7 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, device):
     return accuracies, losses, training_meter.avg_accuracy, training_meter.avg_loss
 
 
-def _eval_epoch_fn(model, para_loader, criterion, device):
+def _eval_epoch_fn(model, para_loader, criterion):
     # Set model to evaluation
     model.eval()
 
@@ -210,27 +211,27 @@ def _eval_epoch_fn(model, para_loader, criterion, device):
     with torch.no_grad():
         for i, eval_batch in enumerate(para_loader):
             # Get mini-batch data
-            eval_ids = eval_batch['input_ids'].to(device)
-            eval_mask = eval_batch['attention_mask'].to(device)
-            eval_cls_targets = eval_batch['cls_targets'].to(device)
+            eval_ids = eval_batch['input_ids']
+            eval_mask = eval_batch['attention_mask']
+            eval_cls_targets = eval_batch['cls_targets']
             # Compute model output
             eval_outputs = model(eval_ids, eval_mask)
             loss = criterion(eval_outputs, eval_cls_targets)
 
-            # Update running average of loss for epoch
-            eval_meter.update_loss(xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
-
-            # Update running average of accuracy for epoch
-            eval_meter.update_accuracy(
-                xm.mesh_reduce(
-                    'accuracy_reduce',
-                    (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum().item() / eval_cls_targets.size(0),
-                    lambda values: sum(values) / len(values)
-                )
-            )
-
             # Feedback
             if i % VERBOSE_PARAM == 0:
+                # Update running average of loss for epoch
+                eval_meter.update_loss(
+                    xm.mesh_reduce('loss_reduce', loss.item(), lambda values: sum(values) / len(values)))
+
+                # Update running average of accuracy for epoch
+                eval_meter.update_accuracy(
+                    xm.mesh_reduce(
+                        'accuracy_reduce',
+                        (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum().item() / eval_cls_targets.size(0),
+                        lambda values: sum(values) / len(values)
+                    )
+                )
                 xm.master_print('-- step {} evaluation | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, '
                                 'avg_acc = {:.6f}'
                                 .format(i, eval_meter.val_loss, eval_meter.avg_loss, eval_meter.val_accuracy,
@@ -289,12 +290,12 @@ def _run(flags):
     training_loader = DataLoader(training_dataset,
                                  batch_size=flags["batch_size"],
                                  sampler=train_sampler,
-                                 num_workers=0)
+                                 num_workers=4)
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
                              sampler=eval_sampler,
-                             num_workers=0)
+                             num_workers=4)
 
     # DEVICE
 
@@ -326,6 +327,15 @@ def _run(flags):
         #         param.requires_grad = False
 
     model = m.to(device)
+
+    # wait for all the tpus to reach here
+    if not xm.is_master_ordinal():
+        xm.rendezvous('load_model')
+
+    if xm.is_master_ordinal():
+        xm.rendezvous('load_model')
+
+    xm.master_print('- model loaded!', flush=True)
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
