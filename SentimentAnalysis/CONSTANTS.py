@@ -15,6 +15,7 @@ PATH_DATASET_TWITTER_TEST = "data/datasets/twitter-test.json"
 PATH_TOKENIZER = "tokenizer"
 PATH_MODELS = "model"
 PATH_PREDICTIONS = "predictions"
+PATH_MAJORITY = "majority"
 
 EPOCHS = 20
 TRAIN_BATCH_SIZE = 16

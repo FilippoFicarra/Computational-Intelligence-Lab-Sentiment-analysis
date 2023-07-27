@@ -36,7 +36,7 @@ if __name__ == "__main__":
     for filename in os.listdir(PATH_MODELS):
         file_path = os.path.join(PATH_MODELS, filename)
 
-        # Check if the current item is a file (not a subdirectory)
+        # Check if the current item is a pt file
         if os.path.isfile(file_path) and ".pt" in file_path:
             # Load model
             checkpoint = torch.load(file_path)
@@ -69,6 +69,7 @@ if __name__ == "__main__":
 
             # Produce final tensor with predictions
             all_predictions = torch.cat(all_predictions, dim=0)
+            all_predictions[all_predictions == 0] = -1
 
             # Save predictions to file
             data = [(idx + 1, value.item()) for idx, value in enumerate(all_predictions)]
