@@ -87,7 +87,7 @@ The arguments are the following:
 - --embeddings : to create the embeddings
 - --model model_name : to choose the model for the embedder (RoBERTa or BERT are the embedder supported)
 
-# Embedder
+# Masker
 The embedder get the CLS embedding of the last layer for the model choosen. The available models for now are:
 
 - bert-base-uncased

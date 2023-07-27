@@ -160,20 +160,22 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer):
         # Compute loss
         loss = criterion(outputs, cls_targets)
 
+        # Update running average of loss for epoch
+        training_meter.update_loss(
+            xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+
+        # Update running average of accuracy for epoch
+        training_meter.update_accuracy(
+            xm.mesh_reduce(
+                'accuracy_reduce',
+                (torch.argmax(outputs, dim=1) == cls_targets).sum() / cls_targets.size(0),
+                lambda values: sum(values) / len(values)
+            )
+        )
+
         # Feedback
         if i % VERBOSE_PARAM == 0:
-            # Update running average of loss for epoch
-            training_meter.update_loss(
-                xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
 
-            # Update running average of accuracy for epoch
-            training_meter.update_accuracy(
-                xm.mesh_reduce(
-                    'accuracy_reduce',
-                    (torch.argmax(outputs, dim=1) == cls_targets).sum() / cls_targets.size(0),
-                    lambda values: sum(values) / len(values)
-                )
-            )
             xm.master_print('-- step {} training | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = '
                             '{:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
@@ -218,20 +220,22 @@ def _eval_epoch_fn(model, para_loader, criterion):
             eval_outputs = model(eval_ids, eval_mask)
             loss = criterion(eval_outputs, eval_cls_targets)
 
+            # Update running average of loss for epoch
+            eval_meter.update_loss(
+                xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
+
+            # Update running average of accuracy for epoch
+            eval_meter.update_accuracy(
+                xm.mesh_reduce(
+                    'accuracy_reduce',
+                    (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum() / eval_cls_targets.size(0),
+                    lambda values: sum(values) / len(values)
+                )
+            )
+
             # Feedback
             if i % VERBOSE_PARAM == 0:
-                # Update running average of loss for epoch
-                eval_meter.update_loss(
-                    xm.mesh_reduce('loss_reduce', loss, lambda values: sum(values) / len(values)))
-
-                # Update running average of accuracy for epoch
-                eval_meter.update_accuracy(
-                    xm.mesh_reduce(
-                        'accuracy_reduce',
-                        (torch.argmax(eval_outputs, dim=1) == eval_cls_targets).sum() / eval_cls_targets.size(0),
-                        lambda values: sum(values) / len(values)
-                    )
-                )
+                # Print running average
                 xm.master_print('-- step {} evaluation | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, '
                                 'avg_acc = {:.6f}'
                                 .format(i, eval_meter.val_loss, eval_meter.avg_loss, eval_meter.val_accuracy,
@@ -309,9 +313,9 @@ def _run(flags):
     if flags["model"] == "robertaMask":
         m = BertTweetWithMask(base_model)
         # Freeze parameters of all layers of the encoder except for the first and last layer
-        # for i in range(1, len(m.base_model.encoder.layer) - 1):
-        #     for param in m.base_model.encoder.layer[i].parameters():
-        #         param.requires_grad = False
+        for i in range(1, len(m.base_model.encoder.layer) - 1):
+             for param in m.base_model.encoder.layer[i].parameters():
+                 param.requires_grad = False
 
     else:
         m = BertTweetWithSparsemax(base_model)

@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast
 
 from CONSTANTS import *
-from masker import Embedder
+from masker import Masker
 
 
 class ReviewDataset(Dataset):
@@ -13,7 +13,7 @@ class ReviewDataset(Dataset):
         self.text = dataframe.reviewText
         self.targets = dataframe.overall
         self.max_length = max_length
-        self.embedder = Embedder(tokenizer, twitter=False)
+        self.embedder = Masker(tokenizer, twitter=False)
 
     def __len__(self):
         return len(self.text)
@@ -37,7 +37,7 @@ class TwitterDataset(Dataset):
         self.targets = dataframe.label
         self.max_length = max_length
         self.use_embedder = use_embedder
-        self.embedder = Embedder(tokenizer)
+        self.embedder = Masker(tokenizer)
 
     def __len__(self):
         return len(self.text)
@@ -73,7 +73,7 @@ class TwitterDatasetTest(Dataset):
         self.text = dataframe.text
         self.max_length = max_length
         self.use_embedder = use_embedder
-        self.embedder = Embedder(tokenizer)
+        self.embedder = Masker(tokenizer)
 
     def __len__(self):
         return len(self.text)

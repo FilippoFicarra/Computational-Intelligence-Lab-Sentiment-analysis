@@ -9,7 +9,7 @@ from transformers import PreTrainedTokenizerFast
 from CONSTANTS import *
 
 
-class Embedder:
+class Masker:
     def __init__(self, tokenizer: PreTrainedTokenizerFast, fraction_masking=FRACTION_MASKING,
                  lower_limit_fraction_masking=LOWER_LIMIT_FRACTION_MASKING, twitter=True):
         self.tokenizer = tokenizer
@@ -23,17 +23,16 @@ class Embedder:
     def load_sentiment_knowledge_words(self, twitter):
         if twitter:
             df = pd.read_csv(PATH_POLARITY_TWITTER, dtype={"word": str, "polarity": float})
-            threashold = 20.
+            threashold = 5.
         else:
             df = pd.read_csv(PATH_POLARITY_AMAZON, dtype={"word": str, "polarity": float})
             threashold = 25.
 
-        # Filter by pmi value (keep pmi bigger than 5)
+        # Filter by pmi value
         df = df[abs(df.polarity) > threashold]
         # Insert words in keyword processor.
         for row in df.itertuples():
-            if row.word not in ["an", "are", "his", "her", "do"]:
-                self.sentiment_knowledge_kp.add_keyword(row.word, self.mask_tosken_for_replacement)
+            self.sentiment_knowledge_kp.add_keyword(row.word, self.mask_tosken_for_replacement)
 
     def encode_plus(self, text, add_special_tokens=True, max_length=MAX_LENGTH, return_attention_mask=True):
         # Get tokens id for string with sentiment words

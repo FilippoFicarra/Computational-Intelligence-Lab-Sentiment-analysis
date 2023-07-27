@@ -9,9 +9,9 @@ class BertTweetWithMask(torch.nn.Module):
         self.base_model = model
         # self.token_classifier_linear = torch.nn.Linear(HIDDEN_SIZE, VOCABULARY_SIZE)
         # self.token_softmax = torch.nn.Softmax()
-        self.first_linear = torch.nn.Linear(HIDDEN_SIZE, HIDDEN_SIZE)
+        self.first_linear = torch.nn.Linear(HIDDEN_SIZE, 4*HIDDEN_SIZE)
         self.classifier_dropout = torch.nn.Dropout(p=DROPOUT_PROB)
-        self.second_linear = torch.nn.Linear(HIDDEN_SIZE, CLASSES_NUM)
+        self.second_linear = torch.nn.Linear(4*HIDDEN_SIZE, CLASSES_NUM)
         self.epoch = 0
 
     def forward(self, input_ids, attention_mask):

@@ -490,9 +490,9 @@ def replace_abbreviations(string):
 def replace_special_tokens_with_placeholder(string, twitter):
     # Choose pattern
     if not twitter:
-        sequence_pattern = r"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]"
+        sequence_pattern = rf"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]|{'|'.join(EMOTICONS.values())}"
     else:
-        sequence_pattern = r"<(?:url|user)>"
+        sequence_pattern = fr"@@USER|HTTPURL|<(?:url|user)>|{'|'.join(EMOTICONS.values())}"
 
     # Find all matches of the sequence pattern in the text
     sequence_matches = re.findall(sequence_pattern, string)

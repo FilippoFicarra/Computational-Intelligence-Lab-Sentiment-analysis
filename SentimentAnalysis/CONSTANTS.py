@@ -18,7 +18,7 @@ PATH_PREDICTIONS = "predictions"
 PATH_MAJORITY = "majority"
 
 EPOCHS = 20
-TRAIN_BATCH_SIZE = 16
+TRAIN_BATCH_SIZE = 32
 LEARNING_RATE = 3e-5
 PATIENCE = 5
 
@@ -45,8 +45,8 @@ TWITTER_OPTIONS = {
     "path": PATH_DATASET_TWITTER,
     "dtype": "label int, text string",
     "grouping_key": "label",
-    "train_fraction": 0.1,
-    "eval_fraction": 0.01,
+    "train_fraction": 0.273,
+    "eval_fraction": 0.068,
     "columns": ["label", "text"]
 }
 
