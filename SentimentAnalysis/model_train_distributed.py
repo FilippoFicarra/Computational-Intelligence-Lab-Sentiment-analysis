@@ -260,7 +260,7 @@ def _run(flags):
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
     if flags["dataset"] == "amazon":
-        tokenizer.add_tokens(SPECIAL_TOKENS_AMAZON)
+        tokenizer.add_tokens(AMAZON_TOKENS)
 
     # DATA FOR TRAINING AND EVALUATION
 

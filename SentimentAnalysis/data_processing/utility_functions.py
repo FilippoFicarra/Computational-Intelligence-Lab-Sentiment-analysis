@@ -490,9 +490,9 @@ def replace_abbreviations(string):
 def replace_special_tokens_with_placeholder(string, twitter):
     # Choose pattern
     if not twitter:
-        sequence_pattern = rf"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]|{'|'.join(EMOTICONS.values())}"
+        sequence_pattern = rf"\[(?:EMAIL|URL|XML|PATH|NUMBER|CUR|BAD)\]|{'|'.join(list(set(EMOTICONS.values())))}"
     else:
-        sequence_pattern = fr"@@USER|HTTPURL|<(?:url|user)>|{'|'.join(EMOTICONS.values())}"
+        sequence_pattern = fr"@USER|HTTPURL|<(?:url|user)>|{'|'.join(list(set(EMOTICONS.values())))}"
 
     # Find all matches of the sequence pattern in the text
     sequence_matches = re.findall(sequence_pattern, string)
@@ -703,15 +703,15 @@ def tokenize_with_sequences(string, twitter=False) -> list[str]:
 
 # FUNCTIONS FOR PMI CALCULATION
 
-def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict, checked_dict):
+def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict):
     pairs = []
     for i in range(0, len(tokens)):
         # Check if current token is a seed
         try:
             if seeds_dict[tokens[i]]:
-                if i - 1 >= 0 and occurrences_dict[tokens[i - 1]] >= 250 and checked_dict[tokens[i - 1]]:
+                if i - 1 >= 0 and occurrences_dict[tokens[i - 1]] >= 5:
                     pairs.append((tokens[i], tokens[i - 1]))
-                if i + 1 < len(tokens) and occurrences_dict[tokens[i + 1]] >= 250 and checked_dict[tokens[i + 1]]:
+                if i + 1 < len(tokens) and occurrences_dict[tokens[i + 1]] >= 5:
                     pairs.append((tokens[i], tokens[i + 1]))
         except Exception:
             pass
@@ -723,8 +723,6 @@ def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict, checked_dict):
 def pmi(c_w1_w2, c_w1, c_w2, N):
     # Calculate pmi
     result = np.log2((c_w1_w2 * N) / (c_w1 * c_w2))
-    if np.isinf(result) or result < 0:
-        return 0
     return result
 
 

@@ -13,7 +13,7 @@ class Masker:
     def __init__(self, tokenizer: PreTrainedTokenizerFast, fraction_masking=FRACTION_MASKING,
                  lower_limit_fraction_masking=LOWER_LIMIT_FRACTION_MASKING, twitter=True):
         self.tokenizer = tokenizer
-        self.mask_tosken_for_replacement = "<mask>"
+        self.mask_tosken_for_replacement = MASK_TOKEN_FOR_REPLACEMENT
         self.mask_token_id = self.tokenizer.get_vocab()[self.mask_tosken_for_replacement]
         self.sentiment_knowledge_kp = KeywordProcessor(case_sensitive=True)
         self.load_sentiment_knowledge_words(twitter)
@@ -23,13 +23,13 @@ class Masker:
     def load_sentiment_knowledge_words(self, twitter):
         if twitter:
             df = pd.read_csv(PATH_POLARITY_TWITTER, dtype={"word": str, "polarity": float})
-            threashold = 5.
+            threshold = TWITTER_THRESHOLD
         else:
             df = pd.read_csv(PATH_POLARITY_AMAZON, dtype={"word": str, "polarity": float})
-            threashold = 25.
+            threshold = AMAZON_THRESHOLD
 
         # Filter by pmi value
-        df = df[abs(df.polarity) > threashold]
+        df = df[abs(df.polarity) > threshold]
         # Insert words in keyword processor.
         for row in df.itertuples():
             self.sentiment_knowledge_kp.add_keyword(row.word, self.mask_tosken_for_replacement)

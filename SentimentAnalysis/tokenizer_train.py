@@ -60,7 +60,7 @@ if __name__ == "__main__":
     flags = parsing()
     # Set variables
     path_tokenizer = PATH_TOKENIZER + "-" + flags["dataset"]
-    special_tokens = SPECIAL_TOKENS_AMAZON if flags["dataset"] == "amazon" else SPECIAL_TOKENS_TWITTER
+    special_tokens = AMAZON_TOKENS if flags["dataset"] == "amazon" else SPECIAL_TOKENS_TWITTER
     path_dataset = PATH_DATASET_AMAZON if flags["dataset"] == "amazon" else PATH_DATASET_TWITTER
 
     # Delete tokenizer directory if present

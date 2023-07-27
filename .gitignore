@@ -8,7 +8,6 @@ SentimentAnalysis/data/sentiment-knowledge/amazon-pmi.csv
 SentimentAnalysis/data/sentiment-knowledge/amazon-polarity.csv
 SentimentAnalysis/data/sentiment-knowledge/twitter-all-words-with-occurrences.csv
 SentimentAnalysis/data/sentiment-knowledge/twitter-pmi.csv
-SentimentAnalysis/data/sentiment-knowledge/twitter-polarity.csv
 SentimentAnalysis/data/sentiment-knowledge/twitter-words-seed-score.csv
 SentimentAnalysis/data/twitter-data
 SentimentAnalysis/model/

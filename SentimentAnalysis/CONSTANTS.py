@@ -32,6 +32,10 @@ LOWER_LIMIT_FRACTION_MASKING = 0.1
 VERBOSE_PARAM = 100
 VERBOSE_PARAM_FOR_SAVING = 250
 
+MASK_TOKEN_FOR_REPLACEMENT = "<mask>"
+TWITTER_THRESHOLD = 5.
+AMAZON_THRESHOLD = 25.
+
 AMAZON_OPTIONS = {
     "path": PATH_DATASET_AMAZON,
     "dtype": "label int, text string",
@@ -53,5 +57,4 @@ TWITTER_OPTIONS = {
 DTYPE_TWITTER_TEST = "text string"
 TEST_BATCH_SIZE = 16
 
-SPECIAL_TOKENS_AMAZON = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]",
-                                                       "[BAD]"]}
+AMAZON_TOKENS = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]", "[BAD]"]}
