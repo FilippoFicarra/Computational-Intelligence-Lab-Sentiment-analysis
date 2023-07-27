@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="62384651-8d6e-458e-a695-7c070d18e6be" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/ReferencePapers/How Will Your Tweet Be Received? Predicting the Sentiment Polarity of Tweet Replies.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/NGrams/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/NGrams/ngrams.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/args.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/common/constants.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/common/utils.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/config.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/data_frame_manager/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/data_frame_manager/data_frame_manager.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/embedder/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/embedder/embedder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/ethz-cil-text-classification-2023/.gitkeep" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/main.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/preprocessor/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/preprocessor/text_preprocessor.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/smart_pytorch/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/SentimentAnalysis/smart_pytorch/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/smart_pytorch/loss.py" beforeDir="false" afterPath="$PROJECT_DIR$/SentimentAnalysis/smart_pytorch/loss.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/smart_pytorch/smart_pytorch.py" beforeDir="false" afterPath="$PROJECT_DIR$/SentimentAnalysis/smart_pytorch/smart_pytorch.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/train.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/sentimental_analysis/train.py" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="DjangoConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)">
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Jupyter Notebook" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo&#10;locals().update(ScriptInfo(create_app=None).load_app().make_shell_context())&#10;print(&quot;Python %s on %s\nApp: %s [%s]\nInstance: %s&quot; % (sys.version, sys.platform, app.import_name, app.env, app.instance_path))" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="feat/gaia-smart" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/SentimentAnalysis/data/datasets/twitter-test.json" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2T0vFrJT4GE2Qa8XD17ZTSYXhlp" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "gaia-with-just-smart",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/Users/buddy/Desktop/University/CIL/Computational-Intelligence-Lab-Sentiment-analysis/SentimentAnalysis/majority",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
+    "two.files.diff.last.used.file": "C:/Users/buddy/Desktop/University/CIL/Computational-Intelligence-Lab-Sentiment-analysis/SentimentAnalysis/pretraining/model_pretrain.py",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\majority" />
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\predictions" />
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\lightning_training" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis" />
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\model" />
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\data_processing" />
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis" />
+      <recent name="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\pretraining" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.majority_voting">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="Computational-Intelligence-Lab-Sentiment-analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="majority_voting" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Computational-Intelligence-Lab-Sentiment-analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SentimentAnalysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SentimentAnalysis/majority_voting.py" />
+      <option name="PARAMETERS" value="-w 0.4,0.6" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="model_inference" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Computational-Intelligence-Lab-Sentiment-analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SentimentAnalysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SentimentAnalysis/model_inference.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="profiler" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Computational-Intelligence-Lab-Sentiment-analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SentimentAnalysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SentimentAnalysis/profiler.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="save_processed_data (1)" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Computational-Intelligence-Lab-Sentiment-analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SentimentAnalysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/SentimentAnalysis/save_processed_data.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="save_processed_data" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="Computational-Intelligence-Lab-Sentiment-analysis" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/SentimentAnalysis" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="C:\Users\buddy\Desktop\University\CIL\Computational-Intelligence-Lab-Sentiment-analysis\SentimentAnalysis\save_processed_data.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.majority_voting" />
+      <item itemvalue="Python.model_inference" />
+      <item itemvalue="Python.profiler" />
+      <item itemvalue="Python.save_processed_data" />
+      <item itemvalue="Python.save_processed_data (1)" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.majority_voting" />
+        <item itemvalue="Python.model_inference" />
+        <item itemvalue="Python.profiler" />
+        <item itemvalue="Python.save_processed_data (1)" />
+        <item itemvalue="Python.save_processed_data" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="62384651-8d6e-458e-a695-7c070d18e6be" name="Changes" comment="" />
+      <created>1690192714149</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1690192714149</updated>
+      <workItem from="1690192714149" duration="762000" />
+      <workItem from="1690193489980" duration="313000" />
+      <workItem from="1690193820848" duration="20000" />
+      <workItem from="1690193848675" duration="30010000" />
+      <workItem from="1690274554984" duration="5680000" />
+      <workItem from="1690280433726" duration="77000" />
+      <workItem from="1690291569121" duration="621000" />
+      <workItem from="1690293141470" duration="21147000" />
+      <workItem from="1690356469008" duration="6228000" />
+      <workItem from="1690362773688" duration="149000" />
+      <workItem from="1690363295811" duration="4367000" />
+      <workItem from="1690369861318" duration="29611000" />
+      <workItem from="1690443739911" duration="6487000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/Computational_Intelligence_Lab_Sentiment_analysis$model_pretrain.coverage" NAME="model_pretrain Coverage Results" MODIFIED="1689856820021" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SentimentAnalysis/pretraining" />
+    <SUITE FILE_PATH="coverage/Computational_Intelligence_Lab_Sentiment_analysis$model_inference.coverage" NAME="model_inference Coverage Results" MODIFIED="1690409070210" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SentimentAnalysis" />
+    <SUITE FILE_PATH="coverage/Computational_Intelligence_Lab_Sentiment_analysis$pretrainer.coverage" NAME="pretrainer Coverage Results" MODIFIED="1689688582589" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SentimentAnalysis/pretraining" />
+    <SUITE FILE_PATH="coverage/Computational_Intelligence_Lab_Sentiment_analysis$majority_voting.coverage" NAME="majority_voting Coverage Results" MODIFIED="1690448759807" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SentimentAnalysis" />
+    <SUITE FILE_PATH="coverage/Computational_Intelligence_Lab_Sentiment_analysis$sentiment_knowledge_miner.coverage" NAME="sentiment-knowledge-miner Coverage Results" MODIFIED="1689324391656" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/SentimentAnalysis/pretraining" />
+  </component>
+</project>
