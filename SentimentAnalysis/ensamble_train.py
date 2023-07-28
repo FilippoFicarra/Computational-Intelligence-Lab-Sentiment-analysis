@@ -1,4 +1,4 @@
-"""This module trains the weights used to train the weights """
+"""This module trains the weights of an ensamble of models. """
 
 import gc
 import getopt
