@@ -20,8 +20,8 @@ PATH_LOSSES_AND_ACCURACIES = "measures"
 
 EPOCHS = 20
 TRAIN_BATCH_SIZE = 32
-LEARNING_RATE = 3e-5
-PATIENCE = 5
+LEARNING_RATE = 1e-5
+PATIENCE = 1
 
 CHUNK_SIZE = 100000
 SECOND_COLUMN = "text"
@@ -50,8 +50,8 @@ TWITTER_OPTIONS = {
     "path": PATH_DATASET_TWITTER,
     "dtype": "label int, text string",
     "grouping_key": "label",
-    "train_fraction": 0.273,
-    "eval_fraction": 0.068,
+    "train_fraction": 0.8,
+    "eval_fraction": 1,
     "columns": ["label", "text"]
 }
 
