@@ -14,10 +14,10 @@ class SMARTRobertaClassificationModel(nn.Module):
         self.epoch = 0
 
     def forward(self, input_ids, attention_mask, labels):
-        embed = self.model.model.embeddings(input_ids)
+        embed = self.model.base_model.embeddings(input_ids)
 
         def eval_fn(embed):
-            outputs = self.model.model(inputs_embeds=embed, attention_mask=attention_mask)
+            outputs = self.model.base_model(inputs_embeds=embed, attention_mask=attention_mask)
             pooled = outputs.last_hidden_state
             logits = self.model.classifier(pooled)
             return logits
@@ -31,10 +31,10 @@ class SMARTRobertaClassificationModel(nn.Module):
         return state, loss
 
     def forward_eval(self, input_ids, attention_mask, labels):
-        embed = self.model.model.embeddings(input_ids)
+        embed = self.model.base_model.embeddings(input_ids)
 
         def eval_fn(embed):
-            outputs = self.model.model(inputs_embeds=embed, attention_mask=attention_mask)
+            outputs = self.model.base_model(inputs_embeds=embed, attention_mask=attention_mask)
             pooled = outputs.last_hidden_state
             logits = self.model.classifier(pooled)
             return logits
