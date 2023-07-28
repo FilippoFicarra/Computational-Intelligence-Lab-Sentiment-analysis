@@ -10,7 +10,7 @@ class SMARTRobertaClassificationModel(torch.nn.Module):
         self.epoch = 0
 
     def forward(self, input_ids, attention_mask):
-        return self.model(inputs_ids=input_ids, attention_mask=attention_mask)
+        return self.model(input_ids=input_ids, attention_mask=attention_mask)
 
     def update_epoch(self, epoch):
         self.epoch = epoch

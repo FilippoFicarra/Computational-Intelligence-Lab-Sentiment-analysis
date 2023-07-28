@@ -131,7 +131,7 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, flags):
             loss = criterion(outputs, cls_targets)
         else:
             loss = torch.nn.functional.cross_entropy(outputs, cls_targets)
-            loss += model.weight * criterion(model.base_model.embeddings(ids), outputs)
+            loss += model.weight * criterion(model.model.base_model.embeddings(ids), outputs)
 
         # Update running average of loss for epoch
         training_meter.update_loss(
