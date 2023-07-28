@@ -43,7 +43,8 @@ class SMARTLoss(nn.Module):
         self.epsilon = epsilon
         self.noise_var = noise_var
 
-    def forward(self, embed: Tensor, state: Tensor) -> Tensor:
+    def forward(self, embed: Tensor, outputs: Tensor) -> Tensor:
+
         noise = torch.randn_like(embed, requires_grad=True) * self.noise_var
 
         # Indefinite loop with counter 

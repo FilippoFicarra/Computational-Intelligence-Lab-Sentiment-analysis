@@ -122,16 +122,13 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, flags):
         ids = data['input_ids']
         mask = data['attention_mask']
         cls_targets = data['cls_targets']
-        # Compute model output
-        outputs = model(ids, mask)
-        # Compute accuracy
 
-        # Compute loss
+        # Compute model output and loss
         if flags["model"] != "smart":
+            outputs = model(ids, mask)
             loss = criterion(outputs, cls_targets)
         else:
-            loss = torch.nn.functional.cross_entropy(outputs, cls_targets)
-            loss += model.weight * criterion(model.model.base_model.embeddings(ids), outputs)
+            outputs, loss = model(ids, mask, cls_targets)
 
         # Update running average of loss for epoch
         training_meter.update_loss(
@@ -188,13 +185,13 @@ def _eval_epoch_fn(model, para_loader, criterion, flags):
             eval_ids = eval_batch['input_ids']
             eval_mask = eval_batch['attention_mask']
             eval_cls_targets = eval_batch['cls_targets']
-            # Compute model output
-            eval_outputs = model(eval_ids, eval_mask)
 
+            # Compute model output and loss
             if flags["model"] != "smart":
+                eval_outputs = model(eval_ids, eval_mask)
                 loss = criterion(eval_outputs, eval_cls_targets)
             else:
-                loss = torch.nn.functional.cross_entropy(eval_outputs, eval_cls_targets)
+                eval_outputs, loss = model.forward_eval(eval_ids, eval_mask, eval_cls_targets)
 
             # Update running average of loss for epoch
             eval_meter.update_loss(
@@ -320,11 +317,7 @@ def _run(flags):
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
-    if flags["model"] != "smart":
-        criterion = torch.nn.CrossEntropyLoss()
-    else:
-        criterion = SMARTLoss(eval_fn=eval, loss_fn=kl_loss, loss_last_fn=sym_kl_loss)
-
+    criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
     # LISTS FOR STORING LOSSES AND DICTIONARY FOR EARLY STOPPING
