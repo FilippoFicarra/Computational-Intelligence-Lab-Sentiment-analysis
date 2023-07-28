@@ -22,15 +22,48 @@ from datasets import TwitterDatasetEnsamble
 from model_train_distributed import get_training_and_validation_dataframes
 
 
+class LinearCombinationModel(Module):
+    def __init__(self):
+        super().__init__()
+        self.ensamble_models = []
+
+        # Define weights for each model
+        self.weight1 = Parameter(torch.tensor(1.0))
+        self.weight1 = Parameter(torch.tensor(1.0))
+        self.weight1 = Parameter(torch.tensor(1.0))
+
+        self.epoch = 0
+
+    def forward(self, input1, input2, input3):
+        # Calculate the linear combinations
+        linear_combination = self.weight1 * input1 + self.weight2 * input2 + self.weight3 * input3
+
+        return linear_combination
+
+    def update_epoch(self, epoch):
+        self.epoch = epoch
+
+    def model_representation(self):
+        return {
+            'epoch': self.epoch,
+            'model_state_dict': self.state_dict()
+        }
+
+    def load_model(self, file_path):
+        state = torch.load(file_path)
+        self.epoch = state['epoch']
+        self.load_state_dict(state['model_state_dict'])
+
+
 def parsing():
     # Remove 1st argument from the list of command line arguments
     arguments = sys.argv[1:]
 
     # Options
-    options = "hb:e:f:"
+    options = "hb:e:"
 
     # Long options
-    long_options = ["help", "batch_size=", "epoch=", "dataset=", "filename="]
+    long_options = ["help", "batch_size=", "epoch="]
 
     # Prepare flags
     flags = {"batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS}
@@ -41,8 +74,7 @@ def parsing():
     if len(arguments) > 0 and arguments[0][0] in ("-h", "--help"):
         print(f'This script trains an ensamble on a TPU.\n\
         -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n\
-        -e or --epoch: number of epochs (default={EPOCHS}).\n\
-        -f or --filename: name of the file for the model (valid name with no extension).')
+        -e or --epoch: number of epochs (default={EPOCHS}).')
         sys.exit()
 
     # checking each argument
@@ -57,11 +89,8 @@ def parsing():
                 flags["epoch"] = int(val)
             else:
                 raise ValueError("Number of epochs must be at least 1.")
-        elif arg in ("-f", "--filename"):
-            flags["filename"] = '{}.pt'.format(val)
 
-    if "filename" not in flags.keys():
-        flags["filename"] = 'model{}.pt'.format(random.randint(1, 100000))
+    flags["filename"] = 'model-ensamble-{}.pt'.format(random.randint(1, 100000))
 
     return flags
 
@@ -82,23 +111,6 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
 def freeze_model_parameters(model):
     for param in model.parameters():
         param.requires_grad = False
-
-
-class LinearCombinationModel(Module):
-    def __init__(self):
-        super().__init__()
-        self.ensamble_models = []
-
-        # Define weights for each model
-        self.weight1 = Parameter(torch.tensor(1.0))
-        self.weight1 = Parameter(torch.tensor(1.0))
-        self.weight1 = Parameter(torch.tensor(1.0))
-
-    def forward(self, input1, input2, input3):
-        # Calculate the linear combinations
-        linear_combination = self.weight1 * input1 + self.weight2 * input2 + self.weight3 * input3
-
-        return linear_combination
 
 
 def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device):
@@ -256,7 +268,7 @@ def _run(flags):
 
     # MODEL
 
-    # Upload all ensamble_models for making pradictions. Models are freezed.
+    # Upload all ensamble_models for making predictions. Models are freezed.
     ensamble_models = []
     # Check if the folder exists
     if not os.path.exists(PATH_MODELS):
