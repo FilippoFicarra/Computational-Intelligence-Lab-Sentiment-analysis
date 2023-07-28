@@ -4,6 +4,7 @@ import math
 import random
 import sys
 import time
+import os
 
 import numpy as np
 import pandas as pd
@@ -87,11 +88,15 @@ def parsing():
 
 
 def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, filename):
+    # Make directory to store losses and accuracies if not present
+    if not os.path.exists(PATH_LOSSES_AND_ACCURACIES):
+        os.makedirs(PATH_LOSSES_AND_ACCURACIES)
+
     xm.master_print("- saving accuracies and losses...")
-    xm.save(training_losses, 'trn-losses-{}.txt'.format(filename), master_only=True)
-    xm.save(eval_losses, 'val-losses-{}.txt'.format(filename), master_only=True)
-    xm.save(training_accuracies, 'trn-accuracies-{}.txt'.format(filename), master_only=True)
-    xm.save(eval_accuracies, 'val-accuracies-{}.txt'.format(filename), master_only=True)
+    xm.save(training_losses,  PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-losses-{}.txt'.format(filename), master_only=True)
+    xm.save(eval_losses,  PATH_LOSSES_AND_ACCURACIES + "/" + 'val-losses-{}.txt'.format(filename), master_only=True)
+    xm.save(training_accuracies,  PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-accuracies-{}.txt'.format(filename), master_only=True)
+    xm.save(eval_accuracies,  PATH_LOSSES_AND_ACCURACIES + "/" + 'val-accuracies-{}.txt'.format(filename), master_only=True)
     xm.master_print("- saved!")
 
 

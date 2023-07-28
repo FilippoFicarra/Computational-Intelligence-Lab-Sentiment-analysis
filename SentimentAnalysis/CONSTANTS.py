@@ -31,7 +31,7 @@ FRACTION_MASKING = 0.15
 LOWER_LIMIT_FRACTION_MASKING = 0.1
 
 VERBOSE_PARAM = 100
-VERBOSE_PARAM_FOR_SAVING = 250
+VERBOSE_PARAM_FOR_SAVING = 100
 
 MASK_TOKEN_FOR_REPLACEMENT = "<mask>"
 TWITTER_THRESHOLD = 5.
@@ -59,3 +59,19 @@ DTYPE_TWITTER_TEST = "text string"
 TEST_BATCH_SIZE = 16
 
 AMAZON_TOKENS = {"additional_special_tokens": ["[EMAIL]", "[URL]", "[XML]", "[PATH]", "[NUMBER]", "[CUR]", "[BAD]"]}
+
+# Variables for plotting
+LABEL_TRAINING_ACCURACY = "Training Accuracy"
+LABEL_VAL_ACCURACY = "Validation Accuracy"
+
+LABEL_TRAINING_LOSS = "Training Loss"
+LABEL_VAL_LOSS = "Validation Loss"
+
+TITLE_TRAINING_ACCURACY = "Training Accuracy"
+TITLE_VAL_ACCURACY = "Validation Accuracy"
+TITLE_TRAINING_LOSS = "Training Loss"
+TITLE_VAL_LOSS = "Validation Loss"
+
+Y_LABEL_ACCURACY = "Accuracy"
+Y_LABEL_LOSS = "Loss"
+X_LABEL = "Epoch"
