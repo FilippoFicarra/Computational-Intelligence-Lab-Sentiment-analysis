@@ -21,6 +21,7 @@ class BertTweetWithSparsemax(nn.Module):
         cls = outputs['last_hidden_state'][:, 0]
         dropout = self.dropout(cls)
         out = self.classifier(dropout)
+        out = nn.functional.softmax(out, dim=1)
         return out
 
     def update_epoch(self, epoch):
