@@ -13,14 +13,12 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
-from smart_pytorch import SMARTLoss
 from average_meter import AverageMeter
 from bert_tweet_sparsemax import BertTweetWithSparsemax
 from bert_tweet_with_mask import BertTweetWithMask
 from datasets import ReviewDataset, TwitterDataset
 from utility_functions import get_training_and_validation_dataframes
 from smart_roberta_classification_model import SMARTRobertaClassificationModel
-from smart_pytorch.loss import sym_kl_loss, kl_loss
 
 
 def parsing():

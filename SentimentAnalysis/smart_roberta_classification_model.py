@@ -17,9 +17,8 @@ class SMARTRobertaClassificationModel(nn.Module):
         embed = self.model.base_model.embeddings(input_ids)
 
         def eval_fn(embed):
-            encoder_out = self.model.base_model.encoder(embed, attention_mask=attention_mask)
-            pooler_out = self.model.base_model.pooler(encoder_out[0])
-            logits = self.model.classifier(pooler_out)
+            encoder_out = self.model.base_model(inputs_embeds=embed, attention_mask=attention_mask)
+            logits = self.model.classifier(encoder_out.last_hidden_state[:, 0])
             return logits
 
         smart_loss_fn = SMARTLoss(eval_fn=eval_fn, loss_fn=kl_loss, loss_last_fn=sym_kl_loss)
@@ -33,9 +32,8 @@ class SMARTRobertaClassificationModel(nn.Module):
         embed = self.model.base_model.embeddings(input_ids)
 
         def eval_fn(embed):
-            encoder_out = self.model.base_model.encoder(embed, attention_mask=attention_mask)
-            pooler_out = self.model.base_model.pooler(encoder_out[0])
-            logits = self.model.classifier(pooler_out)
+            encoder_out = self.model.base_model(inputs_embeds=embed, attention_mask=attention_mask)
+            logits = self.model.classifier(encoder_out.last_hidden_state[:, 0])
             return logits
 
         state = eval_fn(embed)
