@@ -13,11 +13,14 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
+from smart_pytorch import SMARTLoss
 from average_meter import AverageMeter
-from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
+from bert_tweet_sparsemax import BertTweetWithSparsemax
 from bert_tweet_with_mask import BertTweetWithMask
 from datasets import ReviewDataset, TwitterDataset
-from SentimentAnalysis.utility_functions import get_training_and_validation_dataframes
+from utility_functions import get_training_and_validation_dataframes
+from smart_roberta_classification_model import SMARTRobertaClassificationModel
+from smart_pytorch.loss import sym_kl_loss, kl_loss
 
 
 def parsing():
@@ -31,7 +34,7 @@ def parsing():
     long_options = ["help", "cores=", "model=", "batch_size=", "epoch=", "dataset=", "filename="]
 
     # Prepare flags
-    flags = {"cores": 1, "model": "robertaMask", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
+    flags = {"cores": 1, "model": "smart", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
              "dataset": "twitter"}
 
     # Parsing argument
@@ -100,7 +103,7 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
     xm.master_print("- saved!")
 
 
-def _train_epoch_fn(model, para_loader, criterion, optimizer):
+def _train_epoch_fn(model, para_loader, criterion, optimizer, flags):
     # Set model for training
     model.train()
 
@@ -124,7 +127,11 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer):
         # Compute accuracy
 
         # Compute loss
-        loss = criterion(outputs, cls_targets)
+        if flags["model"] != "smart":
+            loss = criterion(outputs, cls_targets)
+        else:
+            loss = torch.nn.functional.cross_entropy(outputs, cls_targets)
+            loss += model.weight * criterion(model.base_model.embeddings(ids), outputs)
 
         # Update running average of loss for epoch
         training_meter.update_loss(
@@ -164,7 +171,7 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer):
     return accuracies, losses, training_meter.avg_accuracy, training_meter.avg_loss
 
 
-def _eval_epoch_fn(model, para_loader, criterion):
+def _eval_epoch_fn(model, para_loader, criterion, flags):
     # Set model to evaluation
     model.eval()
 
@@ -183,7 +190,11 @@ def _eval_epoch_fn(model, para_loader, criterion):
             eval_cls_targets = eval_batch['cls_targets']
             # Compute model output
             eval_outputs = model(eval_ids, eval_mask)
-            loss = criterion(eval_outputs, eval_cls_targets)
+
+            if flags["model"] != "smart":
+                loss = criterion(eval_outputs, eval_cls_targets)
+            else:
+                loss = torch.nn.functional.cross_entropy(eval_outputs, eval_cls_targets)
 
             # Update running average of loss for epoch
             eval_meter.update_loss(
@@ -282,13 +293,8 @@ def _run(flags):
             for param in m.base_model.encoder.layer[i].parameters():
                 param.requires_grad = False
 
-    else:
-        m = BertTweetWithSparsemax(base_model)
-        # Change first and last self-attention layers of the model
-        m.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=m.base_model.config)
-        # m.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=m.base_model.config)
-        # m.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=m.base_model.config)
-        m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
+    elif flags["model"] == "sparsemax":
+        m = BertTweetWithSparsemax(base_model, (0, -1))
 
         # Freeze parameters of all layers of the encoder except for the first and last layer
         # for param in m.base_model.embeddings.parameters():
@@ -296,6 +302,10 @@ def _run(flags):
         # for i in range(2, len(m.base_model.encoder.layer) - 2):
         #    for param in m.base_model.encoder.layer[i].parameters():
         #        param.requires_grad = False
+
+    else:
+        base = BertTweetWithSparsemax(base_model, sparsemax_ids=(0, 11))
+        m = SMARTRobertaClassificationModel(base)
 
     model = m.to(device)
 
@@ -310,7 +320,11 @@ def _run(flags):
 
     # LOSS FUNCTIONS AND OPTIMIZER
 
-    criterion = torch.nn.CrossEntropyLoss()
+    if flags["model"] != "smart":
+        criterion = torch.nn.CrossEntropyLoss()
+    else:
+        criterion = SMARTLoss(eval_fn=eval, loss_fn=kl_loss, loss_last_fn=sym_kl_loss)
+
     optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
 
     # LISTS FOR STORING LOSSES AND DICTIONARY FOR EARLY STOPPING
@@ -357,7 +371,8 @@ def _run(flags):
                                                                                            para_loader=para_loader
                                                                                            .per_device_loader(device),
                                                                                            criterion=criterion,
-                                                                                           optimizer=optimizer)
+                                                                                           optimizer=optimizer,
+                                                                                           flags=flags)
 
             # Add new accuracies and losses
             training_accuracies += new_accuracies
@@ -373,7 +388,8 @@ def _run(flags):
             new_accuracies, new_losses, eval_accuracy, eval_loss = _eval_epoch_fn(model=model,
                                                                                   para_loader=para_loader
                                                                                   .per_device_loader(device),
-                                                                                  criterion=criterion)
+                                                                                  criterion=criterion,
+                                                                                  flags=flags)
 
             # Add new accuracies and losses
             eval_accuracies += new_accuracies

@@ -11,7 +11,7 @@ from torch.nn import Module, Parameter
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from SentimentAnalysis.average_meter import AverageMeter
+from average_meter import AverageMeter
 from datasets import TwitterDatasetEnsamble
 from utility_functions import *
 

@@ -6,8 +6,8 @@ import random
 import pandas as pd
 from transformers import AutoModel
 
-from SentimentAnalysis.bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
-from SentimentAnalysis.bert_tweet_with_mask import BertTweetWithMask
+from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
+from bert_tweet_with_mask import BertTweetWithMask
 from CONSTANTS import *
 
 

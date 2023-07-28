@@ -9,9 +9,11 @@ from CONSTANTS import *
 
 
 class BertTweetWithSparsemax(nn.Module):
-    def __init__(self, model, hidden_size=HIDDEN_SIZE):
+    def __init__(self, model, sparsemax_ids=(-1, -2), hidden_size=HIDDEN_SIZE):
         super().__init__()
         self.base_model = model
+        for i in sparsemax_ids:
+            self.base_model.encoder.layer[i].attention.self = RobertaSelfAttention(config=self.base_model.config)
         self.dropout = nn.Dropout(DROPOUT_PROB)
         self.classifier = nn.Linear(hidden_size, CLASSES_NUM)
         self.epoch = 0
