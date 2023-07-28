@@ -13,7 +13,7 @@ class ReviewDataset(Dataset):
         self.text = dataframe.reviewText
         self.targets = dataframe.overall
         self.max_length = max_length
-        self.embedder = Masker(tokenizer, twitter=False)
+        self.masker = Masker(tokenizer, twitter=False)
 
     def __len__(self):
         return len(self.text)
@@ -22,7 +22,7 @@ class ReviewDataset(Dataset):
         text = " ".join(self.text[index].split())
 
         # Get token_ids, attention_mask and token_type_ids
-        encode_plus_res = self.embedder.encode_plus(text, max_length=self.max_length)
+        encode_plus_res = self.masker.encode_plus(text, max_length=self.max_length)
         # Add cls target
         encode_plus_res['cls_targets'] = torch.tensor(self.targets[index], dtype=torch.long)
 
@@ -36,16 +36,16 @@ class TwitterDataset(Dataset):
         self.text = dataframe.text
         self.targets = dataframe.label
         self.max_length = max_length
-        self.use_embedder = use_embedder
-        self.embedder = Masker(tokenizer)
+        self.use_masker = use_embedder
+        self.masker = Masker(tokenizer)
 
     def __len__(self):
         return len(self.text)
 
     def __getitem__(self, index):
         text = " ".join(self.text[index].split())
-        if self.use_embedder:
-            encode_plus_res = self.embedder.encode_plus(text, max_length=self.max_length)
+        if self.use_masker:
+            encode_plus_res = self.masker.encode_plus(text, max_length=self.max_length)
             input_ids = encode_plus_res['input_ids']
             attention_mask = encode_plus_res['attention_mask']
         else:
@@ -72,16 +72,16 @@ class TwitterDatasetTest(Dataset):
         self.tokenizer = tokenizer
         self.text = dataframe.text
         self.max_length = max_length
-        self.use_embedder = use_embedder
-        self.embedder = Masker(tokenizer)
+        self.use_masker = use_embedder
+        self.masker = Masker(tokenizer)
 
     def __len__(self):
         return len(self.text)
 
     def __getitem__(self, index):
         text = " ".join(self.text[index].split())
-        if self.use_embedder:
-            encode_plus_res = self.embedder.encode_plus(text, max_length=self.max_length)
+        if self.use_masker:
+            encode_plus_res = self.masker.encode_plus(text, max_length=self.max_length)
             input_ids = encode_plus_res['input_ids']
             attention_mask = encode_plus_res['attention_mask']
         else:
@@ -98,4 +98,36 @@ class TwitterDatasetTest(Dataset):
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
+        }
+
+
+class TwitterDatasetEnsamble(Dataset):
+    def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH):
+        self.tokenizer = tokenizer
+        self.text = dataframe.text
+        self.targets = dataframe.label
+        self.max_length = max_length
+        self.masker = Masker(tokenizer)
+
+    def __len__(self):
+        return len(self.text)
+
+    def __getitem__(self, index):
+        text = " ".join(self.text[index].split())
+        encode_plus_res_masker = self.masker.encode_plus(text, max_length=self.max_length)
+
+        encode_plus_res = self.tokenizer.encode_plus(text,
+                                                     None,
+                                                     add_special_tokens=True,
+                                                     padding='max_length',
+                                                     max_length=self.max_length,
+                                                     return_attention_mask=True,
+                                                     truncation=True)
+
+        return {
+            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
+            'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
+            'input_ids_masker': encode_plus_res_masker['input_ids'],
+            'attention_mask_masker': encode_plus_res_masker['attention_mask'],
+            'cls_targets': torch.tensor(self.targets[index], dtype=torch.long)
         }

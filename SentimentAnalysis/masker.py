@@ -83,7 +83,7 @@ class Masker:
 
         for ind_indeces in sampled_indeces:
             while tokens_with_replacement[ind_indeces] != encode_plus_res['input_ids'][ind_input_ids] \
-                        and ind_input_ids < limit:
+                    and ind_input_ids < limit:
                 # Go to next input token
                 ind_input_ids += 1
 

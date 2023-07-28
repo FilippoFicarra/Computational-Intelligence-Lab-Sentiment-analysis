@@ -16,6 +16,7 @@ PATH_TOKENIZER = "tokenizer"
 PATH_MODELS = "model"
 PATH_PREDICTIONS = "predictions"
 PATH_MAJORITY = "majority"
+PATH_LOSSES_AND_ACCURACIES = "measures"
 
 EPOCHS = 20
 TRAIN_BATCH_SIZE = 32

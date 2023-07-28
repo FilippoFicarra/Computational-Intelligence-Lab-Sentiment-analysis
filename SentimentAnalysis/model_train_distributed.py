@@ -1,9 +1,9 @@
 import gc
+import getopt
 import math
 import random
-import time
 import sys
-import getopt
+import time
 
 import numpy as np
 import pandas as pd
@@ -16,9 +16,9 @@ from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
 from average_meter import AverageMeter
-from datasets import ReviewDataset, TwitterDataset
-from bert_tweet_with_mask import BertTweetWithMask
 from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
+from bert_tweet_with_mask import BertTweetWithMask
+from datasets import ReviewDataset, TwitterDataset
 
 
 def parsing():
@@ -175,7 +175,6 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer):
 
         # Feedback
         if i % VERBOSE_PARAM == 0:
-
             xm.master_print('-- step {} training | cur_loss = {:.6f}, avg_loss = {:.6f}, curr_acc = {:.6f}, avg_acc = '
                             '{:.6f}'
                             .format(i, training_meter.val_loss, training_meter.avg_loss, training_meter.val_accuracy,
@@ -314,8 +313,8 @@ def _run(flags):
         m = BertTweetWithMask(base_model)
         # Freeze parameters of all layers of the encoder except for the first and last layer
         for i in range(1, len(m.base_model.encoder.layer) - 1):
-             for param in m.base_model.encoder.layer[i].parameters():
-                 param.requires_grad = False
+            for param in m.base_model.encoder.layer[i].parameters():
+                param.requires_grad = False
 
     else:
         m = BertTweetWithSparsemax(base_model)
@@ -358,7 +357,7 @@ def _run(flags):
 
     # Print parameters before starting training
     xm.master_print(
-        f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the'
+        f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the '
         + 'model are the following:+\n'
         + f'- Number of epochs: {flags["epoch"]}\n'
         + f'- Batch size: {flags["cores"] * flags["batch_size"]}\n'
@@ -386,7 +385,7 @@ def _run(flags):
 
             # Training pass
             train_start = time.time()
-            xm.master_print('- training...')
+            xm.master_print('- training...', flush=True)
             para_loader = pl.ParallelLoader(training_loader, [device])
             new_accuracies, new_losses, training_accuracy, training_loss = _train_epoch_fn(model=model,
                                                                                            para_loader=para_loader
@@ -419,7 +418,7 @@ def _run(flags):
 
             # Save weights
             if eval_loss < early_stopping['best']:
-                xm.save(model.model_representation(), "model/" + flags["filename"], master_only=True)
+                xm.save(model.model_representation(), PATH_MODELS + "/" + flags["filename"], master_only=True)
                 early_stopping['best'] = eval_loss
                 early_stopping['no_improvement'] = 0
             else:
@@ -435,8 +434,8 @@ def _run(flags):
             xm.master_print('- average accuracy | train = {:.6f}, valid = {:.6f}'.format(training_accuracy,
                                                                                          eval_accuracy),
                             flush=True)
-            xm.master_print('-' * 55)
-            xm.master_print('')
+            xm.master_print('-' * 55, flush=True)
+            xm.master_print('', flush=True)
 
             del training_loss, eval_loss, training_accuracy, eval_accuracy
             gc.collect()

@@ -1,23 +1,22 @@
 """
-This module is designed to perform inference on the twitter test set only. The precondition is that the models are
-named such that if a model requires sentiment-based masking, its name should contain 'mask', while all other models
-should have a name which does not contain the word 'mask'. The module computes predictions for all models saved in the
+This module is designed to perform inference on the twitter test set only. The precondition is that the ensamble_models are
+named such that if a model requires sentiment-based masking, its name should contain 'mask', while all other ensamble_models
+should have a name which does not contain the word 'mask'. The module computes predictions for all ensamble_models saved in the
 folder 'model', and saves the predictions in the folder 'predictions'.
 """
 
-import os
 import csv
+import os
 
-from CONSTANTS import *
-
+import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
-import pandas as pd
-from datasets import TwitterDatasetTest
+
+from CONSTANTS import *
 from bert_tweet_sparsemax import BertTweetWithSparsemax
 from bert_tweet_with_mask import BertTweetWithMask
-
+from datasets import TwitterDatasetTest
 
 if __name__ == "__main__":
     # Get test dataframe
@@ -39,8 +38,6 @@ if __name__ == "__main__":
         # Check if the current item is a pt file
         if os.path.isfile(file_path) and ".pt" in file_path:
             # Load model
-            checkpoint = torch.load(file_path)
-            model_state_dict = checkpoint["model_state_dict"]
             if "mask" not in filename.lower():
                 model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
                 model.load_model(file_path)

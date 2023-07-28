@@ -1,13 +1,15 @@
 """ This module applies majority voting to the predictions in the folder 'majority'. Make sure all the predictions are
 in the folder before running the script. This module also allows to specify weights for each predictions file."""
 
-import os
-import sys
-import getopt
-from CONSTANTS import *
-import pandas as pd
-import random
 import csv
+import getopt
+import os
+import random
+import sys
+
+import pandas as pd
+
+from CONSTANTS import *
 
 
 def parsing():
