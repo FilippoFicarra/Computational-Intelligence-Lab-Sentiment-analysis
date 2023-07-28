@@ -1,13 +1,10 @@
 import gc
 import getopt
-import math
-import random
 import sys
 import time
 import os
 
 import numpy as np
-import pandas as pd
 import torch
 import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
@@ -20,6 +17,7 @@ from average_meter import AverageMeter
 from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
 from bert_tweet_with_mask import BertTweetWithMask
 from datasets import ReviewDataset, TwitterDataset
+from utility_functions import get_training_and_validation_dataframes
 
 
 def parsing():
@@ -93,50 +91,13 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
         os.makedirs(PATH_LOSSES_AND_ACCURACIES)
 
     xm.master_print("- saving accuracies and losses...")
-    xm.save(training_losses,  PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-losses-{}.txt'.format(filename), master_only=True)
-    xm.save(eval_losses,  PATH_LOSSES_AND_ACCURACIES + "/" + 'val-losses-{}.txt'.format(filename), master_only=True)
-    xm.save(training_accuracies,  PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-accuracies-{}.txt'.format(filename), master_only=True)
-    xm.save(eval_accuracies,  PATH_LOSSES_AND_ACCURACIES + "/" + 'val-accuracies-{}.txt'.format(filename), master_only=True)
+    xm.save(training_losses, PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-losses-{}.txt'.format(filename), master_only=True)
+    xm.save(eval_losses, PATH_LOSSES_AND_ACCURACIES + "/" + 'val-losses-{}.txt'.format(filename), master_only=True)
+    xm.save(training_accuracies, PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-accuracies-{}.txt'.format(filename),
+            master_only=True)
+    xm.save(eval_accuracies, PATH_LOSSES_AND_ACCURACIES + "/" + 'val-accuracies-{}.txt'.format(filename),
+            master_only=True)
     xm.master_print("- saved!")
-
-
-def get_training_and_validation_dataframes(path, dtype, grouping_key, train_fraction, eval_fraction, columns):
-    # Load dataframe with dataset
-
-    # Set random seed so the same dataset is sampled every time
-    random_seed = 42
-    random.seed(random_seed)
-
-    df = pd.read_json(path, lines=True, dtype=dtype)
-    dataset_size = df.shape[0]
-
-    # Group by overall
-    grouped_df = df.groupby(grouping_key)
-
-    # Sample 20 % of dataset for training
-    training_values = []
-    indeces_to_drop_training = []
-    for key, group in grouped_df.groups.items():
-        for ind in random.sample(group.tolist(), k=math.ceil(train_fraction * len(group))):
-            training_values.append((key, df.iloc[ind, 1]))
-            indeces_to_drop_training.append(ind)
-
-    df_after_drop = df.drop(indeces_to_drop_training).reset_index(drop=True)
-    grouped_df_after_drop = df_after_drop.groupby(grouping_key)
-
-    # Sample dataset for validation
-    eval_values = []
-    for key, group in grouped_df_after_drop.groups.items():
-        for ind in random.sample(group.tolist(), k=math.ceil(eval_fraction * len(group))):
-            eval_values.append((key, df_after_drop.iloc[ind, 1]))
-
-    # Delete unused variable
-    del df, grouped_df, df_after_drop, grouped_df_after_drop
-    gc.collect()
-
-    # Return training and validation dataframes plus the splits
-    return pd.DataFrame(data=training_values, columns=columns), pd.DataFrame(data=eval_values, columns=columns), \
-        len(training_values) / dataset_size, len(eval_values) / dataset_size
 
 
 def _train_epoch_fn(model, para_loader, criterion, optimizer):
@@ -325,14 +286,14 @@ def _run(flags):
         m = BertTweetWithSparsemax(base_model)
         # Change first and last self-attention layers of the model
         m.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=m.base_model.config)
-        #m.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=m.base_model.config)
-        #m.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=m.base_model.config)
+        # m.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=m.base_model.config)
+        # m.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=m.base_model.config)
         m.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=m.base_model.config)
 
         # Freeze parameters of all layers of the encoder except for the first and last layer
-        #for param in m.base_model.embeddings.parameters():
+        # for param in m.base_model.embeddings.parameters():
         #    param.requires_grad = False
-        #for i in range(2, len(m.base_model.encoder.layer) - 2):
+        # for i in range(2, len(m.base_model.encoder.layer) - 2):
         #    for param in m.base_model.encoder.layer[i].parameters():
         #        param.requires_grad = False
 

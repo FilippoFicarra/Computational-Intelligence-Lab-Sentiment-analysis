@@ -9,17 +9,17 @@ import time
 
 import numpy as np
 import torch
-import torch_xla.core.xla_model as xm
+# import torch_xla.core.xla_model as xm
 from torch.nn import Module, Parameter
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
 
 from CONSTANTS import *
 from SentimentAnalysis.average_meter import AverageMeter
-from SentimentAnalysis.bert_tweet_sparsemax import BertTweetWithSparsemax
+from SentimentAnalysis.bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
 from SentimentAnalysis.bert_tweet_with_mask import BertTweetWithMask
 from datasets import TwitterDatasetEnsamble
-from model_train_distributed import get_training_and_validation_dataframes
+from utility_functions import get_training_and_validation_dataframes
 
 
 class LinearCombinationModel(Module):
@@ -29,8 +29,8 @@ class LinearCombinationModel(Module):
 
         # Define weights for each model
         self.weight1 = Parameter(torch.tensor(1.0))
-        self.weight1 = Parameter(torch.tensor(1.0))
-        self.weight1 = Parameter(torch.tensor(1.0))
+        self.weight2 = Parameter(torch.tensor(1.0))
+        self.weight3 = Parameter(torch.tensor(1.0))
 
         self.epoch = 0
 
@@ -95,6 +95,40 @@ def parsing():
     return flags
 
 
+def get_model(pt_file, device):
+    file_path = os.path.join(PATH_MODELS, pt_file)
+    mask = False
+    # Do something with each .pt file
+    if "mask" in file_path.lower():
+        model = BertTweetWithMask(AutoModel.from_pretrained(MODEL))
+        mask = True
+    else:
+        if "last-2-sparsemax" in pt_file:
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
+            model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
+        elif "no-sparsemax" in pt_file:
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
+        elif "sparsemax-first-2-last-2" in pt_file:
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
+            model.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            model.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+        else:
+            raise Exception("Model not yet supported")
+
+    model.load_model(file_path)
+    freeze_model_parameters(model)
+    model.to(device)
+    return model, mask
+
+
+def freeze_model_parameters(model):
+    for param in model.parameters():
+        param.requires_grad = False
+
+
 def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, filename):
     # Make directory to store losses and accuracies if not present
     if not os.path.exists(PATH_LOSSES_AND_ACCURACIES):
@@ -106,11 +140,6 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
     torch.save(training_accuracies, PATH_LOSSES_AND_ACCURACIES + "/" + 'trn-accuracies-{}.txt'.format(filename))
     torch.save(eval_accuracies, PATH_LOSSES_AND_ACCURACIES + "/" + 'val-accuracies-{}.txt'.format(filename))
     print("- saved!")
-
-
-def freeze_model_parameters(model):
-    for param in model.parameters():
-        param.requires_grad = False
 
 
 def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device):
@@ -172,7 +201,7 @@ def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device):
         # Update learnable parameters
         optimizer.step()
         # If the device being used is the tpu, take step
-        xm.mark_step()
+        # xm.mark_step()
 
         # Free up memory
         del ids, mask, cls_targets, outputs, loss
@@ -255,16 +284,17 @@ def _run(flags):
     eval_dataset = TwitterDatasetEnsamble(df_eval, tokenizer)
 
     training_loader = DataLoader(training_dataset,
-                                 batch_size=TRAIN_BATCH_SIZE,
+                                 batch_size=flags["batch_size"],
                                  shuffle=True)
 
     eval_loader = DataLoader(eval_dataset,
-                             batch_size=TRAIN_BATCH_SIZE,
+                             batch_size=flags["batch_size"],
                              sampler=False)
 
     # DEVICE
 
-    device = xm.xla_device()
+    # device = xm.xla_device()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # MODEL
 
@@ -288,20 +318,8 @@ def _run(flags):
             else:
                 # Loop over the .pt files in the folder
                 for pt_file in sorted(pt_files):
-                    file_path = os.path.join(PATH_MODELS, pt_file)
-                    # Do something with each .pt file
-                    if "mask" in file_path.lower():
-                        model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-                        model.load_model(file_path)
-                        freeze_model_parameters(model)
-                        model.to(device)
-                        ensamble_models.append((model, True))
-                    else:
-                        model = BertTweetWithMask(AutoModel.from_pretrained(MODEL))
-                        model.load_model(file_path)
-                        freeze_model_parameters(model)
-                        model.to(device)
-                        ensamble_models.append((model, False))
+                    # Get model
+                    ensamble_models.append(get_model(pt_file, device))
 
     # Create model for ensamble
     model = LinearCombinationModel()
@@ -323,7 +341,7 @@ def _run(flags):
         f'Training and evaluation of the model ensamble with early stopping. The parameters of the '
         + 'model are the following:+\n'
         + f'- Number of epochs: {flags["epoch"]}\n'
-        + f'- Batch size: {flags["cores"] * flags["batch_size"]}\n'
+        + f'- Batch size: {flags["batch_size"]}\n'
         + f'- Training fraction: {training_frac:.6f}\n'
         + f'- Validation fraction: {eval_frac:.6f}\n'
         + f'- Patience: {early_stopping["patience"]}\n'
@@ -399,7 +417,13 @@ def _run(flags):
 
             # Save training and evaluation values collected up to the current epoch
             save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
+            print(f"weight 1: {model.weight1}, weight 2: {model.weight2}, weight3: {model.weight3}")
 
         else:
             print('- early stopping triggered ')
             break
+
+
+if __name__ == "__main__":
+    flags = parsing()
+    _run(flags)
