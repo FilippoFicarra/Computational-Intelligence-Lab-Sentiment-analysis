@@ -210,11 +210,12 @@ class SMARTRobertaClassificationModel(nn.Module):
         def eval(embed):
             outputs = self.model.model(inputs_embeds=embed, attention_mask=attention_mask)
             pooled = outputs.last_hidden_state
-            logits = self.model.classifier(pooled) 
+            logits = self.model(pooled) 
             return logits
         
         smart_loss_fn = SMARTLoss(eval_fn = eval, loss_fn = kl_loss, loss_last_fn = sym_kl_loss)
         state = eval(embed)
+        
         gt_state = nn.functional.one_hot(labels, num_classes=2)
         loss = nn.functional.cross_entropy(state, gt_state)
         loss += self.weight * smart_loss_fn(embed, state)
@@ -232,7 +233,8 @@ class SMARTRobertaClassificationModel(nn.Module):
             return logits 
        
         state = eval(embed)
-        loss = nn.functional.cross_entropy(state, labels)
+        gt_state = nn.functional.one_hot(labels, num_classes=2)
+        loss = nn.functional.cross_entropy(state, gt_state)
         return state, loss 
 
 BATCH_SIZE = 128
@@ -254,7 +256,7 @@ def train():
     train_df = dataFrameManage.load_dataframe(filepath="data/twitter-datasets/preprocessed/train_preprocessed.csv", encoding=DATASET_ENCODING, preprocess=False)
     test_df = dataFrameManage.load_dataframe(filepath="data/twitter-datasets/preprocessed/test_preprocessed.csv", encoding=DATASET_ENCODING, preprocess=False)
 
-    encode_map = {"NEGATIVE" : 0, "POSITIVE" : 2}
+    encode_map = {"NEGATIVE" : 0, "POSITIVE" : 1}
 
     train_labels = train_df["target"].map(encode_map).to_list()
     test_labels = test_df["target"].map(encode_map).to_list()
@@ -309,10 +311,7 @@ def train():
         
         for step, batch in enumerate(tqdm(train_loader)):
             input_ids, attention_mask, labels = batch
-            input_ids = input_ids
-            attention_mask = attention_mask
-            labels = labels
-
+            
             optimizer.zero_grad()
             logits, loss = model(input_ids, attention_mask=attention_mask, labels=labels )
             
@@ -320,10 +319,9 @@ def train():
             optimizer.step()
 
             running_train_loss += loss.item()
-            
-            l = torch.cat((logits[:, 0:1], logits[:, 2:]), dim=1)
-            predicted_train_labels = torch.where(torch.argmax(l, dim=1) == 1, torch.tensor([2], device = device), torch.tensor([0], device = device))
-
+            print(logits)
+            predicted_train_labels = torch.argmax(logits, dim=1)
+            print(predicted_train_labels, labels)
             correct_train += (predicted_train_labels == labels).sum().item()
             total_train += labels.size(0)
         
@@ -347,16 +345,12 @@ def train():
         with torch.no_grad():
             for eval_batch in eval_loader:
                 eval_input_ids, eval_attention_mask, eval_labels = eval_batch
-                eval_input_ids = eval_input_ids
-                eval_attention_mask = eval_attention_mask
-                eval_labels = eval_labels
-
+                
                 logits,  loss  = model.forward_eval(eval_input_ids, attention_mask=eval_attention_mask, labels = eval_labels)
                 eval_loss += loss.item()
                 eval_total += eval_labels.size(0)
-
-                l = torch.cat((logits[:, 0:1], logits[:, 2:]), dim=1)
-                predicted_eval_labels = torch.where(torch.argmax(l, dim=1) == 1, torch.tensor([2], device = device), torch.tensor([0], device = device))
+                
+                predicted_eval_labels = torch.argmax(logits, dim=1)
                 
                 correct_eval += (predicted_eval_labels == eval_labels).sum().item()
                 
@@ -392,11 +386,10 @@ def train():
     print(eval_accuracies_np)
 
     # Save the arrays to a .npy file
-    np.save(f'metrics/train_losses_{j}.npy', train_losses_np)
-    np.save(f'metrics/eval_losses.npy_{j}', eval_losses_np)
-    np.save(f'metrics/train_accuracies_{j}.npy', train_accuracies_np)
-    np.save(f'metrics/eval_accuracies_{j}.npy', eval_accuracies_np)
-    
+    np.save(f'metrics/train_losses_smart.npy', train_losses_np)
+    np.save(f'metrics/eval_losses.npy_smart', eval_losses_np)
+    np.save(f'metrics/train_accuracies_smart.npy', train_accuracies_np)
+    np.save(f'metrics/eval_accuracies_smart.npy', eval_accuracies_np)
 
 def eval():
     dataFrameManage = DataFrameManager()
@@ -433,9 +426,7 @@ def eval():
 
             outputs = model(input_ids, attention_mask=attention_mask)
             logits = outputs.logits   
-            l = torch.cat((logits[:, 0:1], logits[:, 2:]), dim=1)
-            l = l.cpu()
-            predicted_labels =  torch.where(torch.argmax(l, dim=1) == 1, 2, 0)
+            predicted_labels = torch.argmax(logits.cpu(), dim=1)
             preds.append(predicted_labels)
 
     preds = torch.cat(preds, dim=0)
