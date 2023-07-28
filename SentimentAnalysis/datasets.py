@@ -131,3 +131,33 @@ class TwitterDatasetEnsamble(Dataset):
             'attention_mask_masker': encode_plus_res_masker['attention_mask'],
             'cls_targets': torch.tensor(self.targets[index], dtype=torch.long)
         }
+
+
+class TwitterDatasetEnsambleTest(Dataset):
+    def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH):
+        self.tokenizer = tokenizer
+        self.text = dataframe.text
+        self.max_length = max_length
+        self.masker = Masker(tokenizer)
+
+    def __len__(self):
+        return len(self.text)
+
+    def __getitem__(self, index):
+        text = " ".join(self.text[index].split())
+        encode_plus_res_masker = self.masker.encode_plus(text, max_length=self.max_length)
+
+        encode_plus_res = self.tokenizer.encode_plus(text,
+                                                     None,
+                                                     add_special_tokens=True,
+                                                     padding='max_length',
+                                                     max_length=self.max_length,
+                                                     return_attention_mask=True,
+                                                     truncation=True)
+
+        return {
+            'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
+            'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
+            'input_ids_masker': encode_plus_res_masker['input_ids'],
+            'attention_mask_masker': encode_plus_res_masker['attention_mask']
+        }

@@ -1,16 +1,12 @@
 import csv
-import os
 
-import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer
 
-from CONSTANTS import *
-from bert_tweet_sparsemax import BertTweetWithSparsemax
-from bert_tweet_with_mask import BertTweetWithMask
-from datasets import TwitterDatasetEnsamble
+from datasets import TwitterDatasetEnsambleTest
 from ensamble_train import LinearCombinationModel
+from utility_functions import *
 
 if __name__ == "__main__":
     # Get test dataframe
@@ -20,7 +16,7 @@ if __name__ == "__main__":
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
     # Create dataset and data loader
-    dataset = TwitterDatasetEnsamble(df, tokenizer)
+    dataset = TwitterDatasetEnsambleTest(df, tokenizer)
     loader = DataLoader(dataset, batch_size=TEST_BATCH_SIZE, shuffle=False)
 
     # Device
@@ -49,23 +45,13 @@ if __name__ == "__main__":
             else:
                 # Loop over the .pt files in the folder
                 for pt_file in sorted(pt_files):
-                    file_path = os.path.join(PATH_MODELS, pt_file)
-                    # Do something with each .pt file
-                    if "mask" in file_path.lower():
-                        model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-                        model.load_model(file_path)
-                        model.to(device)
-                        ensamble_models.append((model, True))
-                    elif "ensamble" in file_path.lower():
+                    if "ensamble" in pt_file:
                         e_model = LinearCombinationModel()
-                        e_model.load_model(file_path)
+                        e_model.load_model(os.path.join(PATH_MODELS, pt_file))
                         e_model.to(device)
                         name_ensamble = pt_file.replace(".pt", "")
                     else:
-                        model = BertTweetWithMask(AutoModel.from_pretrained(MODEL))
-                        model.load_model(file_path)
-                        model.to(device)
-                        ensamble_models.append((model, False))
+                        ensamble_models.append(get_model(pt_file, device))
 
     if e_model is None:
         raise Exception("No model for ensamble found...")
@@ -111,3 +97,5 @@ if __name__ == "__main__":
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(['Id', 'Prediction'])
         csv_writer.writerows(data)
+
+    print("- predictions saved!")

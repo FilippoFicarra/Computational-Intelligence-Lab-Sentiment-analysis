@@ -17,7 +17,7 @@ from average_meter import AverageMeter
 from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
 from bert_tweet_with_mask import BertTweetWithMask
 from datasets import ReviewDataset, TwitterDataset
-from utility_functions import get_training_and_validation_dataframes
+from SentimentAnalysis.utility_functions import get_training_and_validation_dataframes
 
 
 def parsing():

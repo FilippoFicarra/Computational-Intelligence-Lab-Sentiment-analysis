@@ -1,9 +1,6 @@
 """This module trains the weights of an ensamble of models. """
 
-import gc
 import getopt
-import os
-import random
 import sys
 import time
 
@@ -12,14 +9,11 @@ import torch
 # import torch_xla.core.xla_model as xm
 from torch.nn import Module, Parameter
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer
 
-from CONSTANTS import *
 from SentimentAnalysis.average_meter import AverageMeter
-from SentimentAnalysis.bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
-from SentimentAnalysis.bert_tweet_with_mask import BertTweetWithMask
 from datasets import TwitterDatasetEnsamble
-from utility_functions import get_training_and_validation_dataframes
+from utility_functions import *
 
 
 class LinearCombinationModel(Module):
@@ -93,40 +87,6 @@ def parsing():
     flags["filename"] = 'model-ensamble-{}.pt'.format(random.randint(1, 100000))
 
     return flags
-
-
-def get_model(pt_file, device):
-    file_path = os.path.join(PATH_MODELS, pt_file)
-    mask = False
-    # Do something with each .pt file
-    if "mask" in file_path.lower():
-        model = BertTweetWithMask(AutoModel.from_pretrained(MODEL))
-        mask = True
-    else:
-        if "last-2-sparsemax" in pt_file:
-            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-            model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
-        elif "no-sparsemax" in pt_file:
-            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-        elif "sparsemax-first-2-last-2" in pt_file:
-            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-            model.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
-        else:
-            raise Exception("Model not yet supported")
-
-    model.load_model(file_path)
-    freeze_model_parameters(model)
-    model.to(device)
-    return model, mask
-
-
-def freeze_model_parameters(model):
-    for param in model.parameters():
-        param.requires_grad = False
 
 
 def save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, filename):
@@ -289,7 +249,7 @@ def _run(flags):
 
     eval_loader = DataLoader(eval_dataset,
                              batch_size=flags["batch_size"],
-                             sampler=False)
+                             shuffle=False)
 
     # DEVICE
 
@@ -417,7 +377,8 @@ def _run(flags):
 
             # Save training and evaluation values collected up to the current epoch
             save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
-            print(f"weight 1: {model.weight1}, weight 2: {model.weight2}, weight3: {model.weight3}")
+            print(f"weight 1: {model.weight1.data.item()}, weight 2: {model.weight2.data.item()},"
+                  f" weight 3: {model.weight3.data.item()}")
 
         else:
             print('- early stopping triggered ')
