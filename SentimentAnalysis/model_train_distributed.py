@@ -57,7 +57,7 @@ def parsing():
                 flags["cores"] = int(val)
             else:
                 raise ValueError("Not enough xla devices.")
-        if arg in ("-m", "--model"):
+        elif arg in ("-m", "--model"):
             if val in MODEL_NAME_OPTIONS:
                 flags["model"] = val
             else:
@@ -330,7 +330,7 @@ def _run(flags):
     # Print parameters before starting training
     xm.master_print(
         f'Training and evaluation of the model {flags["model"]} with early stopping. The parameters of the '
-        + 'model are the following:+\n'
+        + 'model are the following:\n'
         + f'- Number of epochs: {flags["epoch"]}\n'
         + f'- Batch size: {flags["cores"] * flags["batch_size"]}\n'
         + f'- Training fraction: {training_frac:.6f}\n'

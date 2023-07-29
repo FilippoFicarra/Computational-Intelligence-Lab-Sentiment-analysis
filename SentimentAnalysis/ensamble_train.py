@@ -9,7 +9,8 @@ import torch
 # import torch_xla.core.xla_model as xm
 from torch.nn import Module, Parameter
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, PretrainedConfig
+from transformers.models.roberta.modeling_roberta import RobertaEmbeddings, RobertaLayer
 
 from average_meter import AverageMeter
 from datasets import TwitterDatasetEnsamble
@@ -49,18 +50,51 @@ class LinearCombinationModel(Module):
         self.load_state_dict(state['model_state_dict'])
 
 
+class EnsamblerWithSelfAttention(Module):
+    def __init__(self):
+        super().__init__()
+        config = PretrainedConfig.from_pretrained(MODEL)
+        self.embeddings = RobertaEmbeddings(config)
+        self.self_attention = RobertaLayer(config)
+        self.linear = torch.nn.Linear(HIDDEN_SIZE, 3)
+
+        self.epoch = 0
+
+    def forward(self, input_ids, attention_mask, input1, input2, input3):
+        # Calculate the linear combinations
+        embeddings = self.embeddings(input_ids=input_ids)
+        self_attention_out = self.self_attention(hidden_state=embeddings, attention_mask=attention_mask)
+        weights = self.linear(self_attention_out[0][:, 0, :])
+
+        return weights[0] * input1 + weights[1] * input2 + weights[2] * input3
+
+    def update_epoch(self, epoch):
+        self.epoch = epoch
+
+    def model_representation(self):
+        return {
+            'epoch': self.epoch,
+            'model_state_dict': self.state_dict()
+        }
+
+    def load_model(self, file_path):
+        state = torch.load(file_path)
+        self.epoch = state['epoch']
+        self.load_state_dict(state['model_state_dict'])
+
+
 def parsing():
     # Remove 1st argument from the list of command line arguments
     arguments = sys.argv[1:]
 
     # Options
-    options = "hb:e:"
+    options = "hm:b:e:"
 
     # Long options
-    long_options = ["help", "batch_size=", "epoch="]
+    long_options = ["help", "model=", "batch_size=", "epoch="]
 
     # Prepare flags
-    flags = {"batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS}
+    flags = {"model": "self_attention", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS}
 
     # Parsing argument
     arguments, values = getopt.getopt(arguments, options, long_options)
@@ -73,7 +107,12 @@ def parsing():
 
     # checking each argument
     for arg, val in arguments:
-        if arg in ("-b", "--batch_size"):
+        if arg in ("-m", "--model"):
+            if val in MODEL_NAME_OPTIONS_ENSAMBLE:
+                flags["model"] = val
+            else:
+                raise ValueError("Model argument not valid.")
+        elif arg in ("-b", "--batch_size"):
             if int(val) >= 1:
                 flags["batch_size"] = int(val)
             else:
@@ -102,7 +141,7 @@ def save_model_info(training_losses, eval_losses, training_accuracies, eval_accu
     print("- saved!")
 
 
-def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device):
+def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device, flags):
     # Set model for training
     model.train()
 
@@ -133,7 +172,10 @@ def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device):
                 outputs.append(e_model(ids, mask))
 
         # Compute model output
-        output_ensamble = model(outputs[0], outputs[1], outputs[2])
+        if flags["model"] == "linear":
+            output_ensamble = model(outputs[0], outputs[1], outputs[2])
+        else:
+            output_ensamble = model(ids, mask, outputs[0], outputs[1], outputs[2])
 
         # Compute loss
         loss = criterion(output_ensamble, cls_targets)
@@ -171,7 +213,7 @@ def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device):
     return accuracies, losses, training_meter.avg_accuracy, training_meter.avg_loss
 
 
-def _eval_epoch_fn(model, ensamble, loader, criterion, device):
+def _eval_epoch_fn(model, ensamble, loader, criterion, device, flags):
     # Set model to evaluation
     model.eval()
 
@@ -200,7 +242,10 @@ def _eval_epoch_fn(model, ensamble, loader, criterion, device):
                     outputs.append(e_model(eval_ids, eval_mask))
 
             # Compute model output
-            eval_outputs = model(outputs[0], outputs[1], outputs[2])
+            if flags["model"] == "linear":
+                eval_outputs = model(outputs[0], outputs[1], outputs[2])
+            else:
+                eval_outputs = model(eval_ids, eval_mask, outputs[0], outputs[1], outputs[2])
 
             # Compute loss
             loss = criterion(eval_outputs, eval_cls_targets)
@@ -282,7 +327,11 @@ def _run(flags):
                     ensamble_models.append(get_model(pt_file, device))
 
     # Create model for ensamble
-    model = LinearCombinationModel()
+    if flags["model"] == "linear":
+        model = LinearCombinationModel()
+    else:
+        model = EnsamblerWithSelfAttention()
+
     model.to(device)
 
     criterion = torch.nn.CrossEntropyLoss()
@@ -329,7 +378,8 @@ def _run(flags):
                                                                                            loader=training_loader,
                                                                                            criterion=criterion,
                                                                                            optimizer=optimizer,
-                                                                                           device=device)
+                                                                                           device=device,
+                                                                                           flags=flags)
 
             # Add new accuracies and losses
             training_accuracies += new_accuracies
@@ -345,7 +395,8 @@ def _run(flags):
                                                                                   ensamble=ensamble_models,
                                                                                   loader=eval_loader,
                                                                                   criterion=criterion,
-                                                                                  device=device)
+                                                                                  device=device,
+                                                                                  flags=flags)
 
             # Add new accuracies and losses
             eval_accuracies += new_accuracies

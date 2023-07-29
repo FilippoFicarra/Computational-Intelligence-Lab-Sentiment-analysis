@@ -4,6 +4,7 @@ DROPOUT_PROB = 0.1
 MODEL = "vinai/bertweet-base"
 
 MODEL_NAME_OPTIONS = ("sparsemax", "robertaMask", "smart")
+MODEL_NAME_OPTIONS_ENSAMBLE = ("self_attention", "linear")
 DATASET_NAME_OPTIONS = ("amazon", "twitter")
 TOKENIZER_OPTIONS = ("base", "custom")
 
