@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
         # Compute majority vote
         majority_votes = []
-        for ind in dataframes[0].index[1:]:
+        for ind in dataframes[0].index[0:]:
             weights_0 = 0
             weights_1 = 0
             for i in range(len(dataframes)):

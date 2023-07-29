@@ -60,13 +60,13 @@ class EnsamblerWithSelfAttention(Module):
 
         self.epoch = 0
 
-    def forward(self, input_ids, attention_mask, input1, input2, input3):
+    def forward(self, input_ids, input1, input2, input3):
         # Calculate the linear combinations
         embeddings = self.embeddings(input_ids=input_ids)
-        self_attention_out = self.self_attention(hidden_state=embeddings, attention_mask=attention_mask)
+        self_attention_out = self.self_attention(embeddings)
         weights = self.linear(self_attention_out[0][:, 0, :])
 
-        return weights[0] * input1 + weights[1] * input2 + weights[2] * input3
+        return weights[:, 0].unsqueeze(1) * input1 + weights[:, 1].unsqueeze(1) * input2 + weights[:, 2].unsqueeze(1) * input3
 
     def update_epoch(self, epoch):
         self.epoch = epoch
@@ -101,6 +101,8 @@ def parsing():
 
     if len(arguments) > 0 and arguments[0][0] in ("-h", "--help"):
         print(f'This script trains an ensamble on a TPU.\n\
+        -m or --model: model name, available options are {", ".join(MODEL_NAME_OPTIONS_ENSAMBLE)} '
+              f'(default={flags["model"]}).\n\
         -b or --batch_size: batch size used for training (default={TRAIN_BATCH_SIZE}).\n\
         -e or --epoch: number of epochs (default={EPOCHS}).')
         sys.exit()
@@ -175,7 +177,7 @@ def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device, flags
         if flags["model"] == "linear":
             output_ensamble = model(outputs[0], outputs[1], outputs[2])
         else:
-            output_ensamble = model(ids, mask, outputs[0], outputs[1], outputs[2])
+            output_ensamble = model(ids, outputs[0], outputs[1], outputs[2])
 
         # Compute loss
         loss = criterion(output_ensamble, cls_targets)
@@ -245,7 +247,7 @@ def _eval_epoch_fn(model, ensamble, loader, criterion, device, flags):
             if flags["model"] == "linear":
                 eval_outputs = model(outputs[0], outputs[1], outputs[2])
             else:
-                eval_outputs = model(eval_ids, eval_mask, outputs[0], outputs[1], outputs[2])
+                eval_outputs = model(eval_ids, outputs[0], outputs[1], outputs[2])
 
             # Compute loss
             loss = criterion(eval_outputs, eval_cls_targets)
@@ -324,7 +326,10 @@ def _run(flags):
                 # Loop over the .pt files in the folder
                 for pt_file in sorted(pt_files):
                     # Get model
-                    ensamble_models.append(get_model(pt_file, device))
+                    trained_model, mask = get_model(pt_file, device)
+                    # Set model for evaluation
+                    trained_model.eval()
+                    ensamble_models.append((trained_model, mask))
 
     # Create model for ensamble
     if flags["model"] == "linear":

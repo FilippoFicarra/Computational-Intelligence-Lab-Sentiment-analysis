@@ -7,16 +7,16 @@ folder 'model', and saves the predictions in the folder 'predictions'.
 
 import csv
 import os
+import gc
 
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer
 
 from CONSTANTS import *
-from bert_tweet_sparsemax import BertTweetWithSparsemax
-from bert_tweet_with_mask import BertTweetWithMask
 from datasets import TwitterDatasetTest
+from utility_functions import get_model
 
 if __name__ == "__main__":
     # Get test dataframe
@@ -38,21 +38,19 @@ if __name__ == "__main__":
         # Check if the current item is a pt file
         if os.path.isfile(file_path) and ".pt" in file_path:
             # Load model
-            if "mask" not in filename.lower():
-                model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-                model.load_model(file_path)
-                model.to(device)
-                dataset = dataset_no_special_mask
-            else:
-                model = BertTweetWithMask(AutoModel.from_pretrained(MODEL))
-                model.load_model(file_path)
-                model.to(device)
+            model, mask = get_model(filename, device)
+            # Set model for evaluation
+            model.eval()
+            if mask:
                 dataset = dataset_special_mask
+            else:
+                dataset = dataset_no_special_mask
 
             # Create dataloader
             loader = DataLoader(dataset,
                                 batch_size=TEST_BATCH_SIZE,
                                 shuffle=False)
+
             # Define list of predictions
             all_predictions = []
             # Compute predictions
@@ -81,3 +79,6 @@ if __name__ == "__main__":
                 csv_writer = csv.writer(csvfile)
                 csv_writer.writerow(['Id', 'Prediction'])
                 csv_writer.writerows(data)
+
+            del model, mask
+            gc.collect()

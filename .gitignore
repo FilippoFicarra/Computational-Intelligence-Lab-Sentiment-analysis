@@ -10,10 +10,12 @@ SentimentAnalysis/data/sentiment-knowledge/twitter-all-words-with-occurrences.cs
 SentimentAnalysis/data/sentiment-knowledge/twitter-pmi.csv
 SentimentAnalysis/data/sentiment-knowledge/twitter-words-seed-score.csv
 SentimentAnalysis/data/twitter-data
+SentimentAnalysis/analysis_predictions
 SentimentAnalysis/model/*
 SentimentAnalysis/predictions/*
 SentimentAnalysis/measures/*
 SentimentAnalysis/figures/*
+SentimentAnalysis/majority/*
 
 .idea
 

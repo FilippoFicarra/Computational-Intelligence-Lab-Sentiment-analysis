@@ -48,10 +48,15 @@ if __name__ == "__main__":
                     if "ensamble" in pt_file:
                         e_model = LinearCombinationModel()
                         e_model.load_model(os.path.join(PATH_MODELS, pt_file))
+                        e_model.eval()
                         e_model.to(device)
                         name_ensamble = pt_file.replace(".pt", "")
                     else:
-                        ensamble_models.append(get_model(pt_file, device))
+                        # Get model
+                        trained_model, mask = get_model(pt_file, device)
+                        # Set model for evaluation
+                        trained_model.eval()
+                        ensamble_models.append((trained_model, mask))
 
     if e_model is None:
         raise Exception("No model for ensamble found...")
