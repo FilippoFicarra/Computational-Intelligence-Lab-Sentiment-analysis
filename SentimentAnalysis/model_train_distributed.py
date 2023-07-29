@@ -10,7 +10,7 @@ import torch_xla.core.xla_model as xm
 import torch_xla.distributed.parallel_loader as pl
 import torch_xla.distributed.xla_multiprocessing as xmp
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModel
+from transformers import AutoTokenizer, AutoModel, AdamW
 
 from CONSTANTS import *
 from average_meter import AverageMeter
@@ -126,7 +126,7 @@ def _train_epoch_fn(model, para_loader, criterion, optimizer, flags):
             outputs = model(ids, mask)
             loss = criterion(outputs, cls_targets)
         else:
-            outputs, loss = model(ids, mask, cls_targets)
+            outputs, loss = model.forward(ids, mask, cls_targets)
 
         # Update running average of loss for epoch
         training_meter.update_loss(
@@ -316,7 +316,8 @@ def _run(flags):
     # LOSS FUNCTIONS AND OPTIMIZER
 
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
+    # optimizer = torch.optim.Adam(params=model.parameters(), lr=LEARNING_RATE)
+    optimizer = AdamW(params=model.parameters(), lr=LEARNING_RATE)
 
     # LISTS FOR STORING LOSSES AND DICTIONARY FOR EARLY STOPPING
 
