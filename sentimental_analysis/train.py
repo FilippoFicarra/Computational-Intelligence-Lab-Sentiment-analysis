@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AdamW
-from data_frame_manager.data_frame_manager import DataFrameManager
+from dataframe_manager import DataFrameManager
 import numpy as np
 from tqdm import tqdm
 # import xgboost as xgb
