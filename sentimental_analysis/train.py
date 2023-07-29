@@ -95,14 +95,14 @@ def train():
 
         # Convert the dataset to PyTorch tensors
         train_dataset = torch.utils.data.TensorDataset(
-            torch.tensor(train_encodings["input_ids"]),
-            torch.tensor(train_encodings["attention_mask"]),
-            torch.tensor(train_lbls)
+            torch.tensor(train_encodings["input_ids"]).to(device),
+            torch.tensor(train_encodings["attention_mask"]).to(device),
+            torch.tensor(train_lbls).to(device)
         )
         eval_dataset = torch.utils.data.TensorDataset(
-            torch.tensor(eval_encodings["input_ids"]),
-            torch.tensor(eval_encodings["attention_mask"]),
-            torch.tensor(eval_lbls)
+            torch.tensor(eval_encodings["input_ids"]).to(device),
+            torch.tensor(eval_encodings["attention_mask"]).to(device),
+            torch.tensor(eval_lbls).to(device)
         )
 
         # Define the optimizer and learning rate
@@ -138,9 +138,9 @@ def train():
             
             for step, batch in enumerate(tqdm(train_loader)):
                 input_ids, attention_mask, labels = batch
-                input_ids = input_ids.to(device)
-                attention_mask = attention_mask.to(device)
-                labels = labels.to(device)
+                input_ids = input_ids
+                attention_mask = attention_mask
+                labels = labels
 
                 optimizer.zero_grad()
                 logits, loss = model(input_ids, attention_mask=attention_mask, labels=labels )
@@ -175,9 +175,9 @@ def train():
             with torch.no_grad():
                 for eval_batch in eval_loader:
                     eval_input_ids, eval_attention_mask, eval_labels = eval_batch
-                    eval_input_ids = eval_input_ids.to(device)
-                    eval_attention_mask = eval_attention_mask.to(device)
-                    eval_labels = eval_labels.to(device)
+                    eval_input_ids = eval_input_ids
+                    eval_attention_mask = eval_attention_mask
+                    eval_labels = eval_labels
 
                     logits,  loss  = model.forward_eval(eval_input_ids, attention_mask=eval_attention_mask, labels = eval_labels)
                     eval_loss += loss.item()
@@ -221,8 +221,8 @@ def eval():
     val_df = dataFrameManage.load_dataframe(filepath="data/twitter-datasets/preprocessed/test_data_preprocessed.csv", encoding=DATASET_ENCODING, preprocess=False, test = True)
     eval_encodings = tokenizer(val_df["text"].to_list(), truncation=True, padding=True)
     eval_dataset = torch.utils.data.TensorDataset(
-        torch.tensor(eval_encodings["input_ids"]),
-        torch.tensor(eval_encodings["attention_mask"])
+        torch.tensor(eval_encodings["input_ids"]).to(device),
+        torch.tensor(eval_encodings["attention_mask"]).to(device)
     )
     eval_loader = torch.utils.data.DataLoader(eval_dataset, batch_size=32)
     print(len(val_df))
@@ -239,8 +239,8 @@ def eval():
 
             for batch in tqdm(eval_loader):
                 input_ids, attention_mask = batch
-                input_ids = input_ids.to(device)
-                attention_mask = attention_mask.to(device)
+                input_ids = input_ids
+                attention_mask = attention_mask
 
                 logits = model(input_ids, attention_mask=attention_mask)
                 predicted_labels =  torch.argmax(logits, dim=1)
