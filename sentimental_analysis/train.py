@@ -68,6 +68,7 @@ config = {
 }
 
 def train():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     dataFrameManage = DataFrameManager()
     train_df = dataFrameManage.load_dataframe(filepath="data/twitter-datasets/preprocessed/train_preprocessed.csv", encoding=DATASET_ENCODING, preprocess=False)
@@ -214,7 +215,7 @@ def train():
 
 def eval():
     dataFrameManage = DataFrameManager()
-
+    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
