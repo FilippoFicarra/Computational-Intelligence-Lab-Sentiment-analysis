@@ -83,7 +83,7 @@ def train():
     num_models = 3
     for j in  tqdm(range(1,num_models + 1)):
         print(f"Model {j}")
-        model = SMARTRobertaClassificationModel(config["models"]["bertweet_{j}"])
+        model = SMARTRobertaClassificationModel(config["models"][f"bertweet_{j}"])
 
         # Split the dataset into training and evaluation sets
         train_texts, eval_texts, train_lbls, eval_lbls = train_df["text"][:500000].to_list(), test_df["text"][:20000*5].to_list(), train_labels[:100000*5], test_labels[:20000*5]
