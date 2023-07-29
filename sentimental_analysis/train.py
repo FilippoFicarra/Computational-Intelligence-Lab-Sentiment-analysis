@@ -87,7 +87,7 @@ def train():
         model = SMARTRobertaClassificationModel(config["models"][f"bertweet_{j}"])
 
         # Split the dataset into training and evaluation sets
-        train_texts, eval_texts, train_lbls, eval_lbls = train_df["text"][:500000].to_list(), test_df["text"][:20000*5].to_list(), train_labels[:100000*5], test_labels[:20000*5]
+        train_texts, eval_texts, train_lbls, eval_lbls = train_df["text"][:200000].to_list(), test_df["text"][:20000].to_list(), train_labels[:200000], test_labels[:20000]
 
         # Tokenize the texts
         train_encodings = tokenizer(train_texts, truncation=True, padding=True)
