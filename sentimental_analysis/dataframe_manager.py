@@ -110,7 +110,7 @@ class DataFrameManager:
         
         df.to_csv(filepath, index=False, encoding=encoding)
     
-    def split(self, df : pd.DataFrame, test_size : float = 0.2, random_state : int = 42) -> tuple[pd.DataFrame, pd.DataFrame]:
+    def split(self, df : pd.DataFrame, test_size : float = 0.2, random_state : int = 42):
         """
         This function splits the dataframe into train and test dataframes.
 
