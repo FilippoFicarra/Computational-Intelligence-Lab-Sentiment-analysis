@@ -21,5 +21,6 @@ pip install contractions
 pip install wordninja
 pip install clean-text
 pip install nltk
+pip install torchvision
 
 pip install https://storage.googleapis.com/tpu-pytorch/wheels/tpuvm/torch_xla-2.0-cp38-cp38-linux_x86_64.whl
