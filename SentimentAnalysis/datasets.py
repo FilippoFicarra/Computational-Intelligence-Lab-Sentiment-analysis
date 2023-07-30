@@ -119,7 +119,7 @@ class CLIPDataset(torch.utils.data.Dataset):
                                                  (0, TOKENIZER_SIZE - len(torch.tensor(res["input_ids"]))),
                                                   mode="constant", value=self.pad_token_id),
             'attention_mask': torch.nn.functional.pad(torch.tensor(res["attention_mask"], dtype=torch.long),
-                                                      (0, - len(torch.tensor(res["attention_mask"]))),
+                                                      (0,TOKENIZER_SIZE - len(torch.tensor(res["attention_mask"]))),
                                                       mode="constant", value=0),
             'cls_targets': torch.tensor(self.label[index], dtype=torch.long)
         }
