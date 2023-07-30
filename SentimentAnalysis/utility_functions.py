@@ -59,6 +59,7 @@ def freeze_model_parameters(model):
 def get_model(pt_file, device):
     file_path = os.path.join(PATH_MODELS, pt_file)
     mask = False
+    clip = False
     # Do something with each .pt file
     if "mask" in file_path.lower():
         model = BertTweetWithMask(AutoModel.from_pretrained(MODEL))
@@ -78,10 +79,11 @@ def get_model(pt_file, device):
             model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
         elif "clip" in pt_file:
             model = CLIPWithClassificationHead()
+            clip = True
         else:
             raise Exception("Model not yet supported")
 
     model.load_model(file_path)
     freeze_model_parameters(model)
     model.to(device)
-    return model, mask
+    return model, mask, clip

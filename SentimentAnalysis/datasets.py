@@ -105,7 +105,7 @@ class CLIPDataset(torch.utils.data.Dataset):
     def __init__(self, dataframe):
         self.text = dataframe.text
         self.label = dataframe.label
-        self.tokenizer = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch16").tokenizer
+        self.tokenizer = CLIPProcessor.from_pretrained(CLIP).tokenizer
         self.pad_token_id = self.tokenizer.pad_token_id
 
     def __len__(self):
@@ -117,9 +117,9 @@ class CLIPDataset(torch.utils.data.Dataset):
         return {
             'input_ids': torch.nn.functional.pad(torch.tensor(res["input_ids"], dtype=torch.long),
                                                  (0, TOKENIZER_SIZE - len(torch.tensor(res["input_ids"]))),
-                                                  mode="constant", value=self.pad_token_id),
+                                                 mode="constant", value=self.pad_token_id),
             'attention_mask': torch.nn.functional.pad(torch.tensor(res["attention_mask"], dtype=torch.long),
-                                                      (0,TOKENIZER_SIZE - len(torch.tensor(res["attention_mask"]))),
+                                                      (0, TOKENIZER_SIZE - len(torch.tensor(res["attention_mask"]))),
                                                       mode="constant", value=0),
             'cls_targets': torch.tensor(self.label[index], dtype=torch.long)
         }
@@ -128,6 +128,8 @@ class CLIPDataset(torch.utils.data.Dataset):
 class TwitterDatasetEnsamble(Dataset):
     def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH):
         self.tokenizer = tokenizer
+        self.clip_tokenizer = CLIPProcessor.from_pretrained(CLIP).tokenizer
+        self.pad_token_id = self.tokenizer.pad_token_id
         self.text = dataframe.text
         self.targets = dataframe.label
         self.max_length = max_length
@@ -148,12 +150,21 @@ class TwitterDatasetEnsamble(Dataset):
                                                      return_attention_mask=True,
                                                      truncation=True)
 
+        res = self.clip_tokenizer(text, padding='longest', truncation=True)
+
         return {
             'input_ids': torch.tensor(encode_plus_res['input_ids'], dtype=torch.long),
             'attention_mask': torch.tensor(encode_plus_res['attention_mask'], dtype=torch.long),
             'input_ids_masker': encode_plus_res_masker['input_ids'],
             'attention_mask_masker': encode_plus_res_masker['attention_mask'],
-            'cls_targets': torch.tensor(self.targets[index], dtype=torch.long)
+            'cls_targets': torch.tensor(self.targets[index], dtype=torch.long),
+            'input_ids_clip': torch.nn.functional.pad(torch.tensor(res["input_ids"], dtype=torch.long),
+                                                      (0, TOKENIZER_SIZE - len(torch.tensor(res["input_ids"]))),
+                                                      mode="constant", value=self.pad_token_id),
+            'attention_mask_clip': torch.nn.functional.pad(torch.tensor(res["attention_mask"], dtype=torch.long),
+                                                           (0,
+                                                            TOKENIZER_SIZE - len(torch.tensor(res["attention_mask"]))),
+                                                           mode="constant", value=0)
         }
 
 

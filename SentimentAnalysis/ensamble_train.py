@@ -66,7 +66,8 @@ class EnsamblerWithSelfAttention(Module):
         self_attention_out = self.self_attention(embeddings)
         weights = self.linear(self_attention_out[0][:, 0, :])
 
-        return weights[:, 0].unsqueeze(1) * input1 + weights[:, 1].unsqueeze(1) * input2 + weights[:, 2].unsqueeze(1) * input3
+        return weights[:, 0].unsqueeze(1) * input1 + weights[:, 1].unsqueeze(1) * input2 + weights[:, 2].unsqueeze(
+            1) * input3
 
     def update_epoch(self, epoch):
         self.epoch = epoch
@@ -164,14 +165,19 @@ def _train_epoch_fn(model, ensamble, loader, criterion, optimizer, device, flags
         ids_masker = data['input_ids_masker'].to(device)
         mask_masker = data['attention_mask_masker'].to(device)
         cls_targets = data['cls_targets'].to(device)
+        ids_clip = data['input_ids_clip'].to(device)
+        mask_clip = data['attention_mask_clip'].to(device)
 
         # Compute outputs of the models in the ensamble
         outputs = []
-        for e_model, requires_mask in ensamble:
+        for e_model, requires_mask, is_clip in ensamble:
             if requires_mask:
                 outputs.append(e_model(ids_masker, mask_masker))
             else:
-                outputs.append(e_model(ids, mask))
+                if not is_clip:
+                    outputs.append(e_model(ids, mask))
+                else:
+                    outputs.append(e_model(ids_clip, mask_clip))
 
         # Compute model output
         if flags["model"] == "linear":
@@ -234,14 +240,19 @@ def _eval_epoch_fn(model, ensamble, loader, criterion, device, flags):
             eval_ids_masker = eval_batch['input_ids_masker'].to(device)
             eval_mask_masker = eval_batch['attention_mask_masker'].to(device)
             eval_cls_targets = eval_batch['cls_targets'].to(device)
+            eval_ids_clip = eval_batch['input_ids_clip'].to(device)
+            eval_mask_clip = eval_batch['attention_mask_clip'].to(device)
 
             # Compute outputs of the models in the ensamble
             outputs = []
-            for e_model, requires_mask in ensamble:
+            for e_model, requires_mask, is_clip in ensamble:
                 if requires_mask:
                     outputs.append(e_model(eval_ids_masker, eval_mask_masker))
                 else:
-                    outputs.append(e_model(eval_ids, eval_mask))
+                    if not is_clip:
+                        outputs.append(e_model(eval_ids, eval_mask))
+                    else:
+                        outputs.append(e_model(eval_ids_clip, eval_mask_clip))
 
             # Compute model output
             if flags["model"] == "linear":
@@ -326,10 +337,10 @@ def _run(flags):
                 # Loop over the .pt files in the folder
                 for pt_file in sorted(pt_files):
                     # Get model
-                    trained_model, mask = get_model(pt_file, device)
+                    trained_model, requires_mask, is_clip = get_model(pt_file, device)
                     # Set model for evaluation
                     trained_model.eval()
-                    ensamble_models.append((trained_model, mask))
+                    ensamble_models.append((trained_model, requires_mask, is_clip))
 
     # Create model for ensamble
     if flags["model"] == "linear":
