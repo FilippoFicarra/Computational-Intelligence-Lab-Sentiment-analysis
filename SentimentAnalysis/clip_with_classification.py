@@ -11,7 +11,7 @@ class CLIPWithClassificationHead(torch.nn.Module):
         self.epoch = 0
 
     def forward(self, input_ids, attention_mask):
-        text_features = self.clip(input_ids, attention_mask)
+        text_features = self.clip.get_text_features(input_ids, attention_mask)
         return self.linear(text_features)
 
     def update_epoch(self, epoch):
