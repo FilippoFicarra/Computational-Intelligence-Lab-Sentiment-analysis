@@ -433,8 +433,6 @@ def _run(flags):
 
             # Save training and evaluation values collected up to the current epoch
             save_model_info(training_losses, eval_losses, training_accuracies, eval_accuracies, flags["filename"])
-            print(f"weight 1: {model.weight1.data.item()}, weight 2: {model.weight2.data.item()},"
-                  f" weight 3: {model.weight3.data.item()}")
 
         else:
             print('- early stopping triggered ')

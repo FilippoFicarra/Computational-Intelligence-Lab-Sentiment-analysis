@@ -8,6 +8,7 @@ from transformers import AutoModel
 
 from bert_tweet_sparsemax import BertTweetWithSparsemax, RobertaSelfAttention
 from bert_tweet_with_mask import BertTweetWithMask
+from clip_with_classification import CLIPWithClassificationHead
 from CONSTANTS import *
 
 
@@ -75,6 +76,8 @@ def get_model(pt_file, device):
             model.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=model.base_model.config)
             model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
             model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+        elif "clip" in pt_file:
+            model = CLIPWithClassificationHead()
         else:
             raise Exception("Model not yet supported")
 
