@@ -16,6 +16,7 @@ SentimentAnalysis/predictions/*
 SentimentAnalysis/measures/*
 SentimentAnalysis/figures/*
 SentimentAnalysis/majority/*
+SentimentAnalysis/clip
 
 .idea
 

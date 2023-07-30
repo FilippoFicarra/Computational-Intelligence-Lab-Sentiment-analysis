@@ -709,13 +709,13 @@ def get_pairs_word_seed(tokens, seeds_dict, occurrences_dict):
         # Check if current token is a seed
         try:
             if seeds_dict[tokens[i]]:
-                if i - 1 >= 0:  # and occurrences_dict[tokens[i - 1]] >= 5:
+                if i - 1 >= 0 and occurrences_dict[tokens[i - 1]] >= 1:
                     pairs.append((tokens[i], tokens[i - 1]))
-                if i - 2 >= 0:  # and occurrences_dict[tokens[i - 1]] >= 5:
+                if i - 2 >= 0 and occurrences_dict[tokens[i - 1]] >= 1:
                     pairs.append((tokens[i], tokens[i - 2]))
-                if i + 1 < len(tokens):  # and occurrences_dict[tokens[i + 1]] >= 5:
+                if i + 1 < len(tokens) and occurrences_dict[tokens[i - 1]] >= 1:
                     pairs.append((tokens[i], tokens[i + 1]))
-                if i + 2 < len(tokens):  # and occurrences_dict[tokens[i + 1]] >= 5:
+                if i + 2 < len(tokens) and occurrences_dict[tokens[i - 1]] >= 1:
                     pairs.append((tokens[i], tokens[i + 2]))
         except Exception:
             pass

@@ -3,10 +3,14 @@ HIDDEN_SIZE = 768
 DROPOUT_PROB = 0.1
 MODEL = "vinai/bertweet-base"
 
-MODEL_NAME_OPTIONS = ("sparsemax", "robertaMask", "smart")
+MODEL_NAME_OPTIONS = ("sparsemax", "robertaMask", "smart", "clip")
 MODEL_NAME_OPTIONS_ENSAMBLE = ("self_attention", "linear")
 DATASET_NAME_OPTIONS = ("amazon", "twitter")
 TOKENIZER_OPTIONS = ("base", "custom")
+CLIP = "openai/clip-vit-base-patch16"
+
+CLIP_SIZE = 512
+TOKENIZER_SIZE = 77
 
 PATH_POLARITY_AMAZON = "data/sentiment-knowledge/amazon-polarity.csv"
 PATH_POLARITY_TWITTER = "data/sentiment-knowledge/twitter-polarity.csv"
@@ -28,7 +32,7 @@ CHUNK_SIZE = 100000
 SECOND_COLUMN = "text"
 
 MAX_LENGTH = 64
-FRACTION_MASKING = 0.15
+FRACTION_MASKING = 0.2
 LOWER_LIMIT_FRACTION_MASKING = 0.1
 
 VERBOSE_PARAM = 100

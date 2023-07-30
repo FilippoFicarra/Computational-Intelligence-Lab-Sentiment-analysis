@@ -1,8 +1,8 @@
 import gc
 import getopt
+import os
 import sys
 import time
-import os
 
 import numpy as np
 import torch
@@ -16,9 +16,10 @@ from CONSTANTS import *
 from average_meter import AverageMeter
 from bert_tweet_sparsemax import BertTweetWithSparsemax
 from bert_tweet_with_mask import BertTweetWithMask
-from datasets import ReviewDataset, TwitterDataset
-from utility_functions import get_training_and_validation_dataframes
+from datasets import ReviewDataset, TwitterDataset, CLIPDataset
 from smart_roberta_classification_model import SMARTRobertaClassificationModel
+from utility_functions import get_training_and_validation_dataframes
+from clip_with_classification import CLIPWithClassificationHead
 
 
 def parsing():
@@ -32,7 +33,7 @@ def parsing():
     long_options = ["help", "cores=", "model=", "batch_size=", "epoch=", "dataset=", "filename="]
 
     # Prepare flags
-    flags = {"cores": 1, "model": "smart", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
+    flags = {"cores": 1, "model": "clip", "batch_size": TRAIN_BATCH_SIZE, "epoch": EPOCHS,
              "dataset": "twitter"}
 
     # Parsing argument
@@ -246,6 +247,9 @@ def _run(flags):
         if flags["model"] == "robertaMask":
             training_dataset = TwitterDataset(df_training, tokenizer, use_embedder=True)
             eval_dataset = TwitterDataset(df_eval, tokenizer, use_embedder=True)
+        elif flags["model"] == "clip":
+            training_dataset = CLIPDataset(df_training)
+            eval_dataset = CLIPDataset(df_eval)
         else:
             training_dataset = TwitterDataset(df_training, tokenizer)
             eval_dataset = TwitterDataset(df_eval, tokenizer)
@@ -297,7 +301,8 @@ def _run(flags):
         # for i in range(2, len(m.base_model.encoder.layer) - 2):
         #    for param in m.base_model.encoder.layer[i].parameters():
         #        param.requires_grad = False
-
+    elif flags["model"] == "clip":
+        m = CLIPWithClassificationHead()
     else:
         base = BertTweetWithSparsemax(base_model, sparsemax_ids=(0, 11))
         m = SMARTRobertaClassificationModel(base)

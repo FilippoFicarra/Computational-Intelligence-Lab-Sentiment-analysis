@@ -22,10 +22,10 @@ class Masker:
 
     def load_sentiment_knowledge_words(self, twitter):
         if twitter:
-            df = pd.read_csv(PATH_POLARITY_TWITTER, dtype={"word": str, "polarity": float})
+            df = pd.read_csv(PATH_POLARITY_TWITTER, dtype={"word": str, "polarity": float}, keep_default_na=False)
             threshold = TWITTER_THRESHOLD
         else:
-            df = pd.read_csv(PATH_POLARITY_AMAZON, dtype={"word": str, "polarity": float})
+            df = pd.read_csv(PATH_POLARITY_AMAZON, dtype={"word": str, "polarity": float}, keep_default_na=False)
             threshold = AMAZON_THRESHOLD
 
         # Filter by pmi value

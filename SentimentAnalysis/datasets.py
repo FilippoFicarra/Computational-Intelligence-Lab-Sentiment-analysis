@@ -1,7 +1,7 @@
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizerFast, CLIPProcessor
 
 from CONSTANTS import *
 from masker import Masker
@@ -98,6 +98,28 @@ class TwitterDatasetTest(Dataset):
         return {
             'input_ids': input_ids,
             'attention_mask': attention_mask,
+        }
+
+
+class CLIPDataset(torch.utils.data.Dataset):
+    def __init__(self, dataframe):
+        self.text = dataframe.text
+        self.label = dataframe.label
+        self.tokenizer = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch16").tokenizer
+        self.pad_token_id = self.tokenizer.pad_token_id
+
+    def __len__(self):
+        return len(self.text)
+
+    def __getitem__(self, index):
+        text = " ".join(self.text[index].split())
+        res = self.tokenizer(text, padding='longest', truncation=True)
+        return {
+            'input_ids': torch.nn.functional.pad(torch.tensor(res["input_ids"], dtype=torch.long),
+                                                 (0, TOKENIZER_SIZE), mode="constant", value=self.pad_token_id),
+            'attention_mask': torch.nn.functional.pad(torch.tensor(res["attention_mask"], dtype=torch.long),
+                                                      (0, TOKENIZER_SIZE), mode="constant", value=0),
+            'cls_targets': torch.tensor(self.label[index], dtype=torch.long)
         }
 
 
