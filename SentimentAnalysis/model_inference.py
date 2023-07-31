@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
 from CONSTANTS import *
-from datasets import TwitterDatasetTest
+from datasets import TwitterDatasetTest, CLIPDatasetTest
 from utility_functions import get_model
 
 if __name__ == "__main__":
@@ -28,6 +28,7 @@ if __name__ == "__main__":
     # Create dataset and data loader with and without special masking
     dataset_no_special_mask = TwitterDatasetTest(df, tokenizer)
     dataset_special_mask = TwitterDatasetTest(df, tokenizer, use_embedder=True)
+    dataset_clip = CLIPDatasetTest(df)
 
     # Device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -38,13 +39,18 @@ if __name__ == "__main__":
         # Check if the current item is a pt file
         if os.path.isfile(file_path) and ".pt" in file_path:
             # Load model
-            model, mask = get_model(filename, device)
+            model, requires_mask, is_clip = get_model(filename, device)
             # Set model for evaluation
             model.eval()
-            if mask:
+
+            dataset = None
+            if requires_mask:
                 dataset = dataset_special_mask
             else:
                 dataset = dataset_no_special_mask
+
+            if is_clip:
+                dataset = dataset_clip
 
             # Create dataloader
             loader = DataLoader(dataset,

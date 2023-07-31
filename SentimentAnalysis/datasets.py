@@ -66,6 +66,30 @@ class TwitterDataset(Dataset):
         }
 
 
+class CLIPDataset(torch.utils.data.Dataset):
+    def __init__(self, dataframe):
+        self.text = dataframe.text
+        self.label = dataframe.label
+        self.tokenizer = CLIPProcessor.from_pretrained(CLIP).tokenizer
+        self.pad_token_id = self.tokenizer.pad_token_id
+
+    def __len__(self):
+        return len(self.text)
+
+    def __getitem__(self, index):
+        text = " ".join(self.text[index].split())
+        res = self.tokenizer(text, padding='longest', truncation=True)
+        return {
+            'input_ids': torch.nn.functional.pad(torch.tensor(res["input_ids"], dtype=torch.long),
+                                                 (0, TOKENIZER_SIZE - len(torch.tensor(res["input_ids"]))),
+                                                 mode="constant", value=self.pad_token_id),
+            'attention_mask': torch.nn.functional.pad(torch.tensor(res["attention_mask"], dtype=torch.long),
+                                                      (0, TOKENIZER_SIZE - len(torch.tensor(res["attention_mask"]))),
+                                                      mode="constant", value=0),
+            'cls_targets': torch.tensor(self.label[index], dtype=torch.long)
+        }
+
+
 class TwitterDatasetTest(Dataset):
     def __init__(self, dataframe: pd.DataFrame, tokenizer: PreTrainedTokenizerFast, max_length=MAX_LENGTH,
                  use_embedder=False):
@@ -101,10 +125,9 @@ class TwitterDatasetTest(Dataset):
         }
 
 
-class CLIPDataset(torch.utils.data.Dataset):
+class CLIPDatasetTest(torch.utils.data.Dataset):
     def __init__(self, dataframe):
         self.text = dataframe.text
-        self.label = dataframe.label
         self.tokenizer = CLIPProcessor.from_pretrained(CLIP).tokenizer
         self.pad_token_id = self.tokenizer.pad_token_id
 
@@ -120,8 +143,7 @@ class CLIPDataset(torch.utils.data.Dataset):
                                                  mode="constant", value=self.pad_token_id),
             'attention_mask': torch.nn.functional.pad(torch.tensor(res["attention_mask"], dtype=torch.long),
                                                       (0, TOKENIZER_SIZE - len(torch.tensor(res["attention_mask"]))),
-                                                      mode="constant", value=0),
-            'cls_targets': torch.tensor(self.label[index], dtype=torch.long)
+                                                      mode="constant", value=0)
         }
 
 
