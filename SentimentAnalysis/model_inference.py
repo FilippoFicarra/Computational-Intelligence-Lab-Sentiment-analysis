@@ -37,7 +37,7 @@ if __name__ == "__main__":
         file_path = os.path.join(PATH_MODELS, filename)
 
         # Check if the current item is a pt file
-        if os.path.isfile(file_path) and ".pt" in file_path:
+        if os.path.isfile(file_path) and ".pt" in file_path and "ensamble" not in file_path:
             # Load model
             model, requires_mask, is_clip = get_model(filename, device)
             # Set model for evaluation
