@@ -9,7 +9,7 @@ from CONSTANTS import *
 
 
 class BertTweetWithSparsemax(nn.Module):
-    def __init__(self, model, sparsemax_ids=None, hidden_size=HIDDEN_SIZE):
+    def __init__(self, model, sparsemax_ids=(-1, -2), hidden_size=HIDDEN_SIZE):
         super().__init__()
         self.base_model = model
         if sparsemax_ids is not None:

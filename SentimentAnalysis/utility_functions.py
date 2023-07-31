@@ -66,9 +66,9 @@ def get_model(pt_file, device):
         mask = True
     else:
         if "last-2-sparsemax" in pt_file:
-            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL), (-1, -2))
-        elif "no-sparsemax" in pt_file:
             model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
+        elif "no-sparsemax" in pt_file:
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL), ())
         elif "sparsemax-first-2-last-2" in pt_file:
             model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL), (0, 1, -1, -2))
         elif "sparsemax-first-last" in pt_file:

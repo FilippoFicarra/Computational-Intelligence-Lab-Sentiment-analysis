@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
 from datasets import TwitterDatasetEnsambleTest
-from ensamble_train import LinearCombinationModel
+from ensamble_train import LinearCombinationModel, EnsamblerWithSelfAttention
 from utility_functions import *
 
 if __name__ == "__main__":
@@ -46,17 +46,17 @@ if __name__ == "__main__":
                 # Loop over the .pt files in the folder
                 for pt_file in sorted(pt_files):
                     if "ensamble" in pt_file:
-                        e_model = LinearCombinationModel()
+                        e_model = EnsamblerWithSelfAttention()
                         e_model.load_model(os.path.join(PATH_MODELS, pt_file))
                         e_model.eval()
                         e_model.to(device)
                         name_ensamble = pt_file.replace(".pt", "")
                     else:
                         # Get model
-                        trained_model, mask = get_model(pt_file, device)
+                        trained_model, requires_mask, is_clip = get_model(pt_file, device)
                         # Set model for evaluation
                         trained_model.eval()
-                        ensamble_models.append((trained_model, mask))
+                        ensamble_models.append((trained_model, requires_mask, is_clip))
 
     if e_model is None:
         raise Exception("No model for ensamble found...")
@@ -71,17 +71,22 @@ if __name__ == "__main__":
             mask = sample['attention_mask'].to(device)
             ids_masker = sample['input_ids_masker'].to(device)
             mask_masker = sample['attention_mask_masker'].to(device)
+            ids_clip = sample['input_ids_clip'].to(device)
+            mask_clip = sample['attention_mask_clip'].to(device)
 
             # Compute outputs of the models in the ensamble
             outputs = []
-            for model, requires_mask in ensamble_models:
+            for model, requires_mask, is_clip in ensamble_models:
                 if requires_mask:
                     outputs.append(model(ids_masker, mask_masker))
                 else:
-                    outputs.append(model(ids, mask))
+                    if not is_clip:
+                        outputs.append(model(ids, mask))
+                    else:
+                        outputs.append(model(ids_clip, mask_clip))
 
             # Compute model output
-            prediction_ensamble = e_model(outputs[0], outputs[1], outputs[2])
+            prediction_ensamble = e_model(ids, outputs[0], outputs[1], outputs[2])
 
             all_predictions.append(torch.argmax(prediction_ensamble, dim=1))
 
