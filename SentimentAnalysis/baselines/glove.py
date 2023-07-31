@@ -9,7 +9,7 @@ DIM = 100
 
 
 # Load glove embeddings
-f_embeddings = open("./twitter-datasets/glove.6B.100d.txt")
+f_embeddings = open("./data/twitter-data/glove.6B.100d.txt")
 embeddings = {}
 for line in f_embeddings:
     values = line.split()
@@ -56,8 +56,8 @@ def load_embeddings(filename, max=300000):
     return np.array(pos), original, lengths, tokens
 
 # load tweets and convert them to embeddings
-pos, original_pos, pos_lengths, tokens_pos = load_embeddings("./twitter-datasets/train_pos_full.txt")
-neg, original_neg, neg_lengths, tokens_neg = load_embeddings("./twitter-datasets/train_neg_full.txt")
+pos, original_pos, pos_lengths, tokens_pos = load_embeddings("./data/twitter-data/train_pos_full.txt")
+neg, original_neg, neg_lengths, tokens_neg = load_embeddings("./data/twitter-data/train_neg_full.txt")
 
 vectors = np.concatenate((pos, neg), axis=0)
 original = np.concatenate((original_pos, original_neg), axis=0)[~np.isnan(vectors).any(axis=1)]
