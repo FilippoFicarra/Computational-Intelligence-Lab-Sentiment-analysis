@@ -66,17 +66,13 @@ def get_model(pt_file, device):
         mask = True
     else:
         if "last-2-sparsemax" in pt_file:
-            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-            model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL), (-1, -2))
         elif "no-sparsemax" in pt_file:
             model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
         elif "sparsemax-first-2-last-2" in pt_file:
-            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL))
-            model.base_model.encoder.layer[0].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[1].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[-2].attention.self = RobertaSelfAttention(config=model.base_model.config)
-            model.base_model.encoder.layer[-1].attention.self = RobertaSelfAttention(config=model.base_model.config)
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL), (0, 1, -1, -2))
+        elif "sparsemax-first-last" in pt_file:
+            model = BertTweetWithSparsemax(AutoModel.from_pretrained(MODEL), (0, -1))
         elif "clip" in pt_file:
             model = CLIPWithClassificationHead()
             clip = True
