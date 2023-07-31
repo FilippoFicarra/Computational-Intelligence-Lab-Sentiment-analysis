@@ -15,13 +15,15 @@ tokens = np.load("tokens.npy")
 test_indices = np.load("test_indices.npy")
 
 indices = np.arange(len(labels))
-X_train, X_test, y_train, y_test, _, test_indices = train_test_split(vectors, labels, indices, test_size=0.2, shuffle=True, random_state=42)
+X_train, X_test, y_train, y_test, _, test_indices = train_test_split(vectors, labels, indices, test_size=0.2,
+                                                                     shuffle=True, random_state=42)
 
 train_dataset = TensorDataset(torch.Tensor(X_train), torch.Tensor(y_train))
 test_dataset = TensorDataset(torch.Tensor(X_test), torch.Tensor(y_test))
 
 train_dataloader = DataLoader(train_dataset, batch_size=64)
 test_dataloader = DataLoader(test_dataset, batch_size=64)
+
 
 class LSTMModel(nn.Module):
     def __init__(self):
@@ -31,22 +33,19 @@ class LSTMModel(nn.Module):
 
         hidden_size = 128
 
-
-        self.lstm1 = nn.LSTM(100, 128, num_layers, bidirectional=True)   
+        self.lstm1 = nn.LSTM(100, 128, num_layers, bidirectional=True)
 
         self.dropout1 = nn.Dropout(p=0.6)
 
-        self.lstm2 = nn.LSTM(256, 128, num_layers, bidirectional=True) 
+        self.lstm2 = nn.LSTM(256, 128, num_layers, bidirectional=True)
 
         self.dropout2 = nn.Dropout(p=0.6)
 
-        self.lstm3 = nn.LSTM(256, 128, num_layers, bidirectional=True) 
+        self.lstm3 = nn.LSTM(256, 128, num_layers, bidirectional=True)
 
         self.linear = nn.Linear(2 * 128, 1)
 
-    
     def forward(self, x):
-        
         x, _ = self.lstm1(x)
 
         x = self.dropout1(x)
@@ -60,7 +59,8 @@ class LSTMModel(nn.Module):
         x = self.linear(x)
 
         return torch.sigmoid(x)
-    
+
+
 lstm_model = LSTMModel()
 
 criterion = nn.BCELoss()
@@ -76,7 +76,7 @@ for epoch in range(num_epochs):
     total_loss = 0.0
 
     for i, (inputs_batch, targets_batch) in tqdm(enumerate(train_dataloader)):
-        #if i % 10 == 0:
+        # if i % 10 == 0:
         #    print("step ", i)
         # Forward pass
         outputs = lstm_model(inputs_batch)
@@ -96,7 +96,7 @@ for epoch in range(num_epochs):
     average_loss = total_loss / (i + 1)
 
     # Print and log the average loss for the current epoch
-    print(f"Epoch [{epoch+1}/{num_epochs}], Loss: {average_loss:.4f}")
+    print(f"Epoch [{epoch + 1}/{num_epochs}], Loss: {average_loss:.4f}")
     writer.add_scalar("Loss/train", average_loss, epoch)
 
     lstm_model.eval()  # Set the model to evaluation mode
@@ -117,10 +117,10 @@ for epoch in range(num_epochs):
         average_test_loss = total_test_loss / (i + 1)
 
         # Print and log the average test loss for the current epoch
-        print(f"Epoch [{epoch+1}/{num_epochs}], Test Loss: {average_test_loss:.4f}")
+        print(f"Epoch [{epoch + 1}/{num_epochs}], Test Loss: {average_test_loss:.4f}")
         writer.add_scalar("Loss/test", average_test_loss, epoch)
 
-    if(epoch % 2 == 1):
+    if (epoch % 2 == 1):
         checkpoint_filename = f"model_epoch_{epoch + 1}.pth"
         checkpoint_path = f"./checkpoints/{checkpoint_filename}"
         torch.save({
@@ -131,6 +131,7 @@ for epoch in range(num_epochs):
         }, checkpoint_path)
 
 writer.close()
+
 
 def compute_accuracy(model, dataloader):
     model.eval()
@@ -148,6 +149,7 @@ def compute_accuracy(model, dataloader):
     accuracy = correct_predictions / total_samples
     return accuracy
 
+
 accuracy = compute_accuracy(lstm_model, test_dataloader)
 
 print(accuracy)
@@ -155,6 +157,7 @@ print(accuracy)
 lengths_test = lengths[test_indices]
 print(lengths_test.shape)
 MAX = 50000
+
 
 def get_accuracy_bin_length():
     lstm_model.eval()
@@ -183,6 +186,7 @@ def get_accuracy_bin_length():
     for i in range(len(bins_accuracy)):
         bins_accuracy[i] = bins_t[i] / (bins_f[i] + bins_t[i])
     return bins_accuracy
+
 
 # print accuracy in function of tweet length
 acc = get_accuracy_bin_length()[:10]

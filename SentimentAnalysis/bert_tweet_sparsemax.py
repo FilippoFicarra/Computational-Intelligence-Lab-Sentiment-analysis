@@ -15,7 +15,6 @@ class BertTweetWithSparsemax(nn.Module):
         if sparsemax_ids is not None:
             for i in sparsemax_ids:
                 self.base_model.encoder.layer[i].attention.self = RobertaSelfAttention(config=self.base_model.config)
-        print("Layers with sparsemax: ", sparsemax_ids)
         self.dropout = nn.Dropout(DROPOUT_PROB)
         self.classifier = nn.Linear(hidden_size, CLASSES_NUM)
         self.epoch = 0

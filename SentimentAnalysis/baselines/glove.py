@@ -7,7 +7,6 @@ import joblib
 
 DIM = 100
 
-
 # Load glove embeddings
 f_embeddings = open("./data/twitter-data/glove.6B.100d.txt")
 embeddings = {}
@@ -22,6 +21,8 @@ for line in f_embeddings:
 
     Returns: array of embeddings and the original text array
 """
+
+
 def load_embeddings(filename, max=300000):
     f = open(filename)
     pos = []
@@ -33,7 +34,7 @@ def load_embeddings(filename, max=300000):
         num_tokens = 0
         if j > max:
             break
-        values = line[:len(line)-1].split(' ')
+        values = line[:len(line) - 1].split(' ')
         for val in values:
             if val == '<user>' or val == '<url>':
                 num_tokens += 1
@@ -46,14 +47,15 @@ def load_embeddings(filename, max=300000):
         ls = np.zeros((len(values), DIM))
         for i in range(len(values)):
             ls[i] = embeddings[values[i]]
-        #print(ls.shape)
+        # print(ls.shape)
         mean = np.mean(ls, axis=0)
-        #print(mean.shape)
+        # print(mean.shape)
         pos.append(mean)
         lengths.append(len(values))
         tokens.append(num_tokens)
         j += 1
     return np.array(pos), original, lengths, tokens
+
 
 # load tweets and convert them to embeddings
 pos, original_pos, pos_lengths, tokens_pos = load_embeddings("./data/twitter-data/train_pos_full.txt")
@@ -83,10 +85,10 @@ tokens = np.load("tokens.npy")
 
 # split into train/val dataset
 indices = np.arange(len(labels))
-X_train, X_test, y_train, y_test, _, test_indices = train_test_split(vectors, labels, indices, test_size=0.4, shuffle=True, random_state=42)
+X_train, X_test, y_train, y_test, _, test_indices = train_test_split(vectors, labels, indices, test_size=0.4,
+                                                                     shuffle=True, random_state=42)
 
 np.save("test_indices", test_indices)
-
 
 # fit Logistic Regression classifier
 rf_classifier = LogisticRegression(random_state=42, n_jobs=-1)
@@ -107,6 +109,8 @@ y_pred = y_pred.flatten()
 
 # Get the grap of accuracy per tweet length
 lengths_test = lengths[test_indices]
+
+
 def get_accuracy_bin_length():
     bins_f = np.zeros((50,))
     bins_t = np.zeros((50,))
@@ -121,6 +125,7 @@ def get_accuracy_bin_length():
         bins_accuracy[i] = bins_t[i] / (bins_f[i] + bins_t[i])
     return bins_accuracy
 
+
 acc = get_accuracy_bin_length()[:9]
 
 plt.ylabel("Accuracy")
@@ -129,6 +134,7 @@ plt.plot(np.arange(9) * 5, acc)
 
 special_tokens_test = tokens[test_indices]
 print(special_tokens_test[:10])
+
 
 # get the graph of accuracy per number of <user> and <url> in a tweet
 # this number is then normalized by tweet length
@@ -145,6 +151,7 @@ def get_accuracy_bin_tokens():
     for i in range(len(bins_accuracy)):
         bins_accuracy[i] = bins_t[i] / (bins_f[i] + bins_t[i])
     return bins_accuracy
+
 
 tok_acc = get_accuracy_bin_tokens()
 
