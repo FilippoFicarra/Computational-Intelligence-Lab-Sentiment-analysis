@@ -3,7 +3,7 @@ Welcome to the Sentiment analysis project for Computational Intelligence Lab ETH
 
 ## Data
 The data can be downloaded from the following link:
-
+https://drive.google.com/drive/folders/1IZtDYZcYYCmlaH-nmiTbBgsFtAlqn6kR?usp=sharing
 Place datasets and twitter-data in SentimentAnalysis/data, and place model in SentimentAnalysis.
 
 ## Data Processing 
